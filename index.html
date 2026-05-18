@@ -8273,9 +8273,12 @@ async function renderLunchLearn() {
 
   const threshold = state.llFollowupDays || 90;
 
-  // Annotate each session with its company's region
+  // Annotate each session with its effective region:
+  //   1. The explicit region the user typed on this L&L, if any
+  //   2. Otherwise, the most common region among that company's contacts
+  // _region drives both the table column and the N→S sort.
   for (const s of sessions) {
-    s._region = companyRegion(s.company || '', customers);
+    s._region = (s.region || '').trim() || companyRegion(s.company || '', customers);
   }
 
   // Sort: region N→S → company A→Z → date desc (so repeat sessions for one
@@ -8450,6 +8453,7 @@ async function openLunchLearnModal(id = null) {
     if (!companyDefaults[key] || (x.date || '') > (companyDefaults[key]._date || '')) {
       companyDefaults[key] = {
         _date: x.date || '',
+        region: (x.region || '').trim(),
         drawingSystems: x.drawingSystems || [],
         usesRevitToolbar: x.usesRevitToolbar || 'unknown',
       };
@@ -8471,16 +8475,37 @@ async function openLunchLearnModal(id = null) {
         </div>
         <div class="modal-body">
           <form id="ll-form" onsubmit="return false">
-            <div class="field">
-              <label>Company *</label>
-              <input class="input" list="ll-companies" name="company" required
-                     value="${escape(initialCompany)}"
-                     placeholder="e.g. Beca, Aurecon, Fletcher Hydraulics"
-                     oninput="filterLLAttendees(this.value); maybePrefillLLDefaults(this.value);">
-              <datalist id="ll-companies">
-                ${existingCompanies.map(c => `<option value="${escape(c)}"></option>`).join('')}
-              </datalist>
-              <div id="ll-prefill-note" style="font-size:11px;color:var(--vic-grey-500);margin-top:4px"></div>
+            <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px">
+              <div class="field">
+                <label>Company *</label>
+                <input class="input" list="ll-companies" name="company" required
+                       value="${escape(initialCompany)}"
+                       placeholder="e.g. Beca, Aurecon, Fletcher Hydraulics"
+                       oninput="filterLLAttendees(this.value); maybePrefillLLDefaults(this.value);">
+                <datalist id="ll-companies">
+                  ${existingCompanies.map(c => `<option value="${escape(c)}"></option>`).join('')}
+                </datalist>
+                <div id="ll-prefill-note" style="font-size:11px;color:var(--vic-grey-500);margin-top:4px"></div>
+              </div>
+
+              <div class="field">
+                <label>Region</label>
+                <div style="display:flex;gap:6px">
+                  <select class="select" style="max-width:140px" id="ll-region-quick" onchange="if(this.value){document.querySelector('#ll-form [name=region]').value=this.value;this.value=''}">
+                    <option value="">Quick pick…</option>
+                    <optgroup label="New Zealand">
+                      ${NZ_REGIONS_N_TO_S
+                        .filter(r => r !== 'Hawkes Bay' && r !== 'Manawatu-Whanganui')
+                        .map(r => `<option>${escape(r)}</option>`).join('')}
+                    </optgroup>
+                  </select>
+                  <input class="input" name="region" placeholder="or type any"
+                         value="${escape(s.region || '')}" style="flex:1">
+                </div>
+                <div style="font-size:11px;color:var(--vic-grey-500);margin-top:4px">
+                  Leave blank to auto-derive from the company's contacts.
+                </div>
+              </div>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -8660,6 +8685,7 @@ async function saveLunchLearn(id) {
 
   const record = {
     company,
+    region: titleCaseRegion((fd.get('region') || '').trim()),
     date,
     topics,
     notes: (fd.get('notes') || '').trim(),
