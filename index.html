@@ -8627,11 +8627,16 @@ function maybePrefillLLDefaults(company) {
   const anyDrawingChecked = !!form.querySelector('[name=drawingSystems]:checked');
   const drawingOther = form.querySelector('[name=drawingSystemsOther]');
   const toolbarSelected = form.querySelector('[name=usesRevitToolbar]:checked')?.value;
-  if (anyDrawingChecked || (drawingOther && drawingOther.value.trim()) || (toolbarSelected && toolbarSelected !== 'unknown')) {
+  const regionInput = form.querySelector('[name=region]');
+  if (anyDrawingChecked
+      || (drawingOther && drawingOther.value.trim())
+      || (toolbarSelected && toolbarSelected !== 'unknown')
+      || (regionInput && regionInput.value.trim())) {
     return;
   }
 
   // Apply
+  if (regionInput && defaults.region) regionInput.value = defaults.region;
   for (const cb of form.querySelectorAll('[name=drawingSystems]')) {
     cb.checked = (defaults.drawingSystems || []).includes(cb.value);
   }
@@ -8642,7 +8647,7 @@ function maybePrefillLLDefaults(company) {
   if (tb) tb.checked = true;
 
   const note = document.getElementById('ll-prefill-note');
-  if (note) note.textContent = '↪ Prefilled Drawing Systems and Toolbar from your last session with ' + company + '. Edit if anything\'s changed.';
+  if (note) note.textContent = '↪ Prefilled region, drawing systems and toolbar from your last session with ' + company + '. Edit if anything\'s changed.';
 }
 
 function filterLLAttendees(company) {
