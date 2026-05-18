@@ -382,7 +382,21 @@ a:hover { text-decoration: underline; }
   position: sticky;
   z-index: 50;
 }
-/* Filter-row pinned to the top of the scroll container. */
+/* Search + Reset bar — sticks to the top of .main so the user can keep
+   searching/resetting while the contacts list scrolls underneath.
+   The exact `top` is 0 (flush with .main's top edge) and the table filter-row
+   / column-header `top` values are recomputed in JS after render() so they
+   stack directly below this bar with no gap. */
+.cust-sticky-search {
+  position: sticky;
+  top: 0;
+  z-index: 52;
+  background: var(--vic-grey-50);
+  padding: 10px 0 8px 0;
+  margin-bottom: 0 !important;
+  border-bottom: 1px solid var(--vic-grey-300);
+}
+/* Filter-row pinned just below the sticky search bar (top set in JS). */
 .cust-table tr.filter-row th {
   top: 0;
   z-index: 51;
@@ -1494,6 +1508,9 @@ const _camelToSnake = {
   usesRevitToolbar: 'uses_revit_toolbar',
   // customer: training-session attendance (Yes/No/Unknown)
   attendedTraining: 'attended_training',
+  // customer: timestamp recording that we discussed the Victaulic Toolbar
+  // and sent them an invitation to download it (YYYY-MM-DD)
+  toolbarInvitationSentAt: 'toolbar_invitation_sent_at',
   // soft-delete
   deletedAt: 'deleted_at',
 };
@@ -2639,10 +2656,15 @@ async function render() {
   // and Last Contact column right edges.
   if (state.view === 'customers') {
     setTimeout(() => {
-      // 1) Fix sticky overlap — column-header sticks at filter-row.height
+      // 1) Sticky stack: search-bar (top: 0) → filter-row (top: searchH) →
+      //    column-header (top: searchH + filterH). Measuring instead of hard-
+      //    coding lets the heights respond to wrapping on narrow viewports.
+      const stickyBar = document.querySelector('.cust-sticky-search');
+      const searchH = stickyBar ? stickyBar.offsetHeight : 0;
       const filterRow = document.querySelector('.cust-table tr.filter-row');
       const filterH = filterRow ? filterRow.offsetHeight : 42;
-      document.querySelectorAll('.cust-table thead tr:nth-child(2) th').forEach(el => { el.style.top = filterH + 'px'; });
+      document.querySelectorAll('.cust-table tr.filter-row th').forEach(el => { el.style.top = searchH + 'px'; });
+      document.querySelectorAll('.cust-table thead tr:nth-child(2) th').forEach(el => { el.style.top = (searchH + filterH) + 'px'; });
 
       // 2) Align search/reset widths with Region / Last Contact columns
       const ths = document.querySelectorAll('.cust-table thead tr:nth-child(2) th');
@@ -3380,7 +3402,7 @@ async function renderCustomers() {
       </div>
     </div>
 
-    <div style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="cust-sticky-search" style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <input id="cust-search-input" class="input" placeholder="Search by name, company, email…" value="${escape(state.search)}" oninput="state.search=this.value; debouncedRender()" style="flex:1;min-width:280px;max-width:520px;background:#fff">
       <button onclick="state.search=''; state.filters={region:[],importance:[],tag:[],category:[],market:[],company:[],name:[],lastContact:[]}; state.customerSortKey='company'; state.customerSortDir='asc'; _openFilterField=null; render()"
               class="${hasActiveFilters ? 'active-filter' : ''}"
@@ -3942,6 +3964,17 @@ async function openCustomerModal(id = null, seed = null, focusField = null) {
                     </label>`;
                   }).join('')}
                 </div>
+                <input type="hidden" name="toolbarInvitationSentAt" value="${escape(c.toolbarInvitationSentAt || '')}">
+                <div id="toolbar-invite-status" style="margin-top:8px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  ${c.toolbarInvitationSentAt
+                    ? `<span style="color:var(--vic-success);font-weight:600">✓ Discussed &amp; invitation sent on ${fmtDate(c.toolbarInvitationSentAt)}</span>
+                       <button type="button" class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="clearToolbarInvite()">Clear</button>`
+                    : `<button type="button" class="btn btn-ghost" style="padding:6px 14px;font-size:12px;border:1px dashed var(--vic-orange);color:var(--vic-orange-dark)" onclick="markToolbarInvite()">
+                         ✉ Mark as discussed &amp; invitation sent
+                       </button>
+                       <span style="color:var(--vic-grey-500);font-size:11px">Records today's date on this contact.</span>`
+                  }
+                </div>
               </div>
 
               <div class="field" style="grid-column:1/-1">
@@ -4156,6 +4189,41 @@ function addRelativeRow() {
   row.querySelector('.relative-name').focus();
 }
 
+// Record that we've discussed the Victaulic Toolbar with this contact AND
+// sent them an invitation to download it. Stamps today's ISO date into the
+// hidden input — saveCustomer persists it to customer.toolbarInvitationSentAt.
+// The user still needs to click Save to commit the change.
+function markToolbarInvite() {
+  const f = document.getElementById('cust-form');
+  if (!f) return;
+  const hidden = f.querySelector('input[name="toolbarInvitationSentAt"]');
+  if (!hidden) return;
+  hidden.value = new Date().toISOString().slice(0, 10);
+  _renderToolbarInviteStatus(hidden.value);
+}
+function clearToolbarInvite() {
+  const f = document.getElementById('cust-form');
+  if (!f) return;
+  const hidden = f.querySelector('input[name="toolbarInvitationSentAt"]');
+  if (!hidden) return;
+  hidden.value = '';
+  _renderToolbarInviteStatus('');
+}
+// Re-render the status row beside the toolbar field after the user clicks
+// the mark/clear buttons. Mirrors the JSX in openCustomerModal so the look
+// stays consistent without a full re-render of the modal.
+function _renderToolbarInviteStatus(sentAt) {
+  const el = document.getElementById('toolbar-invite-status');
+  if (!el) return;
+  el.innerHTML = sentAt
+    ? `<span style="color:var(--vic-success);font-weight:600">✓ Discussed &amp; invitation sent on ${fmtDate(sentAt)}</span>
+       <button type="button" class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="clearToolbarInvite()">Clear</button>`
+    : `<button type="button" class="btn btn-ghost" style="padding:6px 14px;font-size:12px;border:1px dashed var(--vic-orange);color:var(--vic-orange-dark)" onclick="markToolbarInvite()">
+         ✉ Mark as discussed &amp; invitation sent
+       </button>
+       <span style="color:var(--vic-grey-500);font-size:11px">Records today's date on this contact.</span>`;
+}
+
 // Toggle one of the Markets pills inside the customer modal and sync the
 // hidden input that saveCustomer reads. Bound from inline onclick handlers
 // so it must live on the window scope.
@@ -4337,6 +4405,11 @@ async function _saveCustomerInner(id, options, data, _marketList) {
   if (toolbarVal && toolbarVal !== 'unknown') record.usesRevitToolbar = toolbarVal;
   const trainingVal = (data.attendedTraining || '').trim();
   if (trainingVal && trainingVal !== 'unknown') record.attendedTraining = trainingVal;
+  // Toolbar-invitation timestamp ('YYYY-MM-DD' from the inline button). Same
+  // conditional-write pattern — only include when set so older Supabase
+  // schemas without this column don't error on save.
+  const toolbarInvAt = (data.toolbarInvitationSentAt || '').trim();
+  if (toolbarInvAt) record.toolbarInvitationSentAt = toolbarInvAt;
   let savedId = id;
   if (id) {
     await db.customers.update(id, record);
