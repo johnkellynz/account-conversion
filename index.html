@@ -1369,6 +1369,7 @@ select.add-field-btn-select option {
     <div class="nav-section">Tools</div>
     <div class="nav-item" data-view="followup" onclick="setView('followup')"><span class="nav-icon">⏰</span> Follow-ups</div>
     <div class="nav-item" data-view="actions" onclick="setView('actions')"><span class="nav-icon">☑</span> Actions</div>
+    <div class="nav-item" data-view="lunchlearn" onclick="setView('lunchlearn')"><span class="nav-icon">◈</span> Lunch &amp; Learns</div>
   </aside>
 
   <main class="main" id="main"></main>
@@ -1439,6 +1440,16 @@ function buildLocalDb() {
     history: '++id, customerId, productId, changedAt',
     opportunities: '++id, customerId, stage, expectedCloseDate, projectId, createdAt',
   });
+  d.version(5).stores({
+    customers: '++id, name, company, region, country, importance, reportsTo, lastContactAt, createdAt',
+    interactions: '++id, customerId, date, type, actionDone, actionDueDate',
+    projects: '++id, name, status, customerIds',
+    products: '++id, name, sortOrder',
+    acceptance: '++id, &[customerId+productId], customerId, productId, status, updatedAt',
+    history: '++id, customerId, productId, changedAt',
+    opportunities: '++id, customerId, stage, expectedCloseDate, projectId, createdAt',
+    lunchLearns: '++id, company, date, createdAt',
+  });
   return d;
 }
 
@@ -1463,6 +1474,8 @@ const _camelToSnake = {
   // opportunities
   expectedCloseDate: 'expected_close_date', projectId: 'project_id',
   wonLostReason: 'won_lost_reason', closedAt: 'closed_at',
+  // lunch & learns
+  attendeeIds: 'attendee_ids',
   // soft-delete
   deletedAt: 'deleted_at',
 };
@@ -1652,6 +1665,7 @@ function buildCloudDb(userId) {
     acceptance:    _buildCloudTable('acceptance',    userId),
     history:       _buildCloudTable('history',       userId),
     opportunities: _buildCloudTable('opportunities', userId),
+    lunchLearns:   _buildCloudTable('lunch_learns',  userId),
     // Cloud has no client-side transaction primitive (Phase 1 limitation).
     // We just invoke the function; Supabase RPC could give us atomicity later.
     async transaction(_mode, ..._args) {
@@ -1685,6 +1699,7 @@ const state = {
   matrixSortMode: 'name_asc',
   mapShow: 'all',
   heatmap: false,
+  llFollowupDays: 90,
 };
 
 // ===========================================================================
@@ -2528,6 +2543,7 @@ async function render() {
   if (state.view === 'map')         html = await renderMapView();
   if (state.view === 'followup')    html = await renderFollowup();
   if (state.view === 'actions')     html = await renderActions();
+  if (state.view === 'lunchlearn')  html = await renderLunchLearn();
 
   // Capture focus + cursor JUST BEFORE the innerHTML swap (not at start of
   // render) so the cursor position reflects whatever the user just typed,
@@ -8186,6 +8202,275 @@ async function continueInit() {
   // Demo customer/interaction/project seeding removed — the app no longer
   // auto-loads sample data on first run. If you want the old demo data back
   // for a fresh install, restore from git history.
+  render();
+}
+
+// ===========================================================================
+// Lunch & Learn Matrix
+// Track completed technical training sessions with engineers/consultants.
+// Each record: company, topics covered, date, attendees (linked to customers),
+// optional notes. The list shows "days since" so you can see when each
+// company is due for another session. Threshold is editable.
+// ===========================================================================
+async function renderLunchLearn() {
+  const sessions = await db.lunchLearns.toArray();
+  const customers = await getAllCustomers();
+  const custById = Object.fromEntries(customers.map(c => [c.id, c]));
+
+  // Sort newest first
+  sessions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  const threshold = state.llFollowupDays || 90;
+
+  // For each company, find the most recent session — used for "due for follow-up" view
+  const lastByCompany = {};
+  for (const s of sessions) {
+    const key = (s.company || '').trim();
+    if (!key) continue;
+    if (!lastByCompany[key] || (s.date || '') > (lastByCompany[key].date || '')) {
+      lastByCompany[key] = s;
+    }
+  }
+  const companiesDue = Object.values(lastByCompany)
+    .filter(s => daysSince(s.date) > threshold)
+    .sort((a, b) => daysSince(b.date) - daysSince(a.date));
+
+  return `
+    <div class="page-header">
+      <div>
+        <div class="page-title">Lunch &amp; Learns</div>
+        <div class="page-sub">${sessions.length} completed session${sessions.length===1?'':'s'} · ${companiesDue.length} compan${companiesDue.length===1?'y':'ies'} due for follow-up</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <label style="font-size:11px;color:var(--vic-grey-700);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Follow-up after</label>
+        <input class="input" type="number" min="1" style="width:70px" value="${threshold}"
+               onchange="state.llFollowupDays=parseInt(this.value)||90; render()">
+        <span style="font-size:11px;color:var(--vic-grey-700)">days</span>
+        <button class="btn btn-primary" onclick="openLunchLearnModal()">+ Log Session</button>
+      </div>
+    </div>
+
+    ${companiesDue.length ? `
+      <div class="card card-pad" style="margin-bottom:16px;border-left:3px solid var(--vic-orange);background:var(--vic-orange-light)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;color:var(--vic-charcoal)">Due for follow-up</div>
+            <div style="font-size:12px;color:var(--vic-grey-700);margin-top:2px">Companies whose last session was more than ${threshold} days ago</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${companiesDue.slice(0, 8).map(s => `
+              <span class="tag" style="background:var(--vic-white);border-color:var(--vic-orange);color:var(--vic-charcoal);font-weight:600">
+                ${escape(s.company)} · ${daysSince(s.date)}d
+              </span>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    ` : ''}
+
+    ${sessions.length === 0 ? `
+      <div class="empty card card-pad">
+        <h3>No Lunch &amp; Learns logged yet</h3>
+        <div style="margin-bottom:12px">Track each technical training session you run with engineers or consultants.</div>
+        <button class="btn btn-primary" onclick="openLunchLearnModal()">+ Log your first session</button>
+      </div>
+    ` : `
+      <div class="card">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:2px solid var(--vic-grey-300);background:var(--vic-grey-50)">
+              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Company</th>
+              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Topics Covered</th>
+              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Attendees</th>
+              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Date</th>
+              <th style="text-align:right;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Days Since</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sessions.map(s => {
+              const d = daysSince(s.date);
+              let dueColor = 'var(--vic-success)';
+              let dueLabel = 'Fresh';
+              if (d > threshold) { dueColor = 'var(--vic-danger)'; dueLabel = 'Overdue'; }
+              else if (d > threshold * 0.66) { dueColor = 'var(--vic-warn)'; dueLabel = 'Soon'; }
+              const attendees = (s.attendeeIds || [])
+                .map(id => custById[id])
+                .filter(Boolean);
+              return `
+                <tr style="border-bottom:1px solid var(--vic-grey-300);cursor:pointer" onclick="openLunchLearnModal(${s.id})">
+                  <td style="padding:10px 12px;font-weight:600">${escape(s.company)}</td>
+                  <td style="padding:10px 12px;font-size:13px;color:var(--vic-grey-700);max-width:340px">${escape(s.topics || '—')}</td>
+                  <td style="padding:10px 12px;font-size:12px">
+                    ${attendees.length === 0 ? '<span style="color:var(--vic-grey-500)">—</span>' :
+                      attendees.slice(0, 3).map(c => `<span class="tag" style="font-size:11px">${escape(c.name)}</span>`).join('')
+                      + (attendees.length > 3 ? `<span style="color:var(--vic-grey-500);font-size:11px"> +${attendees.length-3} more</span>` : '')}
+                  </td>
+                  <td style="padding:10px 12px;font-size:13px">${fmtDate(s.date)}</td>
+                  <td style="padding:10px 12px;text-align:right">
+                    <span style="display:inline-block;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:700;color:#fff;background:${dueColor}" title="${dueLabel}">${d}d</span>
+                  </td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `}
+  `;
+}
+
+async function openLunchLearnModal(id = null) {
+  const s = id ? await db.lunchLearns.get(id) : {
+    date: new Date().toISOString().slice(0, 10),
+    attendeeIds: [],
+  };
+  const customers = await getAllCustomers();
+
+  // Existing companies from customers + previously-logged L&Ls for autocomplete
+  const existingCompanies = [...new Set([
+    ...customers.map(c => c.company).filter(Boolean),
+    ...(await db.lunchLearns.toArray()).map(x => x.company).filter(Boolean),
+  ])].sort();
+
+  // Pre-filter customers to the chosen company if editing
+  const initialCompany = (s.company || '').trim();
+
+  const html = `
+    <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+      <div class="modal" style="max-width:640px">
+        <div class="modal-head">
+          <div class="modal-title">${id ? 'Edit Lunch &amp; Learn' : 'Log Lunch &amp; Learn'}</div>
+          <button class="icon-btn" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <form id="ll-form" onsubmit="return false">
+            <div class="field">
+              <label>Company *</label>
+              <input class="input" list="ll-companies" name="company" required
+                     value="${escape(initialCompany)}"
+                     placeholder="e.g. Beca, Aurecon, Fletcher Hydraulics"
+                     oninput="filterLLAttendees(this.value)">
+              <datalist id="ll-companies">
+                ${existingCompanies.map(c => `<option value="${escape(c)}"></option>`).join('')}
+              </datalist>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="field">
+                <label>Date *</label>
+                <input class="input" type="date" name="date" required value="${s.date || new Date().toISOString().slice(0,10)}">
+              </div>
+              <div class="field">
+                <label>Days since today</label>
+                <div style="padding:8px 0;color:var(--vic-grey-700);font-size:13px" id="ll-days-since">
+                  ${s.date ? daysSince(s.date) + ' days ago' : 'Pick a date above'}
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Topics Covered *</label>
+              <textarea class="textarea" name="topics" required style="min-height:70px"
+                        placeholder="e.g. Style 107 grooved couplings, FireLock fire protection overview, AGS large-diameter">${escape(s.topics || '')}</textarea>
+            </div>
+
+            <div class="field">
+              <label>Attendees <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— pick the engineers/consultants who attended (Cmd/Ctrl-click for multiple)</span></label>
+              <select class="select" name="attendeeIds" multiple size="6" id="ll-attendees" style="height:auto">
+                ${customers.map(c => `
+                  <option value="${c.id}"
+                          data-company="${escape((c.company || '').toLowerCase())}"
+                          ${(s.attendeeIds || []).includes(c.id) ? 'selected' : ''}>
+                    ${escape(c.name)}${c.title ? ' · ' + escape(c.title) : ''}${c.company ? ' · ' + escape(c.company) : ''}
+                  </option>`).join('')}
+              </select>
+              <div style="font-size:11px;color:var(--vic-grey-500);margin-top:4px">
+                The list narrows to people at the company you typed above. Clear the company to see everyone.
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Notes <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— optional</span></label>
+              <textarea class="textarea" name="notes" placeholder="How did it go? Follow-up actions? Questions to revisit?">${escape(s.notes || '')}</textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-foot">
+          ${id ? `<button class="btn btn-danger" style="margin-right:auto" onclick="deleteLunchLearn(${id})">Delete</button>` : ''}
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveLunchLearn(${id || 'null'})">${id ? 'Save changes' : 'Save Session'}</button>
+        </div>
+      </div>
+    </div>
+  `;
+  $('#modal-root').innerHTML = html;
+
+  // Live "days since" indicator below the date picker
+  const dateInput = document.querySelector('#ll-form [name=date]');
+  const daysEl = document.getElementById('ll-days-since');
+  if (dateInput && daysEl) {
+    dateInput.addEventListener('input', () => {
+      daysEl.textContent = dateInput.value ? daysSince(dateInput.value) + ' days ago' : 'Pick a date above';
+    });
+  }
+
+  // Filter the attendees list to those whose company matches the typed company
+  if (initialCompany) filterLLAttendees(initialCompany);
+}
+
+function filterLLAttendees(company) {
+  const sel = document.getElementById('ll-attendees');
+  if (!sel) return;
+  const needle = (company || '').toLowerCase().trim();
+  for (const opt of sel.options) {
+    const co = opt.getAttribute('data-company') || '';
+    // Always show selected attendees so the user can see who they've already picked
+    if (!needle || co === needle || co.includes(needle) || opt.selected) {
+      opt.style.display = '';
+    } else {
+      opt.style.display = 'none';
+    }
+  }
+}
+
+async function saveLunchLearn(id) {
+  const f = document.getElementById('ll-form');
+  if (!f) return;
+  const fd = new FormData(f);
+  const company = (fd.get('company') || '').trim();
+  const date = fd.get('date');
+  const topics = (fd.get('topics') || '').trim();
+  if (!company || !date || !topics) {
+    toast('Company, date, and topics are required');
+    return;
+  }
+  const attendeeIds = [...f.querySelector('[name=attendeeIds]').selectedOptions]
+    .map(o => parseInt(o.value, 10))
+    .filter(n => !isNaN(n));
+
+  const record = {
+    company,
+    date,
+    topics,
+    notes: (fd.get('notes') || '').trim(),
+    attendeeIds,
+  };
+  if (id) {
+    await db.lunchLearns.update(id, record);
+    toast('Lunch &amp; Learn updated');
+  } else {
+    record.createdAt = new Date().toISOString();
+    await db.lunchLearns.add(record);
+    toast('Lunch &amp; Learn logged');
+  }
+  closeModal();
+  render();
+}
+
+async function deleteLunchLearn(id) {
+  if (!confirm('Delete this Lunch & Learn entry? This cannot be undone.')) return;
+  await db.lunchLearns.delete(id);
+  toast('Lunch &amp; Learn deleted');
+  closeModal();
   render();
 }
 </script>

@@ -101,6 +101,20 @@ create index if not exists history_user_idx     on public.history(user_id);
 create index if not exists history_customer_idx on public.history(customer_id);
 create index if not exists history_window_idx   on public.history(user_id, changed_at desc);
 
+create table if not exists public.lunch_learns (
+  id               bigserial primary key,
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  company          text not null,
+  topics           text,
+  date             date not null,
+  notes            text,
+  attendee_ids     bigint[] default '{}',
+  created_at       timestamptz not null default now()
+);
+create index if not exists lunch_learns_user_idx    on public.lunch_learns(user_id);
+create index if not exists lunch_learns_date_idx    on public.lunch_learns(user_id, date desc);
+create index if not exists lunch_learns_company_idx on public.lunch_learns(user_id, company);
+
 -- ----------------------------------------------------------------------------
 -- Row-Level Security
 -- A user can read/write only their own rows. The publishable key on its own
@@ -113,12 +127,13 @@ alter table public.projects     enable row level security;
 alter table public.products     enable row level security;
 alter table public.acceptance   enable row level security;
 alter table public.history      enable row level security;
+alter table public.lunch_learns enable row level security;
 
 do $$
 declare
   t text;
 begin
-  foreach t in array array['customers','interactions','projects','products','acceptance','history']
+  foreach t in array array['customers','interactions','projects','products','acceptance','history','lunch_learns']
   loop
     execute format('drop policy if exists "owner_select" on public.%I', t);
     execute format('drop policy if exists "owner_insert" on public.%I', t);
