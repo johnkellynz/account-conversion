@@ -1450,6 +1450,19 @@ function buildLocalDb() {
     opportunities: '++id, customerId, stage, expectedCloseDate, projectId, createdAt',
     lunchLearns: '++id, company, date, createdAt',
   });
+  d.version(6).stores({
+    // Identical store shape — new fields (drawingSystems, usesRevitToolbar) are
+    // stored on each lunchLearns row without needing a Dexie index. Version
+    // bump triggers a no-op upgrade so old browsers re-open the database.
+    customers: '++id, name, company, region, country, importance, reportsTo, lastContactAt, createdAt',
+    interactions: '++id, customerId, date, type, actionDone, actionDueDate',
+    projects: '++id, name, status, customerIds',
+    products: '++id, name, sortOrder',
+    acceptance: '++id, &[customerId+productId], customerId, productId, status, updatedAt',
+    history: '++id, customerId, productId, changedAt',
+    opportunities: '++id, customerId, stage, expectedCloseDate, projectId, createdAt',
+    lunchLearns: '++id, company, date, createdAt',
+  });
   return d;
 }
 
@@ -1476,6 +1489,8 @@ const _camelToSnake = {
   wonLostReason: 'won_lost_reason', closedAt: 'closed_at',
   // lunch & learns
   attendeeIds: 'attendee_ids',
+  drawingSystems: 'drawing_systems',
+  usesRevitToolbar: 'uses_revit_toolbar',
   // soft-delete
   deletedAt: 'deleted_at',
 };
@@ -8208,38 +8223,96 @@ async function continueInit() {
 // ===========================================================================
 // Lunch & Learn Matrix
 // Track completed technical training sessions with engineers/consultants.
-// Each record: company, topics covered, date, attendees (linked to customers),
-// optional notes. The list shows "days since" so you can see when each
-// company is due for another session. Threshold is editable.
+// Per session we record: company, region (derived from the company's contacts),
+// topics, attendees, drawing systems they use, Victaulic REVIT Toolbar adoption,
+// optional notes. List sorts by region N→S then by company, so repeating
+// companies are grouped and the whole table follows NZ geography top to bottom.
 // ===========================================================================
+
+// NZ regions in north-to-south order. Used to sort the L&L table.
+const NZ_REGIONS_N_TO_S = [
+  'Northland', 'Auckland', 'Waikato', 'Bay of Plenty', 'Gisborne',
+  "Hawke's Bay", 'Hawkes Bay', 'Taranaki', 'Manawatū-Whanganui', 'Manawatu-Whanganui',
+  'Wellington', 'Tasman', 'Nelson', 'Marlborough', 'West Coast',
+  'Canterbury', 'Otago', 'Southland',
+];
+const NZ_REGION_ORDER = Object.fromEntries(NZ_REGIONS_N_TO_S.map((r, i) => [r, i]));
+
+// Pick the most representative region for a company from its contacts in the CRM
+// (mode, fall back to first non-empty). Returns '' if no contacts on file.
+function companyRegion(company, customers) {
+  if (!company) return '';
+  const matches = customers.filter(c => (c.company || '').trim() === company.trim());
+  if (!matches.length) return '';
+  const counts = {};
+  for (const m of matches) {
+    const r = (m.region || '').trim();
+    if (r) counts[r] = (counts[r] || 0) + 1;
+  }
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  return sorted.length ? sorted[0][0] : '';
+}
+
+// Common drawing-system options for the L&L modal checkboxes. Anything else
+// the user wants is captured via "Other" + a free-text field.
+const DRAWING_SYSTEMS_OPTIONS = [
+  'REVIT', 'AutoCAD', 'AutoCAD MEP', 'Plant 3D', 'MicroStation', 'ArchiCAD',
+];
+
+// Three-state for "do they use the Victaulic REVIT Toolbar"
+const TOOLBAR_STATES = [
+  { id: 'yes',     label: 'Yes',     color: 'var(--vic-success)' },
+  { id: 'no',      label: 'No',      color: 'var(--vic-danger)'  },
+  { id: 'unknown', label: 'Unknown', color: 'var(--vic-grey-500)'},
+];
+
 async function renderLunchLearn() {
   const sessions = await db.lunchLearns.toArray();
   const customers = await getAllCustomers();
   const custById = Object.fromEntries(customers.map(c => [c.id, c]));
 
-  // Sort newest first
-  sessions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
   const threshold = state.llFollowupDays || 90;
 
-  // For each company, find the most recent session — used for "due for follow-up" view
-  const lastByCompany = {};
+  // Annotate each session with its company's region
+  for (const s of sessions) {
+    s._region = companyRegion(s.company || '', customers);
+  }
+
+  // Sort: region N→S → company A→Z → date desc (so repeat sessions for one
+  // company stay together, newest at the top of each group).
+  sessions.sort((a, b) => {
+    const ra = NZ_REGION_ORDER[a._region];
+    const rb = NZ_REGION_ORDER[b._region];
+    const ai = ra == null ? 999 : ra;
+    const bi = rb == null ? 999 : rb;
+    if (ai !== bi) return ai - bi;
+    const co = (a.company || '').localeCompare(b.company || '', undefined, { sensitivity: 'base' });
+    if (co !== 0) return co;
+    return (b.date || '').localeCompare(a.date || '');
+  });
+
+  // Per-company stats — latest session, toolbar status, drawing systems
+  const byCompany = {};
   for (const s of sessions) {
     const key = (s.company || '').trim();
     if (!key) continue;
-    if (!lastByCompany[key] || (s.date || '') > (lastByCompany[key].date || '')) {
-      lastByCompany[key] = s;
+    if (!byCompany[key] || (s.date || '') > (byCompany[key].date || '')) {
+      byCompany[key] = s;
     }
   }
-  const companiesDue = Object.values(lastByCompany)
+  const companiesDue = Object.values(byCompany)
     .filter(s => daysSince(s.date) > threshold)
     .sort((a, b) => daysSince(b.date) - daysSince(a.date));
+
+  const totalCompanies = Object.keys(byCompany).length;
+  const toolbarYes = Object.values(byCompany).filter(s => s.usesRevitToolbar === 'yes').length;
+  const toolbarNo  = Object.values(byCompany).filter(s => s.usesRevitToolbar === 'no').length;
 
   return `
     <div class="page-header">
       <div>
         <div class="page-title">Lunch &amp; Learns</div>
-        <div class="page-sub">${sessions.length} completed session${sessions.length===1?'':'s'} · ${companiesDue.length} compan${companiesDue.length===1?'y':'ies'} due for follow-up</div>
+        <div class="page-sub">${sessions.length} session${sessions.length===1?'':'s'} across ${totalCompanies} compan${totalCompanies===1?'y':'ies'} · ${companiesDue.length} due for follow-up</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <label style="font-size:11px;color:var(--vic-grey-700);text-transform:uppercase;letter-spacing:0.06em;font-weight:700">Follow-up after</label>
@@ -8249,6 +8322,14 @@ async function renderLunchLearn() {
         <button class="btn btn-primary" onclick="openLunchLearnModal()">+ Log Session</button>
       </div>
     </div>
+
+    ${totalCompanies > 0 ? `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+        <div class="stat-card"><div class="stat-num">${toolbarYes}</div><div class="stat-label">Using Victaulic Toolbar</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--vic-danger)">${toolbarNo}</div><div class="stat-label">Not Using Toolbar</div></div>
+        <div class="stat-card"><div class="stat-num" style="color:var(--vic-warn)">${companiesDue.length}</div><div class="stat-label">Due for Follow-up</div></div>
+      </div>
+    ` : ''}
 
     ${companiesDue.length ? `
       <div class="card card-pad" style="margin-bottom:16px;border-left:3px solid var(--vic-orange);background:var(--vic-orange-light)">
@@ -8275,44 +8356,66 @@ async function renderLunchLearn() {
         <button class="btn btn-primary" onclick="openLunchLearnModal()">+ Log your first session</button>
       </div>
     ` : `
-      <div class="card">
-        <table style="width:100%;border-collapse:collapse">
+      <div class="card" style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;min-width:1000px">
           <thead>
             <tr style="border-bottom:2px solid var(--vic-grey-300);background:var(--vic-grey-50)">
+              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Region</th>
               <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Company</th>
-              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Topics Covered</th>
-              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Attendees</th>
+              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Topics</th>
+              <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Drawing Systems</th>
+              <th style="text-align:center;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Toolbar</th>
               <th style="text-align:left;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Date</th>
               <th style="text-align:right;padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--vic-grey-700)">Days Since</th>
             </tr>
           </thead>
           <tbody>
-            ${sessions.map(s => {
-              const d = daysSince(s.date);
-              let dueColor = 'var(--vic-success)';
-              let dueLabel = 'Fresh';
-              if (d > threshold) { dueColor = 'var(--vic-danger)'; dueLabel = 'Overdue'; }
-              else if (d > threshold * 0.66) { dueColor = 'var(--vic-warn)'; dueLabel = 'Soon'; }
-              const attendees = (s.attendeeIds || [])
-                .map(id => custById[id])
-                .filter(Boolean);
-              return `
-                <tr style="border-bottom:1px solid var(--vic-grey-300);cursor:pointer" onclick="openLunchLearnModal(${s.id})">
-                  <td style="padding:10px 12px;font-weight:600">${escape(s.company)}</td>
-                  <td style="padding:10px 12px;font-size:13px;color:var(--vic-grey-700);max-width:340px">${escape(s.topics || '—')}</td>
-                  <td style="padding:10px 12px;font-size:12px">
-                    ${attendees.length === 0 ? '<span style="color:var(--vic-grey-500)">—</span>' :
-                      attendees.slice(0, 3).map(c => `<span class="tag" style="font-size:11px">${escape(c.name)}</span>`).join('')
-                      + (attendees.length > 3 ? `<span style="color:var(--vic-grey-500);font-size:11px"> +${attendees.length-3} more</span>` : '')}
-                  </td>
-                  <td style="padding:10px 12px;font-size:13px">${fmtDate(s.date)}</td>
-                  <td style="padding:10px 12px;text-align:right">
-                    <span style="display:inline-block;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:700;color:#fff;background:${dueColor}" title="${dueLabel}">${d}d</span>
-                  </td>
-                </tr>`;
-            }).join('')}
+            ${(() => {
+              let lastCompany = null;
+              return sessions.map(s => {
+                const d = daysSince(s.date);
+                let dueColor = 'var(--vic-success)';
+                let dueLabel = 'Fresh';
+                if (d > threshold) { dueColor = 'var(--vic-danger)'; dueLabel = 'Overdue'; }
+                else if (d > threshold * 0.66) { dueColor = 'var(--vic-warn)'; dueLabel = 'Soon'; }
+                const attendees = (s.attendeeIds || [])
+                  .map(id => custById[id])
+                  .filter(Boolean);
+                const drawings = s.drawingSystems || [];
+                const tb = TOOLBAR_STATES.find(t => t.id === s.usesRevitToolbar);
+                const tbDot = tb
+                  ? `<span title="${tb.label}" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${tb.color}"></span>`
+                  : `<span title="Not recorded" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--vic-grey-300)"></span>`;
+                const isFirstOfCompany = s.company !== lastCompany;
+                lastCompany = s.company;
+                return `
+                  <tr style="border-bottom:1px solid var(--vic-grey-300);cursor:pointer${isFirstOfCompany ? ';border-top:1px solid var(--vic-grey-300)' : ''}" onclick="openLunchLearnModal(${s.id})">
+                    <td style="padding:10px 12px;font-size:12px;color:var(--vic-grey-700);white-space:nowrap">${s._region ? escape(s._region) : '<span style="color:var(--vic-grey-500);font-style:italic">—</span>'}</td>
+                    <td style="padding:10px 12px;${isFirstOfCompany ? 'font-weight:600' : 'color:var(--vic-grey-500);font-size:12px;padding-left:24px'}">
+                      ${isFirstOfCompany ? escape(s.company) : '↳ same'}
+                      ${attendees.length > 0 ? `<div style="font-size:11px;color:var(--vic-grey-500);margin-top:2px;font-weight:400">${attendees.slice(0,3).map(c => escape(c.name)).join(', ')}${attendees.length > 3 ? ', +' + (attendees.length-3) : ''}</div>` : ''}
+                    </td>
+                    <td style="padding:10px 12px;font-size:13px;color:var(--vic-grey-700);max-width:280px">${escape(s.topics || '—')}</td>
+                    <td style="padding:10px 12px;font-size:11px">
+                      ${drawings.length === 0 ? '<span style="color:var(--vic-grey-500)">—</span>' :
+                        drawings.map(ds => `<span class="tag" style="font-size:10px;padding:1px 6px">${escape(ds)}</span>`).join(' ')}
+                    </td>
+                    <td style="padding:10px 12px;text-align:center">${tbDot}</td>
+                    <td style="padding:10px 12px;font-size:13px;white-space:nowrap">${fmtDate(s.date)}</td>
+                    <td style="padding:10px 12px;text-align:right">
+                      <span style="display:inline-block;padding:3px 10px;border-radius:2px;font-size:11px;font-weight:700;color:#fff;background:${dueColor};white-space:nowrap" title="${dueLabel}">${d}d</span>
+                    </td>
+                  </tr>`;
+              }).join('');
+            })()}
           </tbody>
         </table>
+        <div style="padding:10px 14px;border-top:1px solid var(--vic-grey-300);background:var(--vic-grey-50);font-size:11px;color:var(--vic-grey-700);display:flex;gap:18px;flex-wrap:wrap">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--vic-success);vertical-align:middle;margin-right:4px"></span>Toolbar: Yes</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--vic-danger);vertical-align:middle;margin-right:4px"></span>Toolbar: No</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--vic-grey-500);vertical-align:middle;margin-right:4px"></span>Toolbar: Unknown</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--vic-grey-300);vertical-align:middle;margin-right:4px"></span>Toolbar: Not recorded</span>
+        </div>
       </div>
     `}
   `;
@@ -8322,21 +8425,46 @@ async function openLunchLearnModal(id = null) {
   const s = id ? await db.lunchLearns.get(id) : {
     date: new Date().toISOString().slice(0, 10),
     attendeeIds: [],
+    drawingSystems: [],
+    usesRevitToolbar: 'unknown',
   };
   const customers = await getAllCustomers();
+  const allSessions = await db.lunchLearns.toArray();
 
   // Existing companies from customers + previously-logged L&Ls for autocomplete
   const existingCompanies = [...new Set([
     ...customers.map(c => c.company).filter(Boolean),
-    ...(await db.lunchLearns.toArray()).map(x => x.company).filter(Boolean),
+    ...allSessions.map(x => x.company).filter(Boolean),
   ])].sort();
 
-  // Pre-filter customers to the chosen company if editing
   const initialCompany = (s.company || '').trim();
+
+  // For new sessions: if the user types a company that's been L&L'd before,
+  // we'll prefill drawingSystems / usesRevitToolbar from that company's most
+  // recent record. Existing records keep their own values.
+  // Capture the lookup table now so we can use it client-side without a DB call.
+  const companyDefaults = {};
+  for (const x of allSessions) {
+    const key = (x.company || '').trim();
+    if (!key) continue;
+    if (!companyDefaults[key] || (x.date || '') > (companyDefaults[key]._date || '')) {
+      companyDefaults[key] = {
+        _date: x.date || '',
+        drawingSystems: x.drawingSystems || [],
+        usesRevitToolbar: x.usesRevitToolbar || 'unknown',
+      };
+    }
+  }
+
+  // For each row above, drop the internal _date helper so it serialises cleanly
+  for (const k in companyDefaults) delete companyDefaults[k]._date;
+
+  const drawings = s.drawingSystems || [];
+  const tbState = s.usesRevitToolbar || 'unknown';
 
   const html = `
     <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
-      <div class="modal" style="max-width:640px">
+      <div class="modal" style="max-width:680px">
         <div class="modal-head">
           <div class="modal-title">${id ? 'Edit Lunch &amp; Learn' : 'Log Lunch &amp; Learn'}</div>
           <button class="icon-btn" onclick="closeModal()">✕</button>
@@ -8348,10 +8476,11 @@ async function openLunchLearnModal(id = null) {
               <input class="input" list="ll-companies" name="company" required
                      value="${escape(initialCompany)}"
                      placeholder="e.g. Beca, Aurecon, Fletcher Hydraulics"
-                     oninput="filterLLAttendees(this.value)">
+                     oninput="filterLLAttendees(this.value); maybePrefillLLDefaults(this.value);">
               <datalist id="ll-companies">
                 ${existingCompanies.map(c => `<option value="${escape(c)}"></option>`).join('')}
               </datalist>
+              <div id="ll-prefill-note" style="font-size:11px;color:var(--vic-grey-500);margin-top:4px"></div>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -8374,7 +8503,40 @@ async function openLunchLearnModal(id = null) {
             </div>
 
             <div class="field">
-              <label>Attendees <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— pick the engineers/consultants who attended (Cmd/Ctrl-click for multiple)</span></label>
+              <label>Drawing Systems <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— tick any they use</span></label>
+              <div id="ll-drawings" style="display:flex;flex-wrap:wrap;gap:8px">
+                ${DRAWING_SYSTEMS_OPTIONS.map(ds => `
+                  <label style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--vic-grey-300);border-radius:999px;background:white;cursor:pointer;font-size:13px;user-select:none">
+                    <input type="checkbox" name="drawingSystems" value="${escape(ds)}" ${drawings.includes(ds) ? 'checked' : ''}
+                           style="accent-color:var(--vic-orange);margin:0">
+                    ${escape(ds)}
+                  </label>
+                `).join('')}
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                <label style="font-size:12px;color:var(--vic-grey-700);text-transform:uppercase;letter-spacing:0.06em;font-weight:700;min-width:50px">Other</label>
+                <input class="input" name="drawingSystemsOther" placeholder="comma-separated, e.g. Tekla, BIM 360"
+                       value="${escape(drawings.filter(x => !DRAWING_SYSTEMS_OPTIONS.includes(x)).join(', '))}">
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Victaulic REVIT Toolbar</label>
+              <div style="display:flex;gap:6px">
+                ${TOOLBAR_STATES.map(t => `
+                  <label style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border:1px solid var(--vic-grey-300);border-radius:2px;cursor:pointer;font-size:13px;font-weight:600;background:white;user-select:none"
+                         onmouseover="this.style.borderColor='var(--vic-orange)'" onmouseout="this.style.borderColor='var(--vic-grey-300)'">
+                    <input type="radio" name="usesRevitToolbar" value="${t.id}" ${tbState === t.id ? 'checked' : ''}
+                           style="accent-color:var(--vic-orange);margin:0">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.color}"></span>
+                    ${t.label}
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Attendees <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— Cmd/Ctrl-click for multiple</span></label>
               <select class="select" name="attendeeIds" multiple size="6" id="ll-attendees" style="height:auto">
                 ${customers.map(c => `
                   <option value="${c.id}"
@@ -8404,6 +8566,10 @@ async function openLunchLearnModal(id = null) {
   `;
   $('#modal-root').innerHTML = html;
 
+  // Expose company defaults to the prefill helper without polluting globals.
+  window._llCompanyDefaults = companyDefaults;
+  window._llIsExisting = !!id;
+
   // Live "days since" indicator below the date picker
   const dateInput = document.querySelector('#ll-form [name=date]');
   const daysEl = document.getElementById('ll-days-since');
@@ -8415,6 +8581,43 @@ async function openLunchLearnModal(id = null) {
 
   // Filter the attendees list to those whose company matches the typed company
   if (initialCompany) filterLLAttendees(initialCompany);
+}
+
+// When the user types a company that we have prior L&L data on, optionally
+// prefill the Drawing Systems checkboxes and Toolbar radio from the most
+// recent record for that company. Only runs for NEW sessions and only when
+// those fields are still untouched (avoids overwriting deliberate choices).
+function maybePrefillLLDefaults(company) {
+  if (window._llIsExisting) return;
+  const defaults = (window._llCompanyDefaults || {})[(company || '').trim()];
+  if (!defaults) {
+    const note = document.getElementById('ll-prefill-note');
+    if (note) note.textContent = '';
+    return;
+  }
+  const form = document.getElementById('ll-form');
+  if (!form) return;
+
+  // Only prefill if all the relevant inputs are still at their initial defaults.
+  const anyDrawingChecked = !!form.querySelector('[name=drawingSystems]:checked');
+  const drawingOther = form.querySelector('[name=drawingSystemsOther]');
+  const toolbarSelected = form.querySelector('[name=usesRevitToolbar]:checked')?.value;
+  if (anyDrawingChecked || (drawingOther && drawingOther.value.trim()) || (toolbarSelected && toolbarSelected !== 'unknown')) {
+    return;
+  }
+
+  // Apply
+  for (const cb of form.querySelectorAll('[name=drawingSystems]')) {
+    cb.checked = (defaults.drawingSystems || []).includes(cb.value);
+  }
+  if (drawingOther) {
+    drawingOther.value = (defaults.drawingSystems || []).filter(x => !DRAWING_SYSTEMS_OPTIONS.includes(x)).join(', ');
+  }
+  const tb = form.querySelector('[name=usesRevitToolbar][value="' + (defaults.usesRevitToolbar || 'unknown') + '"]');
+  if (tb) tb.checked = true;
+
+  const note = document.getElementById('ll-prefill-note');
+  if (note) note.textContent = '↪ Prefilled Drawing Systems and Toolbar from your last session with ' + company + '. Edit if anything\'s changed.';
 }
 
 function filterLLAttendees(company) {
@@ -8447,20 +8650,30 @@ async function saveLunchLearn(id) {
     .map(o => parseInt(o.value, 10))
     .filter(n => !isNaN(n));
 
+  // Drawing systems = checked boxes + comma-separated "Other" entries
+  const ticked = [...f.querySelectorAll('[name=drawingSystems]:checked')].map(el => el.value);
+  const other = (fd.get('drawingSystemsOther') || '')
+    .split(',').map(s => s.trim()).filter(Boolean);
+  const drawingSystems = [...new Set([...ticked, ...other])];
+
+  const usesRevitToolbar = fd.get('usesRevitToolbar') || 'unknown';
+
   const record = {
     company,
     date,
     topics,
     notes: (fd.get('notes') || '').trim(),
     attendeeIds,
+    drawingSystems,
+    usesRevitToolbar,
   };
   if (id) {
     await db.lunchLearns.update(id, record);
-    toast('Lunch &amp; Learn updated');
+    toast('Lunch & Learn updated');
   } else {
     record.createdAt = new Date().toISOString();
     await db.lunchLearns.add(record);
-    toast('Lunch &amp; Learn logged');
+    toast('Lunch & Learn logged');
   }
   closeModal();
   render();
