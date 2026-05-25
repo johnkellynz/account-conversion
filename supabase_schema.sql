@@ -37,6 +37,9 @@ create table if not exists public.customers (
   -- Date we discussed the Victaulic Toolbar with this contact AND sent
   -- them an invitation to download it (YYYY-MM-DD).
   toolbar_invitation_sent_at date,
+  -- Whether we're connected with this contact on LinkedIn.
+  -- Yes / No / Unknown (text, mirroring uses_revit_toolbar).
+  linkedin_connected text,
   created_at       timestamptz not null default now()
 );
 create index if not exists customers_user_idx        on public.customers(user_id);
@@ -47,6 +50,7 @@ create index if not exists customers_company_idx     on public.customers(user_id
 alter table public.customers add column if not exists uses_revit_toolbar          text;
 alter table public.customers add column if not exists attended_training           text;
 alter table public.customers add column if not exists toolbar_invitation_sent_at  date;
+alter table public.customers add column if not exists linkedin_connected          text;
 
 create table if not exists public.interactions (
   id               bigserial primary key,

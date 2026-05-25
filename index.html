@@ -396,6 +396,30 @@ a:hover { text-decoration: underline; }
   margin-bottom: 0 !important;
   border-bottom: 1px solid var(--vic-grey-300);
 }
+/* Contacts: combined sticky bar that pins the page title, action buttons,
+   search input, and Reset button as one block. The page-header on its own
+   isn't sticky (so other views still behave normally) — only when wrapped
+   inside .contacts-top-bar does the whole zone stay visible. The filter-row
+   and column-header inside the table sit below this bar; their `top` values
+   are set in JS to the measured height of .contacts-top-bar so they stack
+   flush with no gap. */
+.contacts-top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 53;
+  background: var(--vic-grey-50);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--vic-grey-300);
+}
+.contacts-top-bar .page-header { margin-bottom: 12px; }
+.contacts-top-bar .cust-sticky-search {
+  position: static !important;
+  border-bottom: none !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  background: transparent !important;
+  margin-bottom: 0 !important;
+}
 /* Filter-row pinned just below the sticky search bar (top set in JS). */
 .cust-table tr.filter-row th {
   top: 0;
@@ -1511,6 +1535,9 @@ const _camelToSnake = {
   // customer: timestamp recording that we discussed the Victaulic Toolbar
   // and sent them an invitation to download it (YYYY-MM-DD)
   toolbarInvitationSentAt: 'toolbar_invitation_sent_at',
+  // customer: whether we're connected with this contact on LinkedIn
+  // (Yes / No / Unknown — mirrors uses_revit_toolbar / attended_training)
+  linkedinConnected: 'linkedin_connected',
   // soft-delete
   deletedAt: 'deleted_at',
 };
@@ -1719,7 +1746,7 @@ let db = null;
 const state = {
   view: 'dashboard',
   search: '',
-  filters: { region: [], importance: [], tag: [], category: [], market: [], company: [], name: [], lastContact: [] },
+  filters: { region: [], importance: [], tag: [], category: [], market: [], company: [], name: [], lastContact: [], linkedin: false },
   // Separate filter state for the Project Map so toggling project filters
   // doesn't change the Contact Map's filtering (and vice versa).
   projectFilters: { region: [], importance: [], market: [] },
@@ -1827,7 +1854,11 @@ const PILL_RENAMES = {
     // e.g. 'Football': 'Rugby'
   },
 };
-const CATEGORY_ORDER = { Owner: 1, Consultant: 2, Contractor: 3, 'Contractor T1': 4, 'Contractor T2': 5, Distributor: 6 };
+// Sort order when grouping the Contacts table by Category.
+// Order reflects who matters most on a project (owner first, distributor last);
+// must stay in lockstep with the CATEGORIES list above. Unknown categories
+// fall through to 99 in the comparator and end up at the bottom.
+const CATEGORY_ORDER = { Owner: 1, Engineer: 2, 'Contractor T1': 3, 'Contractor T2': 4, Distributor: 5 };
 function categoryClass(cat) {
   if (!cat) return 'cat cat-empty';
   // Slugify: lowercase and replace runs of whitespace with a single dash so
@@ -2656,10 +2687,12 @@ async function render() {
   // and Last Contact column right edges.
   if (state.view === 'customers') {
     setTimeout(() => {
-      // 1) Sticky stack: search-bar (top: 0) → filter-row (top: searchH) →
-      //    column-header (top: searchH + filterH). Measuring instead of hard-
-      //    coding lets the heights respond to wrapping on narrow viewports.
-      const stickyBar = document.querySelector('.cust-sticky-search');
+      // 1) Sticky stack: contacts-top-bar (top: 0, contains title + search +
+      //    reset) → filter-row (top: topBarH) → column-header (top: topBarH +
+      //    filterH). Measuring lets the heights respond to wrapping on narrow
+      //    viewports. Falls back to the search bar alone for older renders.
+      const stickyBar = document.querySelector('.contacts-top-bar')
+                     || document.querySelector('.cust-sticky-search');
       const searchH = stickyBar ? stickyBar.offsetHeight : 0;
       const filterRow = document.querySelector('.cust-table tr.filter-row');
       const filterH = filterRow ? filterRow.offsetHeight : 42;
@@ -3321,6 +3354,10 @@ async function renderCustomers() {
       });
     });
   }
+  // LinkedIn filter — when on, show only contacts marked Connected on LinkedIn.
+  if (state.filters.linkedin) {
+    filtered = filtered.filter(c => c.linkedinConnected === 'yes');
+  }
 
   // Click-to-sort: column-aware comparator
   const sortKey = state.customerSortKey || 'company';
@@ -3355,6 +3392,8 @@ async function renderCustomers() {
         const ao = CATEGORY_ORDER[a.category] || 99;
         const bo = CATEGORY_ORDER[b.category] || 99;
         cmp = ao - bo;
+        // Within a category: group by company A→Z, then by name within each company.
+        if (cmp === 0) cmp = cmpString(a.company, b.company);
         if (cmp === 0) cmp = cmpString(a.name, b.name);
         break;
       }
@@ -3364,6 +3403,8 @@ async function renderCustomers() {
         break;
       case 'importance':
         cmp = (a.importance || 0) - (b.importance || 0);
+        // Within an importance band: group by company A→Z, then by name.
+        if (cmp === 0) cmp = cmpString(a.company, b.company);
         if (cmp === 0) cmp = cmpString(a.name, b.name);
         break;
       case 'lastContact':
@@ -3387,9 +3428,11 @@ async function renderCustomers() {
   const hasNonDefaultSort = state.customerSortKey !== 'company' || state.customerSortDir !== 'asc';
   const hasActiveFilters = !!(state.search
     || Object.values(state.filters).some(v => Array.isArray(v) && v.length)
+    || state.filters.linkedin
     || hasNonDefaultSort);
 
   return `
+    <div class="contacts-top-bar">
     <div class="page-header">
       <div>
         <div class="page-title">Contacts</div>
@@ -3398,17 +3441,24 @@ async function renderCustomers() {
       <div style="display:flex;gap:8px;align-items:center">
         <button class="btn btn-ghost" onclick="document.getElementById('vcf-import-input').click()" title="Pick a .vcf file (or drag one anywhere onto the page)">📇 Import vCard</button>
         <input type="file" id="vcf-import-input" accept=".vcf,.vcard,text/vcard,text/x-vcard" multiple style="display:none" onchange="onVcfPicked(event)">
-        <button class="btn btn-primary" onclick="createNewContactFromCard()">+ Add Contact</button>
+        <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Contact</button>
       </div>
     </div>
 
     <div class="cust-sticky-search" style="margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <input id="cust-search-input" class="input" placeholder="Search by name, company, email…" value="${escape(state.search)}" oninput="state.search=this.value; debouncedRender()" style="flex:1;min-width:280px;max-width:520px;background:#fff">
-      <button onclick="state.search=''; state.filters={region:[],importance:[],tag:[],category:[],market:[],company:[],name:[],lastContact:[]}; state.customerSortKey='company'; state.customerSortDir='asc'; _openFilterField=null; render()"
+      <button onclick="state.filters.linkedin = !state.filters.linkedin; render()"
+              title="Show only contacts you're connected to on LinkedIn"
+              style="display:inline-flex;align-items:center;gap:7px;padding:8px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;background:${state.filters.linkedin ? 'var(--vic-orange-light)' : 'var(--vic-white)'};border:1px solid ${state.filters.linkedin ? 'var(--vic-orange)' : 'var(--vic-grey-300)'};color:${state.filters.linkedin ? 'var(--vic-orange-dark)' : 'var(--vic-grey-700)'};border-radius:var(--radius);cursor:pointer">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:${state.filters.linkedin ? 'var(--vic-orange)' : 'var(--vic-grey-500)'};color:#fff;font-size:9px;font-weight:800;font-family:Arial,Helvetica,sans-serif">in</span>
+        Connected
+      </button>
+      <button onclick="state.search=''; state.filters={region:[],importance:[],tag:[],category:[],market:[],company:[],name:[],lastContact:[],linkedin:false}; state.customerSortKey='company'; state.customerSortDir='asc'; _openFilterField=null; render()"
               class="${hasActiveFilters ? 'active-filter' : ''}"
               style="padding:8px 16px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;background:${hasActiveFilters ? 'var(--vic-orange-light)' : 'var(--vic-white)'};border:1px solid ${hasActiveFilters ? 'var(--vic-orange)' : 'var(--vic-grey-300)'};color:${hasActiveFilters ? 'var(--vic-orange-dark)' : 'var(--vic-grey-700)'};border-radius:var(--radius);cursor:pointer">
         Reset
       </button>
+    </div>
     </div>
 
     ${all.length === 0 ? `
@@ -3657,6 +3707,11 @@ async function openCustomerDetail(id) {
             ${c.address
               ? `<div style="display:flex;align-items:center;gap:6px"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address + (c.country ? ', ' + c.country : ''))}" target="_blank" rel="noopener" title="Open in Google Maps" style="display:flex;align-items:center;gap:8px;color:var(--vic-charcoal);font-weight:500;text-decoration:none" onmouseenter="this.style.color='var(--vic-orange)'" onmouseleave="this.style.color='var(--vic-charcoal)'"><span style="color:var(--vic-orange);font-size:14px">✉</span>${escape(c.address)}</a><button onclick="openCustomerModal(${c.id}, null, 'address')" title="Click to edit" aria-label="Edit address" style="background:transparent;border:0;cursor:pointer;font-size:18px;color:var(--vic-orange);display:inline-block;transform:scaleX(-1);padding:2px 8px;line-height:1">&#9998;</button></div>`
               : `<button class="add-field-btn" onclick="openCustomerModal(${c.id}, null, 'address')" title="Click to add address">+ Add address</button>`}
+            ${c.linkedinConnected === 'yes'
+              ? `<span onclick="openCustomerModal(${c.id}, null, 'linkedinConnected')" title="Connected on LinkedIn — click to change" style="display:flex;align-items:center;gap:8px;color:var(--vic-charcoal);font-weight:500;cursor:pointer"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:3px;background:var(--vic-orange);color:#fff;font-size:10px;font-weight:800;font-family:Arial,Helvetica,sans-serif">in</span>Connected on LinkedIn</span>`
+              : c.linkedinConnected === 'no'
+                ? `<span onclick="openCustomerModal(${c.id}, null, 'linkedinConnected')" title="Not connected on LinkedIn — click to change" style="display:flex;align-items:center;gap:8px;color:var(--vic-grey-700);font-weight:500;cursor:pointer"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:3px;background:var(--vic-grey-500);color:#fff;font-size:10px;font-weight:800;font-family:Arial,Helvetica,sans-serif">in</span>Not connected on LinkedIn</span>`
+                : `<button class="add-field-btn" onclick="openCustomerModal(${c.id}, null, 'linkedinConnected')" title="Click to set LinkedIn connection status">+ LinkedIn status</button>`}
           </div>
         </div>
 
@@ -3919,6 +3974,17 @@ async function openCustomerModal(id = null, seed = null, focusField = null) {
               </div>
               <div class="field"><label>Email</label><input class="input" name="email" type="email" value="${escape(c.email||'')}"></div>
               <div class="field"><label>Phone</label><input class="input" name="phone" value="${escape(c.phone||'')}"></div>
+              <div class="field" style="grid-column:1/-1; position: relative;">
+                <label>Work Address <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— start typing and pick a suggestion</span></label>
+                <input class="input" name="address" value="${escape(c.address||'')}"
+                       oninput="onAddressInput(this)"
+                       onfocus="onAddressInput(this)"
+                       placeholder="Start typing the street address…"
+                       autocomplete="off">
+                <input type="hidden" name="lat" value="${c.lat ?? ''}">
+                <input type="hidden" name="lng" value="${c.lng ?? ''}">
+                <div class="page-sub" id="geo-status" style="font-size:11px;margin:0;padding:0">${c.lat && c.lng ? 'Coordinates on file ✓' : ''}</div>
+              </div>
               <div class="field" style="grid-column:1/-1; position:relative;">
                 <label>Region <span class="req">*</span></label>
                 <input class="input" name="region" required value="${escape(c.region||'')}" placeholder="Select or type a region…" autocomplete="off"
@@ -3995,23 +4061,28 @@ async function openCustomerModal(id = null, seed = null, focusField = null) {
               </div>
 
               <div class="field" style="grid-column:1/-1">
+                <label>Connected on LinkedIn <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— are you connected with this contact on LinkedIn?</span></label>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  ${TOOLBAR_STATES.map(t => {
+                    const current = c.linkedinConnected || 'unknown';
+                    return `
+                    <label style="flex:1;min-width:90px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 12px;border:1px solid var(--vic-grey-300);border-radius:2px;cursor:pointer;font-size:13px;font-weight:600;background:white;user-select:none"
+                           onmouseover="this.style.borderColor='var(--vic-orange)'" onmouseout="this.style.borderColor='var(--vic-grey-300)'">
+                      <input type="radio" name="linkedinConnected" value="${t.id}" ${current === t.id ? 'checked' : ''}
+                             style="accent-color:var(--vic-orange);margin:0">
+                      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${t.color}"></span>
+                      ${t.label}
+                    </label>`;
+                  }).join('')}
+                </div>
+              </div>
+
+              <div class="field" style="grid-column:1/-1">
                 <label>Reports to (within company)</label>
                 <select class="select" name="reportsTo" onchange="onReportsToChange(this)">
                   <option value="">— none —</option>
                   ${possibleManagers.map(p => `<option value="${p.id}" data-company="${escape(p.company || '')}" ${c.reportsTo==p.id?'selected':''}>${escape(p.name)}${p.title ? ' · ' + escape(p.title) : ''}${p.company ? ' · ' + escape(p.company) : ''}</option>`).join('')}
                 </select>
-              </div>
-
-              <div class="field" style="grid-column:1/-1; position: relative;">
-                <label>Work Address <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— start typing and pick a suggestion</span></label>
-                <input class="input" name="address" value="${escape(c.address||'')}"
-                       oninput="onAddressInput(this)"
-                       onfocus="onAddressInput(this)"
-                       placeholder="Start typing the street address…"
-                       autocomplete="off">
-                <input type="hidden" name="lat" value="${c.lat ?? ''}">
-                <input type="hidden" name="lng" value="${c.lng ?? ''}">
-                <div class="page-sub" id="geo-status" style="font-size:11px;min-height:14px">${c.lat && c.lng ? 'Coordinates on file ✓' : ''}</div>
               </div>
 
               <div class="field" style="grid-column:1/-1; position: relative;">
@@ -4117,7 +4188,7 @@ async function openCustomerModal(id = null, seed = null, focusField = null) {
                   <div class="field" style="margin-bottom:0">
                     <label>Type</label>
                     <select class="select" name="ix_type">
-                      ${['Email','Call','Visit','Meeting','Breakfast','Lunch','Dinner','Social','Other'].map(t => `<option ${t==='Email'?'selected':''}>${t}</option>`).join('')}
+                      ${['Email','Call','Text','Visit','Meeting','Breakfast','Lunch','Dinner','Social','Other'].map(t => `<option ${t==='Email'?'selected':''}>${t}</option>`).join('')}
                     </select>
                   </div>
                   <div class="field" style="margin-bottom:0">
@@ -4405,18 +4476,53 @@ async function _saveCustomerInner(id, options, data, _marketList) {
   if (toolbarVal && toolbarVal !== 'unknown') record.usesRevitToolbar = toolbarVal;
   const trainingVal = (data.attendedTraining || '').trim();
   if (trainingVal && trainingVal !== 'unknown') record.attendedTraining = trainingVal;
+  // LinkedIn connection status — same conditional-write pattern: only persist
+  // when the user picked Yes/No, so older Supabase schemas without the column
+  // don't break the save.
+  const linkedinVal = (data.linkedinConnected || '').trim();
+  if (linkedinVal && linkedinVal !== 'unknown') record.linkedinConnected = linkedinVal;
   // Toolbar-invitation timestamp ('YYYY-MM-DD' from the inline button). Same
   // conditional-write pattern — only include when set so older Supabase
   // schemas without this column don't error on save.
   const toolbarInvAt = (data.toolbarInvitationSentAt || '').trim();
   if (toolbarInvAt) record.toolbarInvitationSentAt = toolbarInvAt;
+  // List of columns added after the original schema. If Supabase rejects the
+  // write because one of these doesn't exist (the user hasn't run the latest
+  // supabase_schema.sql migration), we strip them all and retry — the save
+  // still succeeds, the user just loses those new fields until they migrate.
+  const _newOptionalKeys = [
+    'usesRevitToolbar', 'attendedTraining', 'toolbarInvitationSentAt',
+    'linkedinConnected',
+    'personalAddress', 'personalLat', 'personalLng',
+    'likesText', 'dislikes', 'relatives',
+  ];
+  const _saveWithSchemaFallback = async (op, rec) => {
+    try {
+      return await op(rec);
+    } catch (e) {
+      const msg = ((e && (e.message || e.error_description || e.hint)) || '') + '';
+      const isSchemaErr = /schema cache|column.*does not exist|Could not find the '/i.test(msg);
+      if (!isSchemaErr) throw e;
+      const trimmed = { ...rec };
+      const stripped = [];
+      for (const k of _newOptionalKeys) {
+        if (k in trimmed) { delete trimmed[k]; stripped.push(k); }
+      }
+      if (!stripped.length) throw e;
+      console.warn('Customer save: stripping unmigrated columns and retrying:', stripped, msg);
+      const result = await op(trimmed);
+      toastError('Saved without: ' + stripped.join(', ') + '.\n\nYour Supabase database is missing these columns. Open Supabase → SQL Editor and re-run supabase_schema.sql to add them. (Click to dismiss)');
+      return result;
+    }
+  };
+
   let savedId = id;
   if (id) {
-    await db.customers.update(id, record);
+    await _saveWithSchemaFallback(r => db.customers.update(id, r), record);
     toast('Customer updated');
   } else {
     record.createdAt = new Date().toISOString();
-    savedId = await db.customers.add(record);
+    savedId = await _saveWithSchemaFallback(r => db.customers.add(r), record);
     toast('Customer added');
   }
 
@@ -5861,7 +5967,7 @@ function openInteractionModal(customerId, ixId = null) {
                 <div class="field">
                   <label>Type</label>
                   <select class="select" name="type">
-                    ${['Email','Call','Visit','Meeting','Breakfast','Lunch','Dinner','Social','Other'].map(t =>
+                    ${['Email','Call','Text','Visit','Meeting','Breakfast','Lunch','Dinner','Social','Other'].map(t =>
                       `<option ${ix.type===t?'selected':''}>${t}</option>`).join('')}
                   </select>
                 </div>
@@ -6021,7 +6127,7 @@ async function renderOrg() {
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" onclick="exportOrgPDF()" ${!selectedOrgCompany ? 'disabled' : ''}>Export to PDF</button>
-        <button class="btn btn-primary" onclick="createNewContactFromCard()">+ Add Contact</button>
+        <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Contact</button>
       </div>
     </div>
 
@@ -6448,7 +6554,7 @@ async function renderMatrix() {
         <button class="btn btn-ghost" onclick="addSampleCustomers(20)">+ 20 Sample Customers</button>
         <button class="btn btn-ghost" onclick="seedAcceptanceTestData()">Load Sample Data</button>
         <button class="btn btn-ghost" onclick="openManageProductsModal()">Manage Products</button>
-        <button class="btn btn-primary" onclick="createNewContactFromCard()">+ Add Contact</button>
+        <button class="btn btn-primary" onclick="openCustomerModal()">+ Add Contact</button>
       </div>
     </div>
 
@@ -7208,7 +7314,7 @@ async function openNewActionModal() {
               <div class="field">
                 <label>Type</label>
                 <select class="select" name="type">
-                  ${['Email','Call','Visit','Meeting','Breakfast','Lunch','Dinner','Social','Other'].map(t => `<option ${t==='Email'?'selected':''}>${t}</option>`).join('')}
+                  ${['Email','Call','Text','Visit','Meeting','Breakfast','Lunch','Dinner','Social','Other'].map(t => `<option ${t==='Email'?'selected':''}>${t}</option>`).join('')}
                 </select>
               </div>
             </div>
