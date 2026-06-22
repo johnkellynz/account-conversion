@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Field CRM &mdash; Playbook Discovery Q&amp;A for Review</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Calibri", "Segoe UI", Arial, sans-serif;
+    color: #2b2b2b;
+    max-width: 920px;
+    margin: 24px auto;
+    padding: 0 24px 64px;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+  header.cover {
+    border-top: 6px solid #F58220;
+    border-bottom: 1px solid #d6d6d6;
+    padding: 18px 0 22px;
+    margin-bottom: 26px;
+  }
+  header.cover .brand { color: #F58220; font-weight: 700; letter-spacing: 1px; font-size: 18pt; }
+  header.cover .tagline { color: #7a7a7a; font-size: 10pt; margin-top: 2px; }
+  header.cover h1 {
+    margin: 18px 0 6px;
+    color: #232323;
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  header.cover .subtitle { color: #F58220; font-size: 13pt; font-weight: 600; margin-bottom: 14px; }
+  header.cover .meta {
+    color: #555;
+    font-size: 9.5pt;
+    font-style: italic;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+    margin-top: 8px;
+  }
+  .summary-box {
+    background: #fdf3ea;
+    border-left: 4px solid #F58220;
+    padding: 14px 18px;
+    margin: 22px 0 30px;
+    font-size: 10.5pt;
+  }
+  .summary-box h3 { margin: 0 0 6px; color: #b85a18; font-size: 11pt; }
+  h2.section {
+    color: #232323;
+    font-size: 14pt;
+    border-bottom: 2px solid #F58220;
+    padding-bottom: 4px;
+    margin: 30px 0 14px;
+  }
+  .qa {
+    border: 1px solid #e3e3e3;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 10px 0 14px;
+    page-break-inside: avoid;
+  }
+  .qnum {
+    display: inline-block;
+    background: #2b3e50;
+    color: #fff;
+    font-size: 9pt;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .qtext {
+    font-weight: 600;
+    color: #232323;
+    font-size: 11pt;
+  }
+  .answer {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f5faf5;
+    border-left: 3px solid #2e7d32;
+    font-size: 10.5pt;
+  }
+  .answer .label {
+    display: inline-block;
+    font-size: 8.5pt;
+    color: #2e7d32;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .answer.custom {
+    background: #fff8e6;
+    border-left-color: #c9941e;
+  }
+  .answer.custom .label { color: #b8851a; }
+  .answer.multi { background: #eef4fb; border-left-color: #1565c0; }
+  .answer.multi .label { color: #1565c0; }
+  .note {
+    margin-top: 6px;
+    color: #666;
+    font-size: 9.5pt;
+    font-style: italic;
+  }
+  .tensions {
+    background: #fff5f5;
+    border-left: 4px solid #c62828;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 10.5pt;
+  }
+  .tensions h3 { margin: 0 0 8px; color: #b71c1c; font-size: 11.5pt; }
+  .tensions ol { margin: 6px 0 0 18px; padding: 0; }
+  .tensions li { margin-bottom: 8px; }
+  footer.doc-footer {
+    margin-top: 40px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+    color: #888;
+    font-size: 9pt;
+    font-style: italic;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="brand">VICTAULIC &mdash; AUSTRALIA</div>
+  <div class="tagline">Key Account Conversion Strategy &middot; CRM Operational Layer</div>
+  <h1>Field CRM Discovery &mdash; Design Questions &amp; Answers</h1>
+  <div class="subtitle">Companion to the HVAC Key Account Conversion Strategy (May 2026)</div>
+  <div class="meta">
+    Compiled 2 June 2026 &nbsp;|&nbsp; Author: JK (Field) &nbsp;|&nbsp; For review by: DE &nbsp;|&nbsp; Confidential &mdash; internal
+  </div>
+</header>
+
+<div class="summary-box">
+  <h3>Why this document exists</h3>
+  <p style="margin:0 0 6px">DE's <em>HVAC Victaulic Key Account Conversion Strategy &mdash; Australia</em> sets the corporate playbook. This Q&amp;A captures the 50 design decisions needed to turn the existing Field CRM into the <strong>operational layer</strong> of that strategy: the system reps run their day out of, and the system management pulls KPIs from.</p>
+  <p style="margin:6px 0 0">Each question was answered by JK. Default recommendations are marked. Two answers diverged from the recommendation (Q19, Q26) and one was custom (Q26 product taxonomy) &mdash; flagged below for DE's view. The "Open Tensions" section at the end lists items to resolve before build kicks off.</p>
+</div>
+
+<h2 class="section">1. Goals &amp; Users (Q1&ndash;Q5)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q1</span><span class="qtext">12 months from now, what does "winning" look like for this system?</span></div>
+  <div class="answer"><span class="label">Answer</span>Pipeline + KPI engine for management &mdash; the system generates the PSA / CIP / KAC-revenue KPIs from strategy section 10.1, ready for management each quarter.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q2</span><span class="qtext">Who logs in and uses it?</span></div>
+  <div class="answer"><span class="label">Answer</span>Full ANZ field team &mdash; multiple reps across states, with patch assignment, account ownership and sharing rules.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q3</span><span class="qtext">Sign-in method preference?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Email + password + 2FA. Standard, hand-over-friendly. 2FA via authenticator app blocks credential stuffing.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q4</span><span class="qtext">Where should the data physically live?</span></div>
+  <div class="answer custom"><span class="label">Answer (custom)</span>"Supabase will be fine so long as it's secure." &mdash; Sydney region; Victaulic IT sign-off optional but recommended for sensitive contractor data.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q5</span><span class="qtext">With a full ANZ field team, how should roles work?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Rep / Manager / Admin. Reps enter &amp; see their patch. Managers see all data + dashboards. Admin manages users. Clean separation.</div>
+</div>
+
+<h2 class="section">2. Sharing, Devices &amp; Account Model (Q6&ndash;Q9)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q6</span><span class="qtext">Should reps see each other's accounts?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; fully open across reps. Best for cross-state contractors &amp; team coverage. Audit log shows who edited what.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q7</span><span class="qtext">What is one "account" in the system?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>One per company, with state branches linked (e.g. Watpac master &rarr; Watpac SYD / BNE / MEL sub-offices). Supports roll-up + per-state visibility.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q8</span><span class="qtext">Primary device for daily use?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>iPad on site + laptop at desk. iPad-first interface for client visits; full desktop view for planning; phone is quick-note.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q9</span><span class="qtext">Where does the conversion stage (IDENTIFY &rarr; ENGAGE &rarr; DEMO &rarr; CONVERT &rarr; GROW) sit?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>One stage per account, plus per-product status. Account stage drives pipeline view; per-product status drives cross-sell. Both reportable.</div>
+</div>
+
+<h2 class="section">3. PSA, Projects &amp; Displacement (Q10&ndash;Q14)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q10</span><span class="qtext">How should the PSA tier (None / Silver / Gold / Platinum) be tracked?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Current tier + target tier + renewal date. Drives QBR planning.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q11</span><span class="qtext">How should "project" be modelled?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Pipeline stages: Lead &rarr; Tender &rarr; Won &rarr; In-build &rarr; Complete. Tracks competing contractors per project. Forecast Vic content $ &times; probability.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q12</span><span class="qtext">For tracking incumbent piping systems on each contractor?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Per contractor &mdash; default piping spec + notes. Drives section 6.1 / 6.2 / 6.3 displacement playbooks.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q13</span><span class="qtext">How should buyer personas be tagged on contacts?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>One primary persona + optional secondary (Estimating Mgr / Project Eng / Procurement / BIM Lead / Site Foreman / MD-Director). Drives section 5 value-message templates.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q14</span><span class="qtext">How important is offline data entry on iPad / phone?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Critical &mdash; site visits often have no signal. Full offline read + write; sync on reconnect.</div>
+</div>
+
+<h2 class="section">4. Photos, Dashboard &amp; Auth Detail (Q15&ndash;Q18)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q15</span><span class="qtext">Photo capture on interactions / projects / contacts?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; stored in Supabase, attached to records (business cards, site signage, project conditions).</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q16</span><span class="qtext">What's the Monday-morning dashboard?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>My week &mdash; overdue actions + this week's meetings + tender deadlines. Personal action list first.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q17</span><span class="qtext">2FA method preference?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Authenticator app (Google / Microsoft / Authy). Most secure, works offline, standard for Supabase MFA.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q18</span><span class="qtext">How often should the app force re-login?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Stay logged in until manual logout; re-verify 2FA every 30 days. Convenient for daily use, periodic re-check.</div>
+</div>
+
+<h2 class="section">5. Security, Encryption &amp; Privacy (Q19&ndash;Q22)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q19</span><span class="qtext">Lost-device / leaving-employee kill switch?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Admin can force-logout any user from any device. Critical for stolen iPads &amp; departing staff.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q20</span><span class="qtext">Field-level encryption for sensitive notes?</span></div>
+  <div class="answer"><span class="label">Answer (recommended baseline)</span>Standard Supabase encryption at rest + TLS in transit. Strong default; no client-side / no per-field extra encryption.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q21</span><span class="qtext">What's the worst-case data leak you most want to prevent?</span></div>
+  <div class="answer multi"><span class="label">Answer</span>All three equally: competitor seeing the hit list, contractor reading own internal notes, public PII leak. Drives strict access controls across the board.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q22</span><span class="qtext">Audit log &mdash; who changed what, when?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Full audit log on every record change. Visible to admin. Essential for multi-user trust.</div>
+</div>
+
+<h2 class="section">6. Compliance, Backups &amp; Wallet (Q23&ndash;Q26)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q23</span><span class="qtext">Australian Privacy Act compliance &mdash; right to be deleted?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; contacts can be deleted on request, with logged action. Wipes PII, preserves company / project record.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q24</span><span class="qtext">Backups &amp; recovery?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Daily automated backup + 30-day restore window (Supabase Pro tier). Point-in-time restore.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q25</span><span class="qtext">Share-of-wallet tracking format?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Annual snapshot per company &mdash; Vic revenue, est. total spend, share %. Matches strategy's 15&ndash;20% &rarr; 40&ndash;50% target trajectory.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q26</span><span class="qtext">What Vic product taxonomy do you want to track per account?</span></div>
+  <div class="answer custom"><span class="label">Answer (custom)</span>Mechanical (HVAC), Water, Infrastructure, Mining. <em>Note: this is a sector-based taxonomy (matches existing CRM <code>MARKETS</code> array) rather than the strategy's product-line taxonomy (Grooved / Valves / Fire / Factory Solutions / Vortex). See Open Tension #1.</em></div>
+</div>
+
+<h2 class="section">7. Bid Support, CIP, KPIs &amp; QBR (Q27&ndash;Q30)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q27</span><span class="qtext">Tender / bid support tracking?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Tag projects needing bid support + deadline + status. Dashboard view for engineering-support workload. Mirrors strategy section 7.1 Bid Support Service.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q28</span><span class="qtext">CIP (Certified Installer Program) tracking?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Per individual &mdash; status + date + cert expiry (Not invited / Invited / Enrolled / Certified / Expired). Supports the 40 &rarr; 90 &rarr; 160 individual target.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q29</span><span class="qtext">What KPI report does management want first?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Monthly pipeline pack &mdash; accounts by stage, $ forecast, PSAs signed. Auto-generated. Mirrors strategy section 10.1 KPI table.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q30</span><span class="qtext">Can the app auto-generate a QBR pack per account?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; one-click PDF / PPTX per account, rendered from current data. Account Plan template (strategy section 9) populated automatically.</div>
+</div>
+
+<h2 class="section">8. Hit List, Handover &amp; Notifications (Q31&ndash;Q34)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q31</span><span class="qtext">How should the Tier 1 hit list be seeded?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Pre-seed all 8 nationals (Watpac, JCI/York, Stowe, Hastie/Ventia, Mechanical One, Nilsen, AE Smith, Intech) with conversion status from the strategy doc. Ready for day one.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q32</span><span class="qtext">Handover plan if you leave Victaulic?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Built-in admin transfer flow. Successor gets admin rights without your password. Audit log preserved.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q33</span><span class="qtext">Notifications &amp; alerts &mdash; how should the app reach you?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Push to phone / iPad + 7am daily email digest. Real-time for urgent (tender deadline tomorrow), summary for daily planning.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q34</span><span class="qtext">Voice-to-text note capture on phone?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; iOS native dictation for in-car post-meeting notes. Huge field-rep time saver.</div>
+</div>
+
+<h2 class="section">9. Maps, Integrations &amp; App Format (Q35&ndash;Q38)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q35</span><span class="qtext">Maps &amp; geocoding &mdash; how visual?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Current map view + filter by stage / PSA / sector. Build on what's there. Plan a state visit visually.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q36</span><span class="qtext">Integrations &mdash; what should the CRM talk to?</span></div>
+  <div class="answer multi"><span class="label">Answer (all four)</span>Outlook calendar (meetings auto-logged), Outlook email (sent emails attached to contact), LinkedIn (connected status / profile sync), Victaulic SAP / global CRM (actuals in, opportunities out). <em>Note: SAP and Outlook email require Victaulic IT engagement and live in Phase 3.</em></div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q37</span><span class="qtext">Native iOS app vs web app for iPad / phone?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Progressive Web App (PWA) &mdash; install icon, works offline, no App Store. Fast iteration, built into current stack.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q38</span><span class="qtext">Lunch &amp; Learn tracking depth?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Keep current schema (company, date, topics, attendees, notes). Working as-is; revisit if reporting needs grow.</div>
+</div>
+
+<h2 class="section">10. References, Competitor, UX &amp; Risk (Q39&ndash;Q42)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q39</span><span class="qtext">Reference project network (peer-to-peer references)?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Flag projects as "willing to be a reference" + contact + sectors. When pitching, app suggests a peer call. Strategy section 7.1.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q40</span><span class="qtext">Competitor / displacement tracking on projects?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Per project &mdash; incumbent spec + who we're displacing + status. Drives section 6 playbook per job, not just per account.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q41</span><span class="qtext">How should the Account Plan screen feel?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Single scrollable page with collapsible sections (Overview / Stakeholders / Pipeline / Spend / Actions / Risks). iPad-friendly.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q42</span><span class="qtext">Risk register &mdash; do you want it per account?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; per-account risks + mitigation + RAG status. Surfaces "Red" accounts on dashboard. Strategy section 9 Account Plan template.</div>
+</div>
+
+<h2 class="section">11. Forecast, Pricing, Migration &amp; Patches (Q43&ndash;Q46)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q43</span><span class="qtext">Pipeline forecast &mdash; how should it be calculated?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Per project &mdash; Vic content $ &times; probability %, auto-rollup to account / state / quarter. Standard sales-forecast model.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q44</span><span class="qtext">Should sales pricing or PSA discount % be stored in the CRM?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; PSA discount tier + project pricing notes stored, with restricted access. Critical for QBR pack.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q45</span><span class="qtext">Your existing CRM data &mdash; what should happen to it?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Migrate all existing customers / interactions / projects into the new schema. Backfill new fields blank. Zero data loss.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q46</span><span class="qtext">How should reps be assigned to accounts?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Geographic state patches (NSW / VIC / QLD / WA / SA). National Tier 1 accounts co-owned across states. Matches strategy's 5-city focus.</div>
+</div>
+
+<h2 class="section">12. Events, Build Approach, Notes &amp; Rollout (Q47&ndash;Q50)</h2>
+
+<div class="qa">
+  <div><span class="qnum">Q47</span><span class="qtext">Track industry event attendance (AMCA, ARBS, Victaulic Summits)?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Yes &mdash; events calendar + attendance log + leads captured. Tag interactions to an event. Strategy section 7.2 calendar built in.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q48</span><span class="qtext">Build approach &amp; timeline appetite?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Phased &mdash; ship foundations in 4 weeks, add features monthly. Phase 1: schema + auth + roles + Account Plan view. Phase 2: forecast + KPI pack. Phase 3: integrations + QBR PDF + voice.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q49</span><span class="qtext">"Sensitive notes" field &mdash; who can see?</span></div>
+  <div class="answer custom"><span class="label">Answer</span>Private notes opt-in &mdash; default open across team; mark a note as "private" and only owner + admin can see it. Best for sensitive items like PSA negotiations.</div>
+</div>
+
+<div class="qa">
+  <div><span class="qnum">Q50</span><span class="qtext">Launch plan for the ANZ team?</span></div>
+  <div class="answer"><span class="label">Answer (recommended)</span>Pilot with JK for 4 weeks, then 2 more reps, then full team. De-risk solo, onboard in waves with training.</div>
+</div>
+
+<h2 class="section">Open Tensions &mdash; for DE's view before build kicks off</h2>
+
+<div class="tensions">
+  <h3>Items needing alignment before Phase 1 begins</h3>
+  <ol>
+    <li><strong>Product taxonomy split.</strong> JK selected a sector-based taxonomy (HVAC / Water / Infrastructure / Mining) for per-account product tracking. The strategy's KPIs in section 10.1 are product-line-based (Grooved / Valves / Fire / Factory Solutions / Vortex). The monthly pipeline pack may need to report both. <em>Decision needed: which view drives the KPI pack?</em></li>
+    <li><strong>PSA tier vs. share of wallet.</strong> Strategy section 8 ties PSA tier to AUD revenue bands (Silver $150K&ndash;500K, Gold $500K&ndash;1.5M, Platinum $1.5M+). Should the tier be auto-derived from the share-of-wallet snapshot, or manually set by the account owner and audited at QBR? <em>Decision affects the schema design.</em></li>
+    <li><strong>National account co-ownership rules.</strong> With state patches + co-owned Tier 1 nationals, the UI needs clear rules: who is lead rep for Watpac (across SYD / BNE / MEL)? Who can edit the master account record vs. state-branch records? <em>Operating rule needed.</em></li>
+    <li><strong>Outlook email integration scope.</strong> Calendar sync is straightforward; sent-email sync needs Microsoft Graph permissions from Victaulic IT and is substantially more work. Likely Phase 3. <em>Confirm priority.</em></li>
+    <li><strong>SAP integration uncertainty.</strong> Pulling actuals from SAP depends entirely on Victaulic IT willingness and project bandwidth. Plan must work without it for at least Phases 1 and 2. <em>Need a sponsor on the Vic IT side.</em></li>
+    <li><strong>Victaulic IT sign-off on Supabase.</strong> Data residency is Supabase Sydney (acceptable to JK). Recommend looping Vic IT in for review before Phase 1 build, given the data sensitivity. <em>Who from IT is the right contact?</em></li>
+  </ol>
+</div>
+
+<h2 class="section">Recommended Next Steps</h2>
+
+<div class="qa" style="background:#f7fbf7;border-color:#cfe2cf">
+  <ol style="margin: 6px 0 6px 18px">
+    <li>DE reviews this Q&amp;A and flags any redirections (especially Open Tensions 1&ndash;6).</li>
+    <li>30-minute call between JK and DE to align on the tensions.</li>
+    <li>Loop Victaulic IT for a Supabase / data-residency sign-off.</li>
+    <li>Kick off Phase 1 build (4 weeks): schema additions, auth + roles, Account Plan view, Tier 1 hit list seeded.</li>
+    <li>JK pilots solo for 4 weeks before team rollout.</li>
+  </ol>
+</div>
+
+<footer class="doc-footer">
+  Companion document to <em>HVAC Victaulic Key Account Conversion Strategy &mdash; Australia</em> (May 2026) by DE.<br>
+  Compiled 2 June 2026 &mdash; for internal review only.
+</footer>
+
+</body>
+</html>

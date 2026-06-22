@@ -1399,6 +1399,7 @@ select.add-field-btn-select option {
     <div class="nav-item" data-view="customers" onclick="setView('customers')"><span class="nav-icon">☻</span> Contacts</div>
     <div class="nav-item" data-view="projects" onclick="setView('projects')"><span class="nav-icon">◧</span> Projects</div>
     <div class="nav-item" data-view="opportunities" onclick="setView('opportunities')"><span class="nav-icon">⌬</span> Opportunities</div>
+    <div class="nav-item" data-view="conversion" onclick="setView('conversion')"><span class="nav-icon">◎</span> Conversion HQ</div>
     <div class="nav-item" data-view="reports" onclick="setView('reports')"><span class="nav-icon">▥</span> Reports</div>
     <div class="nav-item" data-view="org" onclick="setView('org')"><span class="nav-icon">⚏</span> Org Charts</div>
     <div class="nav-item" data-view="matrix" onclick="setView('matrix')"><span class="nav-icon">▦</span> Acceptance Matrix</div>
@@ -1540,6 +1541,19 @@ const _camelToSnake = {
   linkedinConnected: 'linkedin_connected',
   // soft-delete
   deletedAt: 'deleted_at',
+  // ---- Conversion HQ fields (added 2026-06-23) ----
+  // Multi-word camelCase fields must be registered here or the cloud
+  // adapter sends camelCase keys that don't match the snake_case columns.
+  // Single-word fields (tier, market, sector, incumbent, amount,
+  // probability, owner, stage) need no entry — they map 1:1.
+  conversionStage: 'conversion_stage',
+  psaTier: 'psa_tier',
+  psaTargetTier: 'psa_target_tier',
+  shareOfWalletPct: 'share_of_wallet_pct',
+  mustHave: 'must_have',
+  penetrationPct: 'penetration_pct',
+  expectedInvoiceDate: 'expected_invoice_date',
+  ownerName: 'owner_name',
 };
 const _snakeToCamel = Object.fromEntries(Object.entries(_camelToSnake).map(([c, s]) => [s, c]));
 const _snake = (k) => _camelToSnake[k] || k;
@@ -2603,6 +2617,7 @@ async function render() {
   if (state.view === 'customers')   html = await renderCustomers();
   if (state.view === 'projects')    html = await renderProjects();
   if (state.view === 'opportunities') html = await renderOpportunities();
+  if (state.view === 'conversion')  html = await renderConversion();
   if (state.view === 'reports')     html = await renderReports();
   if (state.view === 'org')         html = await renderOrg();
   if (state.view === 'matrix')      html = await renderMatrix();
@@ -3917,7 +3932,7 @@ async function createNewContactFromCard() {
 async function openCustomerModal(id = null, seed = null, focusField = null) {
   const c = id ? await getCustomer(id) : { importance: 2, likes: [], dislikes: [], ...(seed || {}) };
   const allCust = await getAllCustomers();
-  const possibleManagers = allCust.filter(x => x.id !== id && (!c.company || !x.company || x.company === c.company));
+  const possibleManagers = allCust.filter(x => x.id !== id);
   // Projects this contact is already linked to + the full project list so
   // the user can add/remove links inline from the contact form.
   const allProjects = (await db.projects.toArray()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -3955,7 +3970,7 @@ async function openCustomerModal(id = null, seed = null, focusField = null) {
               <div class="field"><label>First name <span class="req">*</span></label><input class="input" name="firstName" required value="${escape(_splitName(c.name).firstName)}" onblur="capitalizeNameInput(this)"></div>
               <div class="field"><label>Last name <span class="req">*</span></label><input class="input" name="lastName" required value="${escape(_splitName(c.name).lastName)}" onblur="capitalizeNameInput(this)"></div>
               <div class="field"><label>Title / Role</label><input class="input" name="title" value="${escape(c.title||'')}" onblur="capitalizeNameInput(this)"></div>
-              <div class="field"><label>Company <span class="req">*</span></label><input class="input" name="company" required value="${escape(c.company||'')}" onblur="capitalizeNameInput(this)"></div>
+              <div class="field"><label>Company <span class="req">*</span></label><input class="input" name="company" required value="${escape(c.company||'')}" onblur="capitalizeNameInput(this)" oninput="filterReportsToByCompany(this.value)"></div>
               <div class="field">
                 <label>Category <span class="req">*</span></label>
                 <select class="select" name="category" required>
@@ -4221,6 +4236,9 @@ async function openCustomerModal(id = null, seed = null, focusField = null) {
     </div>
   `;
   $('#modal-root').innerHTML = html;
+  // Filter the "Reports to" select to same-company contacts only, matching the
+  // current company value (empty = show all; populated = restrict to that company).
+  filterReportsToByCompany(c.company || '');
   // If the caller asked us to jump straight to a particular field (e.g. the
   // address-pencil shortcut on the contact detail view), focus and scroll it
   // into view after the DOM is in place. Small timeout so the layout settles
@@ -4234,6 +4252,23 @@ async function openCustomerModal(id = null, seed = null, focusField = null) {
       }
     }, 60);
   }
+}
+
+// Filter the "Reports to" select so it only shows contacts from the same company.
+// Called on modal open and whenever the Company field changes.
+function filterReportsToByCompany(companyVal) {
+  const sel = document.querySelector('#cust-form select[name="reportsTo"]');
+  if (!sel) return;
+  const norm = s => (s || '').trim().toLowerCase();
+  const target = norm(companyVal);
+  for (const opt of sel.options) {
+    if (!opt.value) continue; // keep "— none —"
+    const optCo = norm(opt.dataset.company || '');
+    opt.hidden = !!(target && optCo !== target);
+  }
+  // If the currently-selected option got hidden, reset to "none"
+  const cur = sel.options[sel.selectedIndex];
+  if (cur && cur.hidden) sel.value = '';
 }
 
 // Build a single relatives row (relationship dropdown + name input + remove
@@ -8948,6 +8983,716 @@ async function deleteLunchLearn(id) {
   toast('Lunch &amp; Learn deleted');
   closeModal();
   render();
+}
+
+// ====================================================================
+// ACCOUNT CONVERSION HQ  (added 2026-06-23)
+// Self-contained module bolted onto the Field CRM. Powers the
+// "Conversion HQ" view: market sizing (AU + NZ), account segmentation,
+// stakeholder map, 5-stage conversion funnel, conversion tools &
+// support programs, must-have project penetration, and a pipeline
+// rolled up by the month each opportunity is likely to invoice/land.
+//
+// Design rules:
+//  - Reads EXISTING data only (customers, projects, opportunities,
+//    acceptance, products). Never throws if a table is missing.
+//  - Reference frameworks come from the AU Key Account Conversion
+//    Strategy (May 2026). NZ figures are modelled estimates (flagged).
+//  - New editable fields (tier, conversionStage, mustHave,
+//    expectedInvoiceDate, amount, probability, owner) are written
+//    through the normal db layer and "light up" once the conversion
+//    Supabase migration is applied. Until then the view is a rich,
+//    read-only cockpit derived from what you already track.
+// ====================================================================
+
+const CONV_TABS = [
+  { id: 'markets',      label: 'Markets & Segmentation' },
+  { id: 'stakeholders', label: 'Stakeholders' },
+  { id: 'funnel',       label: 'Conversion Funnel' },
+  { id: 'tools',        label: 'Tools & Programs' },
+  { id: 'projects',     label: 'Must-Have Projects' },
+  { id: 'pipeline',     label: 'Pipeline by Month' },
+];
+
+// ---- Reference: market context -------------------------------------
+const CONV_MARKET = {
+  AU: {
+    label: 'Australia',
+    cur: 'AUD',
+    pipeline: '$180B+ national construction pipeline',
+    addressable: 'Top 40 HVAC mechanical contractors',
+    revenue: 'AUD $45–65M incremental (3-yr)',
+    source: 'KAC Strategy, May 2026',
+    drivers: [
+      'Commercial & mixed-use towers — Sydney CBD, Docklands, Brisbane Live, Elizabeth Quay (>$12B)',
+      'Healthcare — Victoria’s Big Build, NSW Health Infrastructure (billions in mechanical services)',
+      'Data centres — #1 APAC market outside SEA; hyperscale in W. Sydney, Melbourne SE, outer Brisbane',
+      'Industrial & logistics — cold chain, pharma, advanced manufacturing',
+      'Education & government — university capital works, Defence (FM/UL-certified systems)',
+    ],
+  },
+  NZ: {
+    label: 'New Zealand',
+    cur: 'NZD',
+    pipeline: 'Construction rebound +4.4% p.a. 2026–29 (after −3.3% 2025)',
+    addressable: 'Est. top 12–15 mechanical contractors',
+    revenue: 'Est. NZD $8–14M incremental (3-yr)',
+    source: 'Modelled estimate — public market data, June 2026',
+    estimate: true,
+    drivers: [
+      'Data centres — >NZ$10B planned over 10yrs; Datagrid Invercargill (280MW), AWS co-location, 70MW+ live by end-2026',
+      'Healthcare — $1B Budget 2025 (Nelson, Wellington ED, Auckland hospital upgrades); 1,100+ Auckland beds needed',
+      'Government infrastructure — Te Waihanga 30-year plan (transport, health, education)',
+      'Commercial retrofit — MEP upgrades, fire-safety & seismic retrofits across the FM stock (NZ FM market ~US$4.1B 2026)',
+      'Industrial / cold chain — Fonterra, food & beverage, mission-critical facilities',
+    ],
+  },
+};
+
+// ---- Reference: tier framework -------------------------------------
+const CONV_TIERS = [
+  { tier: 1, label: 'National Majors',       rev: 'AUD $100M+',     wallet: 'AUD $2–5M pa',     priority: 'Immediate — CEO/Director level' },
+  { tier: 2, label: 'State Leaders',         rev: 'AUD $30–100M',   wallet: 'AUD $500K–2M pa',  priority: '6–12 months — State Manager + Technical' },
+  { tier: 3, label: 'Regional Specialists',  rev: 'AUD $10–30M',    wallet: 'AUD $150–500K pa', priority: '12–24 months — Distributor-assisted' },
+];
+
+// ---- Reference: Tier-1 hit lists (seed) ----------------------------
+// AU list verbatim from the strategy doc. NZ list modelled from public
+// research and flagged as estimated targets, not Victaulic-confirmed.
+const CONV_TIER1 = {
+  AU: [
+    { company: 'Watpac Mechanical / BGIS',          hq: 'Brisbane / National',  sectors: 'Health, Defence, Gov',     rev: 'AUD $200M+', status: 'Partial — deepen' },
+    { company: 'JCI / York Mechanical Services',     hq: 'Sydney / National',    sectors: 'Commercial, Industrial',   rev: 'AUD $180M+', status: 'Low — target' },
+    { company: 'Stowe Australia',                    hq: 'Brisbane / National',  sectors: 'Multi-sector',             rev: 'AUD $150M+', status: 'Partial — grow' },
+    { company: 'Hastie Group / Ventia Mechanical',   hq: 'Melbourne / National', sectors: 'Health, Commercial',       rev: 'AUD $140M+', status: 'Low — target' },
+    { company: 'Mechanical One (Lendlease Services)',hq: 'Sydney / National',    sectors: 'Property, Retail, Gov',     rev: 'AUD $120M+', status: 'Active — protect & grow' },
+    { company: 'Nilsen (Electrical & Mechanical)',   hq: 'Adelaide / National',  sectors: 'Industrial, Mining',       rev: 'AUD $100M+', status: 'Low — target' },
+    { company: 'AE Smith',                           hq: 'Melbourne / National', sectors: 'Commercial, Health',        rev: 'AUD $90M+',  status: 'Active — grow wallet' },
+    { company: 'Intech Engineers',                   hq: 'Perth / WA-focused',   sectors: 'Resources, Industrial',     rev: 'AUD $80M+',  status: 'Emerging — engage' },
+  ],
+  NZ: [
+    { company: 'Aquaheat New Zealand',  hq: 'Auckland / National',          sectors: 'Commercial, Health, Digital, Mission-critical', rev: 'NZD $40M+ (est)', status: 'Estimate — target' },
+    { company: 'Economech',             hq: 'Auckland',                     sectors: 'Commercial, Data centres',                       rev: 'NZD $25M+ (est)', status: 'Estimate — target' },
+    { company: 'Chilltech',             hq: 'Auckland / Upper North Is.',   sectors: 'Commercial, Retail',                             rev: 'NZD $20M+ (est)', status: 'Estimate — target' },
+    { company: 'Thermal Solutions',     hq: 'Auckland / Hastings / Chch',   sectors: 'Industrial, Cold chain, Food & bev',             rev: 'NZD $20M+ (est)', status: 'Estimate — target' },
+    { company: 'AMT Group',             hq: 'Christchurch / National',      sectors: 'Commercial, Health',                             rev: 'NZD $18M+ (est)', status: 'Estimate — engage' },
+  ],
+};
+
+// ---- Reference: 5-stage conversion funnel --------------------------
+const CONV_STAGES = [
+  { id: 'identify',    n: 1, name: 'IDENTIFY',    color: '#787878',
+    objective: 'Map decision-makers; understand current piping spec & suppliers',
+    activities: 'Account research, LinkedIn mapping, distributor intel, site visits',
+    exit: 'Org chart complete; key contacts identified' },
+  { id: 'engage',      n: 2, name: 'ENGAGE',      color: '#1565C0',
+    objective: 'Secure first meeting with estimating, engineering or procurement lead',
+    activities: 'Warm intro via distributor / trade event / referral; Lunch & Learn',
+    exit: 'First meeting held; pain points captured' },
+  { id: 'demonstrate', n: 3, name: 'DEMONSTRATE', color: '#C86A1E',
+    objective: 'Prove Victaulic value through technical proof points and site demo',
+    activities: 'Installation demo, TCO comparison, Factory Solutions walkthrough',
+    exit: 'Trial project or pilot scope agreed' },
+  { id: 'convert',     n: 4, name: 'CONVERT',     color: '#F58220',
+    objective: 'Win first significant project; achieve Preferred Supplier status',
+    activities: 'Competitive bid support, on-site technical support, installer certification',
+    exit: 'PO received; PSA / preferred supplier agreement signed' },
+  { id: 'grow',        n: 5, name: 'GROW & RETAIN', color: '#1B5E20',
+    objective: 'Expand product breadth; lock in repeat business; prevent reversion',
+    activities: 'Quarterly business reviews, cross-sell valves / fire / Factory Solutions',
+    exit: 'Multi-product revenue; account plan updated annually' },
+];
+const CONV_STAGE_IDS = CONV_STAGES.map(s => s.id);
+const CONV_STAGE_BY = Object.fromEntries(CONV_STAGES.map(s => [s.id, s]));
+
+// stage -> win probability used to weight the pipeline forecast
+const CONV_STAGE_PROB = {
+  identify: 0.05, engage: 0.15, demonstrate: 0.35, convert: 0.70, grow: 1.0,
+  // common synonyms found on existing opportunity/project records
+  lead: 0.10, qualify: 0.20, tender: 0.40, bid: 0.40, proposal: 0.50,
+  negotiation: 0.75, won: 1.0, 'closed won': 1.0, closed_won: 1.0,
+  'in-build': 1.0, inbuild: 1.0, complete: 1.0, completed: 1.0,
+  lost: 0.0, 'closed lost': 0.0, closed_lost: 0.0,
+};
+
+// ---- Reference: buyer personas (value prop matrix) -----------------
+const CONV_PERSONAS = [
+  { id: 'estimating', label: 'Estimating Manager', concern: 'Winning tenders at competitive margin', fear: 'Over-specifying and losing on price',
+    msg: 'Grooved cuts installed cost 20–35% vs weld through labour savings — we win you margin, not just tenders',
+    match: ['estimat', 'estimating', 'cost', 'commercial mgr', 'quantity'] },
+  { id: 'engineer', label: 'Project Engineer', concern: 'Schedule certainty, no site problems', fear: 'Leaks, install errors, RFIs',
+    msg: 'Self-restraining, self-sealing joints; no radiographic testing; field rep on your first project',
+    match: ['project eng', 'engineer', 'mechanical eng', 'pm', 'project manager'] },
+  { id: 'procurement', label: 'Procurement Manager', concern: 'Price, availability, supplier reliability', fear: 'Stock-outs on a live site',
+    msg: 'PSA guarantees priority stock; AU/NZ warehousing at Reece & Actrol branches',
+    match: ['procure', 'purchas', 'buyer', 'supply chain', 'sourcing'] },
+  { id: 'bim', label: 'BIM / Design Lead', concern: 'Coordination accuracy, clash avoidance', fear: 'Late-stage clashes causing rework',
+    msg: 'Full Revit/BIM library with accurate geometry; design-assist from our application engineers',
+    match: ['bim', 'revit', 'design', 'draft', 'cad', 'coordinat', 'technical'] },
+  { id: 'site', label: 'Site Foreman / Supervisor', concern: 'Ease of installation, crew safety', fear: 'Learning a new system mid-project',
+    msg: 'Certified Installer Program with hands-on training; simpler than welding — no hot-work permits',
+    match: ['site', 'foreman', 'supervisor', 'install', 'leading hand', 'hse', 'safety'] },
+  { id: 'exec', label: 'MD / Director / Owner', concern: 'Margin, reputation, client retention', fear: 'Project failures, warranty claims',
+    msg: '120-year track record; FM/UL certifications accepted by all major clients; co-branded case studies',
+    match: ['director', 'owner', 'managing', 'md', 'ceo', 'gm', 'general manager', 'principal', 'chief'] },
+];
+
+// ---- Reference: conversion tools & support programs ----------------
+const CONV_TOOLS = [
+  { name: 'TCO Calculator (Digital)',        persona: 'Estimating, Project Eng', desc: 'Enter pipe diameter, length, fitting count → Victaulic vs weld labour cost & schedule comparison', stage: 'demonstrate' },
+  { name: 'CPD Lunch & Learn Program',       persona: 'Project Eng, BIM, Technical', desc: '45-min AIRAH-registered CPD session at contractor offices — grooved systems, seismic, Factory Solutions', stage: 'engage' },
+  { name: 'Certified Installer Program (CIP)',persona: 'Site Foreman, HSE', desc: 'Half-day hands-on training; nationally recognised Victaulic-certified status', stage: 'convert' },
+  { name: 'Factory Solutions Discovery Tour',persona: 'MD/Director, Estimating', desc: 'Facilitated visit to a completed Factory Solutions project or manufacturing facility', stage: 'demonstrate' },
+  { name: 'BIM / Revit Product Library',     persona: 'BIM Leads, Coordinators', desc: 'Full Victaulic range as Revit families with COBie data; free to all specifiers', stage: 'demonstrate' },
+  { name: 'Project Bid Support Service',     persona: 'Estimating, Project Eng', desc: 'Application engineer joins tender prep; material take-off, spec clause & TCO at no charge for key accounts', stage: 'convert' },
+  { name: 'Preferred Supplier Agreement',    persona: 'Procurement, MD/Director', desc: 'Volume-tiered pricing, dedicated AM, priority stock, QBRs, co-branded case study', stage: 'convert' },
+  { name: 'Reference Project Network',       persona: 'All — esp. skeptical technical', desc: 'Curated converted contractors willing to give peer-to-peer references; facilitated intro', stage: 'demonstrate' },
+  { name: 'First Project Support Package',   persona: 'Site Foreman, Project Eng', desc: 'On-site field rep for install kick-off; hotline; same-day response for first 30 days', stage: 'convert' },
+];
+
+// ---- Reference: PSA tier structure ---------------------------------
+const CONV_PSA = [
+  { tier: 'SILVER',   band: 'AUD $150K–500K pa', discount: '5% off list',          am: 'Shared (state-level)',         qbr: 'Bi-annual' },
+  { tier: 'GOLD',     band: 'AUD $500K–1.5M pa', discount: '8–10% off list',       am: 'Dedicated AM',                 qbr: 'Quarterly' },
+  { tier: 'PLATINUM', band: 'AUD $1.5M+ pa',     discount: '12–15% + project px',  am: 'Senior AM + Technical Spec.',  qbr: 'Monthly + exec review' },
+];
+
+// ====================================================================
+// Data loading + derivations (all defensive)
+// ====================================================================
+async function convLoad() {
+  const safe = async (fn, d) => { try { return await fn(); } catch (e) { console.warn('[conv] load fallback', e); return d; } };
+  const [customers, projects, opportunities, acceptance, products, lunchLearns] = await Promise.all([
+    safe(() => getAllCustomers(), []),
+    safe(() => db.projects.toArray(), []),
+    safe(() => db.opportunities.toArray(), []),
+    safe(() => db.acceptance.toArray(), []),
+    safe(() => db.products.toArray(), []),
+    safe(() => db.lunchLearns.toArray(), []),
+  ]);
+  return { customers, projects, opportunities, acceptance, products, lunchLearns };
+}
+
+const convNorm = (s) => (s || '').trim().toLowerCase();
+const convKey  = (s) => convNorm(s).replace(/\s+/g, ' ');
+
+// Group contacts into company "accounts" and attach derived conversion data.
+function convBuildAccounts(data) {
+  const { customers, projects, opportunities, acceptance, products } = data;
+  const byCompany = {};
+  for (const c of customers) {
+    const k = convKey(c.company);
+    if (!k) continue;
+    if (!byCompany[k]) byCompany[k] = { key: k, company: c.company, contacts: [], markets: new Set(), countries: {} };
+    const a = byCompany[k];
+    a.contacts.push(c);
+    (c.markets || []).forEach(m => a.markets.add(m));
+    const cy = (c.country || '').trim() || 'NZ';
+    a.countries[cy] = (a.countries[cy] || 0) + 1;
+    // carry explicit overrides if present on any contact
+    if (c.tier && !a.tier) a.tier = c.tier;
+    if (c.conversionStage && !a.stageExplicit) a.stageExplicit = c.conversionStage;
+    if (c.psaTier && !a.psaTier) a.psaTier = c.psaTier;
+  }
+  const contactIds = (a) => new Set(a.contacts.map(c => c.id));
+  for (const a of Object.values(byCompany)) {
+    const ids = contactIds(a);
+    a.country = Object.entries(a.countries).sort((x, y) => y[1] - x[1])[0][0];
+    a.marketList = [...a.markets].sort();
+    a.projects = projects.filter(p => (p.customerIds || []).some(id => ids.has(id)));
+    a.opps = opportunities.filter(o => ids.has(o.customerId));
+    a.acc = acceptance.filter(x => ids.has(x.customerId));
+    a.tier = a.tier || convDeriveTier(a);
+    a.penetration = convPenetration(a, products);
+    a.stage = a.stageExplicit || convDeriveStage(a);
+    a.personas = convPersonaCoverage(a);
+  }
+  return Object.values(byCompany).sort((x, y) => (x.company || '').localeCompare(y.company || ''));
+}
+
+function convDeriveTier(a) {
+  const cats = a.contacts.map(c => convNorm(c.category));
+  if (cats.some(c => c.includes('t1'))) return 1;
+  if (cats.some(c => c.includes('t2'))) return 2;
+  // fall back on importance — a High-importance contractor reads as Tier 2
+  const maxImp = Math.max(0, ...a.contacts.map(c => Number(c.importance) || 0));
+  if (cats.some(c => c.includes('contractor'))) return maxImp >= 3 ? 2 : 3;
+  return 0; // unsegmented
+}
+
+const CONV_ACCEPT_WON = ['approved', 'specified'];
+function convPenetration(a, products) {
+  const total = products.length || 0;
+  if (!total) return { pct: 0, won: 0, total: 0 };
+  const wonProducts = new Set();
+  for (const x of a.acc) {
+    if (CONV_ACCEPT_WON.includes(convNorm(x.status))) wonProducts.add(x.productId);
+  }
+  return { pct: Math.round((wonProducts.size / total) * 100), won: wonProducts.size, total };
+}
+
+function convDeriveStage(a) {
+  const accStatuses = a.acc.map(x => convNorm(x.status));
+  const wonCount = accStatuses.filter(s => CONV_ACCEPT_WON.includes(s)).length;
+  const inProg = accStatuses.some(s => s === 'in_progress' || s === 'in progress');
+  const oppStages = a.opps.map(o => convNorm(o.stage));
+  const hasWonOpp = oppStages.some(s => s.includes('won') || s === 'complete' || s === 'in-build' || s === 'grow');
+  const hasOpp = a.opps.length > 0;
+  if (hasWonOpp || wonCount >= 2) return 'grow';
+  if (wonCount === 1) return 'convert';
+  if (hasOpp || inProg) return 'demonstrate';
+  if (a.contacts.length >= 2 || a.contacts.some(c => c.lastContactAt)) return 'engage';
+  return 'identify';
+}
+
+function convPersonaCoverage(a) {
+  const present = {};
+  for (const p of CONV_PERSONAS) present[p.id] = [];
+  for (const c of a.contacts) {
+    const hay = (convNorm(c.title) + ' ' + convNorm(c.category));
+    let matched = false;
+    for (const p of CONV_PERSONAS) {
+      if (p.match.some(m => hay.includes(m))) { present[p.id].push(c); matched = true; }
+    }
+    if (!matched && hay) {
+      // crude fallback by category
+      if (hay.includes('director') || hay.includes('owner')) present.exec.push(c);
+    }
+  }
+  return present;
+}
+
+// ---- formatting helpers --------------------------------------------
+function convMoney(n, cur) {
+  if (n == null || isNaN(n)) return '—';
+  const v = Number(n);
+  const sym = cur === 'NZD' ? 'NZ$' : '$';
+  if (Math.abs(v) >= 1e6) return sym + (v / 1e6).toFixed(2).replace(/\.00$/, '') + 'M';
+  if (Math.abs(v) >= 1e3) return sym + Math.round(v / 1e3) + 'K';
+  return sym + Math.round(v);
+}
+function convMonthLabel(ym) {
+  if (!ym || ym === 'unscheduled') return 'Unscheduled';
+  const [y, m] = ym.split('-').map(Number);
+  const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return names[(m - 1) % 12] + ' ' + y;
+}
+function convChip(text, bg, fg) {
+  return `<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;background:${bg};color:${fg || '#fff'};white-space:nowrap">${escape(text)}</span>`;
+}
+function convPctBar(pct, color) {
+  const c = color || 'var(--vic-orange)';
+  return `<div style="background:var(--vic-grey-100);border-radius:999px;height:8px;width:100%;overflow:hidden">
+    <div style="height:100%;width:${Math.max(0, Math.min(100, pct))}%;background:${c};border-radius:999px"></div></div>`;
+}
+
+// ====================================================================
+// Top-level render + tab router
+// ====================================================================
+async function renderConversion() {
+  if (!state.convTab || !CONV_TABS.some(t => t.id === state.convTab)) state.convTab = 'markets';
+  const data = await convLoad();
+  const accounts = convBuildAccounts(data);
+
+  const tabs = CONV_TABS.map(t => `
+    <button onclick="convSetTab('${t.id}')"
+      style="padding:9px 16px;border:none;background:none;cursor:pointer;font-size:13px;font-weight:700;letter-spacing:0.02em;
+             color:${state.convTab === t.id ? 'var(--vic-charcoal)' : 'var(--vic-grey-700)'};
+             border-bottom:3px solid ${state.convTab === t.id ? 'var(--vic-orange)' : 'transparent'}">
+      ${escape(t.label)}</button>`).join('');
+
+  let body = '';
+  if (state.convTab === 'markets')      body = convRenderMarkets(accounts);
+  if (state.convTab === 'stakeholders') body = convRenderStakeholders(accounts);
+  if (state.convTab === 'funnel')       body = convRenderFunnel(accounts);
+  if (state.convTab === 'tools')        body = convRenderTools(accounts, data);
+  if (state.convTab === 'projects')     body = convRenderProjects(accounts, data);
+  if (state.convTab === 'pipeline')     body = convRenderPipeline(accounts, data);
+
+  return `
+    <div style="padding:0 0 40px">
+      <div style="padding:22px 26px 0">
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <h1 class="page-title" style="font-size:24px;margin:0">Conversion HQ</h1>
+          <span style="color:var(--vic-grey-700);font-size:13px">Key Account Conversion — Australia & New Zealand</span>
+        </div>
+        <div style="margin-top:6px;color:var(--vic-grey-700);font-size:12.5px;max-width:880px">
+          Convert 25 of the top 40 AU HVAC contractors (plus the NZ majors) within 36 months —
+          AUD $45–65M incremental. This cockpit pulls live data from your contacts, projects and
+          opportunities; frameworks are from the May 2026 strategy.
+        </div>
+      </div>
+      <div style="position:sticky;top:0;z-index:5;background:var(--vic-white);border-bottom:1px solid var(--vic-grey-300);
+                  margin-top:14px;padding:0 14px;display:flex;gap:4px;overflow-x:auto">${tabs}</div>
+      <div style="padding:20px 26px 0">${body}</div>
+    </div>`;
+}
+
+function convSetTab(tab) { state.convTab = tab; render(); }
+
+function convSectionTitle(t, sub) {
+  return `<div style="margin:6px 0 14px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--vic-orange-dark)">${escape(t)}</div>
+    ${sub ? `<div style="font-size:12.5px;color:var(--vic-grey-700);margin-top:3px">${escape(sub)}</div>` : ''}</div>`;
+}
+function convCard(inner, pad) {
+  return `<div style="background:var(--vic-white);border:1px solid var(--vic-grey-300);border-radius:2px;box-shadow:var(--shadow-sm);padding:${pad || '16px'};">${inner}</div>`;
+}
+
+// ====================================================================
+// TAB 1 — Markets & Segmentation
+// ====================================================================
+function convRenderMarkets(accounts) {
+  const marketCard = (m) => convCard(`
+    <div style="display:flex;align-items:center;gap:10px">
+      <h2 style="font-size:18px;margin:0">${escape(m.label)}</h2>
+      ${m.estimate ? convChip('ESTIMATE', 'var(--vic-grey-700)') : convChip('STRATEGY', 'var(--vic-charcoal)')}
+    </div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;margin:12px 0 14px">
+      <div><div style="font-size:11px;color:var(--vic-grey-700);text-transform:uppercase;letter-spacing:0.05em">Pipeline</div>
+           <div style="font-weight:700;font-size:13px">${escape(m.pipeline)}</div></div>
+      <div><div style="font-size:11px;color:var(--vic-grey-700);text-transform:uppercase;letter-spacing:0.05em">Addressable</div>
+           <div style="font-weight:700;font-size:13px">${escape(m.addressable)}</div></div>
+      <div><div style="font-size:11px;color:var(--vic-grey-700);text-transform:uppercase;letter-spacing:0.05em">Revenue potential</div>
+           <div style="font-weight:700;font-size:13px;color:var(--vic-orange-dark)">${escape(m.revenue)}</div></div>
+    </div>
+    <ul style="margin:0;padding-left:18px;color:var(--vic-charcoal);font-size:12.5px;line-height:1.55">
+      ${m.drivers.map(d => `<li>${escape(d)}</li>`).join('')}
+    </ul>
+    <div style="margin-top:10px;font-size:11px;color:var(--vic-grey-500)">Source: ${escape(m.source)}</div>
+  `);
+
+  // live segmentation matrix: country x tier
+  const seg = { AU: { 1: 0, 2: 0, 3: 0, 0: 0 }, NZ: { 1: 0, 2: 0, 3: 0, 0: 0 } };
+  for (const a of accounts) {
+    const cy = (a.country === 'AU' || a.country === 'Australia') ? 'AU' : (a.country === 'NZ' || a.country === 'New Zealand') ? 'NZ' : (a.country || 'NZ').toUpperCase().startsWith('A') ? 'AU' : 'NZ';
+    if (!seg[cy]) seg[cy] = { 1: 0, 2: 0, 3: 0, 0: 0 };
+    seg[cy][a.tier] = (seg[cy][a.tier] || 0) + 1;
+  }
+  const segRow = (cy) => `<tr>
+    <td style="font-weight:700">${cy}</td>
+    <td style="text-align:center">${seg[cy][1] || 0}</td>
+    <td style="text-align:center">${seg[cy][2] || 0}</td>
+    <td style="text-align:center">${seg[cy][3] || 0}</td>
+    <td style="text-align:center;color:var(--vic-grey-700)">${seg[cy][0] || 0}</td>
+    <td style="text-align:center;font-weight:700">${(seg[cy][1]||0)+(seg[cy][2]||0)+(seg[cy][3]||0)+(seg[cy][0]||0)}</td></tr>`;
+
+  const tierTable = `<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+    <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
+      <th style="padding:6px 8px">Tier</th><th>Segment</th><th>Annual HVAC revenue</th><th>Est. Victaulic wallet</th><th>Conversion priority</th></tr></thead>
+    <tbody>${CONV_TIERS.map(t => `<tr style="border-bottom:1px solid var(--vic-grey-100)">
+      <td style="padding:7px 8px">${convChip('T' + t.tier, t.tier === 1 ? 'var(--vic-orange)' : t.tier === 2 ? 'var(--vic-charcoal)' : 'var(--vic-grey-700)')}</td>
+      <td style="font-weight:700">${escape(t.label)}</td><td>${escape(t.rev)}</td><td>${escape(t.wallet)}</td><td style="color:var(--vic-grey-700)">${escape(t.priority)}</td></tr>`).join('')}</tbody></table>`;
+
+  const liveTable = `<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+    <thead><tr style="text-align:center;border-bottom:2px solid var(--vic-grey-300)">
+      <th style="text-align:left;padding:6px 8px">Country</th><th>Tier 1</th><th>Tier 2</th><th>Tier 3</th><th>Unsegmented</th><th>Total</th></tr></thead>
+    <tbody>${segRow('AU')}${segRow('NZ')}</tbody></table>
+    <div style="font-size:11px;color:var(--vic-grey-500);margin-top:8px">Tier derived from each account’s contact category (Contractor T1/T2) and importance. Set tier explicitly after running the conversion migration.</div>`;
+
+  const hitList = (cc) => `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
+      <th style="padding:5px 7px">Company</th><th>HQ</th><th>Sectors</th><th>Est. revenue</th><th>Status</th><th style="text-align:center">In CRM</th></tr></thead>
+    <tbody>${CONV_TIER1[cc].map(h => {
+      const inCrm = accounts.some(a => convKey(a.company).includes(convKey(h.company).split(' ')[0]) || convKey(h.company).includes(convKey(a.company)));
+      return `<tr style="border-bottom:1px solid var(--vic-grey-100)">
+        <td style="padding:6px 7px;font-weight:700">${escape(h.company)}</td>
+        <td>${escape(h.hq)}</td><td style="color:var(--vic-grey-700)">${escape(h.sectors)}</td>
+        <td>${escape(h.rev)}</td><td>${escape(h.status)}</td>
+        <td style="text-align:center">${inCrm ? convChip('YES', 'var(--vic-success)') : convChip('add', 'var(--vic-grey-500)')}</td></tr>`;
+    }).join('')}</tbody></table>`;
+
+  return `
+    ${convSectionTitle('Market context', 'Where the conversion opportunity lives across the two markets')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px">${marketCard(CONV_MARKET.AU)}${marketCard(CONV_MARKET.NZ)}</div>
+
+    <div style="height:24px"></div>
+    ${convSectionTitle('Account tiering framework', 'Conversion priority by account size & strategic fit')}
+    ${convCard(tierTable)}
+
+    <div style="height:24px"></div>
+    ${convSectionTitle('Your accounts by country & tier', 'Live count from your CRM')}
+    ${convCard(liveTable)}
+
+    <div style="height:24px"></div>
+    ${convSectionTitle('Tier-1 priority hit list — Australia', 'From the May 2026 strategy')}
+    ${convCard(hitList('AU'))}
+    <div style="height:16px"></div>
+    ${convSectionTitle('Tier-1 priority targets — New Zealand', 'Modelled from public research — confirm & refine')}
+    ${convCard(hitList('NZ'))}`;
+}
+
+// ====================================================================
+// TAB 2 — Stakeholders
+// ====================================================================
+function convRenderStakeholders(accounts) {
+  const personaTable = `<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+    <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
+      <th style="padding:6px 8px">Persona</th><th>Primary concern</th><th>What they fear</th><th>Victaulic value message</th></tr></thead>
+    <tbody>${CONV_PERSONAS.map(p => `<tr style="border-bottom:1px solid var(--vic-grey-100)">
+      <td style="padding:7px 8px;font-weight:700;white-space:nowrap">${escape(p.label)}</td>
+      <td>${escape(p.concern)}</td><td style="color:var(--vic-grey-700)">${escape(p.fear)}</td>
+      <td style="font-size:12px">${escape(p.msg)}</td></tr>`).join('')}</tbody></table>`;
+
+  // coverage: key accounts (tier 1/2) x persona present?
+  const key = accounts.filter(a => a.tier === 1 || a.tier === 2).slice(0, 40);
+  const head = `<tr style="border-bottom:2px solid var(--vic-grey-300)">
+    <th style="text-align:left;padding:6px 8px">Account</th>
+    ${CONV_PERSONAS.map(p => `<th style="font-size:10.5px;writing-mode:horizontal-tb;padding:4px 3px;color:var(--vic-grey-700)">${escape(p.label.split(' ')[0])}</th>`).join('')}
+    <th style="text-align:center">Gaps</th></tr>`;
+  const rows = key.length ? key.map(a => {
+    let gaps = 0;
+    const cells = CONV_PERSONAS.map(p => {
+      const has = (a.personas[p.id] || []).length > 0;
+      if (!has) gaps++;
+      return `<td style="text-align:center">${has ? '<span style="color:var(--vic-success);font-weight:700">●</span>' : '<span style="color:var(--vic-grey-300)">○</span>'}</td>`;
+    }).join('');
+    return `<tr style="border-bottom:1px solid var(--vic-grey-100)">
+      <td style="padding:6px 8px;font-weight:600">${escape(a.company)} ${convChip('T' + a.tier, a.tier === 1 ? 'var(--vic-orange)' : 'var(--vic-charcoal)')}</td>
+      ${cells}<td style="text-align:center;font-weight:700;color:${gaps >= 4 ? 'var(--vic-danger)' : gaps >= 2 ? 'var(--vic-warn)' : 'var(--vic-success)'}">${gaps}</td></tr>`;
+  }).join('') : `<tr><td colspan="${CONV_PERSONAS.length + 2}" style="padding:14px;color:var(--vic-grey-700)">No Tier 1/2 accounts yet. Tag key contractor contacts as "Contractor T1/T2" to populate this map.</td></tr>`;
+
+  return `
+    ${convSectionTitle('Value proposition by buyer persona', 'Tailor the message — each stakeholder buys for different reasons')}
+    ${convCard(personaTable)}
+    <div style="height:24px"></div>
+    ${convSectionTitle('Stakeholder coverage on key accounts', 'Filled = you have a mapped contact for that persona. Hollow = a relationship gap to close.')}
+    ${convCard(`<table style="width:100%;border-collapse:collapse;font-size:12px">${head}${rows}</table>`)}`;
+}
+
+// ====================================================================
+// TAB 3 — Conversion Funnel
+// ====================================================================
+function convRenderFunnel(accounts) {
+  const counts = Object.fromEntries(CONV_STAGE_IDS.map(s => [s, 0]));
+  const byStage = Object.fromEntries(CONV_STAGE_IDS.map(s => [s, []]));
+  for (const a of accounts) { if (counts[a.stage] != null) { counts[a.stage]++; byStage[a.stage].push(a); } }
+  const maxCount = Math.max(1, ...Object.values(counts));
+
+  const funnelBars = CONV_STAGES.map(s => `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div style="width:120px;text-align:right;font-weight:700;font-size:12px;color:${s.color}">${s.n}. ${escape(s.name)}</div>
+      <div style="flex:1;background:var(--vic-grey-100);border-radius:2px;height:30px;position:relative">
+        <div style="height:100%;width:${(counts[s.id] / maxCount) * 100}%;min-width:${counts[s.id] ? '34px' : '0'};background:${s.color};border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-weight:700;font-size:12px">${counts[s.id] || ''}</div>
+      </div>
+    </div>`).join('');
+
+  const stageCards = CONV_STAGES.map(s => `
+    ${convCard(`
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="width:22px;height:22px;border-radius:50%;background:${s.color};color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">${s.n}</span>
+        <span style="font-weight:700;font-size:13px">${escape(s.name)}</span>
+        <span style="margin-left:auto">${convChip(counts[s.id] + ' acct' + (counts[s.id] === 1 ? '' : 's'), 'var(--vic-grey-100)', 'var(--vic-charcoal)')}</span>
+      </div>
+      <div style="font-size:12px;margin-bottom:6px"><b>Objective:</b> ${escape(s.objective)}</div>
+      <div style="font-size:12px;color:var(--vic-grey-700);margin-bottom:6px"><b style="color:var(--vic-charcoal)">Activities:</b> ${escape(s.activities)}</div>
+      <div style="font-size:12px;color:var(--vic-grey-700);margin-bottom:8px"><b style="color:var(--vic-charcoal)">Exit:</b> ${escape(s.exit)}</div>
+      <div style="font-size:11.5px;border-top:1px solid var(--vic-grey-100);padding-top:7px">${
+        byStage[s.id].length
+          ? byStage[s.id].slice(0, 8).map(a => escape(a.company)).join(' · ') + (byStage[s.id].length > 8 ? ` +${byStage[s.id].length - 8} more` : '')
+          : '<span style="color:var(--vic-grey-500)">No accounts at this stage</span>'
+      }</div>
+    `, '14px')}`).join('<div style="height:12px"></div>');
+
+  return `
+    ${convSectionTitle('Conversion funnel — live', 'Each account is auto-placed from its contacts, opportunities and acceptance data. Override per account after the migration.')}
+    ${convCard(funnelBars)}
+    <div style="height:22px"></div>
+    ${convSectionTitle('Stage-by-stage playbook', 'Objectives, key activities and exit criteria')}
+    ${stageCards}`;
+}
+
+// ====================================================================
+// TAB 4 — Tools & Programs
+// ====================================================================
+function convRenderTools(accounts, data) {
+  const llCount = (data.lunchLearns || []).length;
+  const toolbarInvites = (data.customers || []).filter(c => c.toolbarInvitationSentAt).length;
+  const stageChipColor = (sid) => (CONV_STAGE_BY[sid] || {}).color || 'var(--vic-grey-700)';
+
+  const toolCards = CONV_TOOLS.map(t => convCard(`
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
+      <div style="font-weight:700;font-size:13px">${escape(t.name)}</div>
+      ${convChip((CONV_STAGE_BY[t.stage] || {}).name || t.stage, stageChipColor(t.stage))}
+    </div>
+    <div style="font-size:12px;color:var(--vic-grey-700);margin:7px 0 8px;line-height:1.5">${escape(t.desc)}</div>
+    <div style="font-size:11px;color:var(--vic-grey-500)"><b style="color:var(--vic-charcoal)">Target:</b> ${escape(t.persona)}</div>
+  `, '14px')).join('');
+
+  const psaTable = `<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+    <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
+      <th style="padding:6px 8px">PSA Tier</th><th>Annual band</th><th>Pricing</th><th>Account manager</th><th>QBR cadence</th></tr></thead>
+    <tbody>${CONV_PSA.map(p => `<tr style="border-bottom:1px solid var(--vic-grey-100)">
+      <td style="padding:7px 8px">${convChip(p.tier, p.tier === 'PLATINUM' ? 'var(--vic-charcoal)' : p.tier === 'GOLD' ? 'var(--vic-orange)' : 'var(--vic-grey-700)')}</td>
+      <td style="font-weight:700">${escape(p.band)}</td><td>${escape(p.discount)}</td><td>${escape(p.am)}</td><td>${escape(p.qbr)}</td></tr>`).join('')}</tbody></table>`;
+
+  const kpi = (label, val, sub) => convCard(`
+    <div style="font-size:26px;font-weight:700;color:var(--vic-orange-dark)">${val}</div>
+    <div style="font-size:12px;font-weight:700;margin-top:2px">${escape(label)}</div>
+    <div style="font-size:11px;color:var(--vic-grey-500)">${escape(sub)}</div>`, '14px');
+
+  return `
+    ${convSectionTitle('Engagement so far', 'Live counters from your CRM')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px">
+      ${kpi('Lunch & Learns delivered', llCount, 'Target: 24 / yr')}
+      ${kpi('Toolbar invitations sent', toolbarInvites, 'BIM/Revit adoption')}
+      ${kpi('Key accounts (T1/T2)', accounts.filter(a => a.tier === 1 || a.tier === 2).length, 'Active relationships')}
+    </div>
+    <div style="height:24px"></div>
+    ${convSectionTitle('Conversion toolkit', 'The programs that move accounts down the funnel')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">${toolCards}</div>
+    <div style="height:24px"></div>
+    ${convSectionTitle('Preferred Supplier Agreement structure', 'The commercial mechanism that formalises conversion')}
+    ${convCard(psaTable)}`;
+}
+
+// ====================================================================
+// TAB 5 — Must-Have Projects (penetration)
+// ====================================================================
+function convRenderProjects(accounts, data) {
+  const { projects } = data;
+  // map a project to its account + penetration
+  const acctByContact = {};
+  for (const a of accounts) for (const c of a.contacts) acctByContact[c.id] = a;
+  const rows = projects.map(p => {
+    const acct = (p.customerIds || []).map(id => acctByContact[id]).find(Boolean);
+    const pen = acct ? acct.penetration.pct : 0;
+    const mustHave = !!p.mustHave;
+    return { p, acct, pen, mustHave, value: Number(p.value) || 0 };
+  });
+  // suggest must-haves = top 8 by value if none flagged yet
+  const anyFlagged = rows.some(r => r.mustHave);
+  if (!anyFlagged) {
+    [...rows].sort((a, b) => b.value - a.value).slice(0, 8).forEach(r => r.suggested = true);
+  }
+  rows.sort((a, b) => (b.mustHave || b.suggested ? 1 : 0) - (a.mustHave || a.suggested ? 1 : 0) || b.value - a.value);
+
+  const mustHaveRows = rows.filter(r => r.mustHave || r.suggested);
+  const totalVal = mustHaveRows.reduce((s, r) => s + r.value, 0);
+  const avgPen = mustHaveRows.length ? Math.round(mustHaveRows.reduce((s, r) => s + r.pen, 0) / mustHaveRows.length) : 0;
+
+  const tableRows = rows.length ? rows.map(r => {
+    const flag = r.mustHave
+      ? `<span title="Must-have" style="color:var(--vic-orange);cursor:pointer" onclick="convToggleMustHave(${r.p.id},false)">★</span>`
+      : `<span title="${r.suggested ? 'Suggested must-have — click to confirm' : 'Mark must-have'}" style="color:${r.suggested ? 'var(--vic-orange)' : 'var(--vic-grey-300)'};cursor:pointer" onclick="convToggleMustHave(${r.p.id},true)">${r.suggested ? '☆' : '☆'}</span>`;
+    return `<tr style="border-bottom:1px solid var(--vic-grey-100)">
+      <td style="text-align:center;font-size:16px">${flag}</td>
+      <td style="padding:7px 8px;font-weight:600">${escape(r.p.name || 'Untitled')}</td>
+      <td>${r.acct ? escape(r.acct.company) : '<span style="color:var(--vic-grey-500)">—</span>'}</td>
+      <td>${escape(r.p.status || '')}</td>
+      <td style="text-align:right;font-weight:700">${r.value ? convMoney(r.value, r.acct && r.acct.country === 'AU' ? 'AUD' : 'NZD') : '—'}</td>
+      <td style="min-width:120px">${convPctBar(r.pen, r.pen >= 60 ? 'var(--vic-success)' : r.pen >= 30 ? 'var(--vic-orange)' : 'var(--vic-grey-500)')}
+          <div style="font-size:11px;color:var(--vic-grey-700);margin-top:2px">${r.pen}% specified/approved${r.acct ? ` (${r.acct.penetration.won}/${r.acct.penetration.total})` : ''}</div></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" style="padding:14px;color:var(--vic-grey-700)">No projects yet. Add projects (with a value and linked contacts) to track penetration.</td></tr>`;
+
+  const kpi = (label, val) => convCard(`<div style="font-size:24px;font-weight:700;color:var(--vic-orange-dark)">${val}</div><div style="font-size:12px;font-weight:700">${escape(label)}</div>`, '13px');
+
+  return `
+    ${convSectionTitle('Must-have projects & penetration', 'How well Victaulic is specified on the projects that matter. Star a project to flag it must-have (saves once the migration is applied).')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
+      ${kpi('Must-have projects', mustHaveRows.length)}
+      ${kpi('Combined value', convMoney(totalVal, 'AUD'))}
+      ${kpi('Avg penetration', avgPen + '%')}
+    </div>
+    ${convCard(`<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
+        <th style="text-align:center;padding:6px 4px">★</th><th>Project</th><th>Account</th><th>Status</th>
+        <th style="text-align:right">Value</th><th>Victaulic penetration</th></tr></thead>
+      <tbody>${tableRows}</tbody></table>
+      ${!anyFlagged && rows.length ? '<div style="font-size:11px;color:var(--vic-grey-500);margin-top:8px">☆ Highlighted rows are auto-suggested must-haves (top by value). Click a star to confirm.</div>' : ''}`)}`;
+}
+
+async function convToggleMustHave(projectId, val) {
+  try {
+    await db.projects.update(projectId, { mustHave: val });
+    if (typeof toast === 'function') toast(val ? 'Flagged as must-have' : 'Removed must-have flag');
+    render();
+  } catch (e) {
+    console.warn('[conv] mustHave save failed', e);
+    if (typeof toastError === 'function') toastError('Could not save the must-have flag yet.\nRun the conversion migration in Supabase (adds the must_have column), then try again.');
+    else if (typeof toast === 'function') toast('Run the conversion migration first to save must-have flags.');
+  }
+}
+
+// ====================================================================
+// TAB 6 — Pipeline by invoice-landing month
+// ====================================================================
+function convRenderPipeline(accounts, data) {
+  const { opportunities, projects } = data;
+  const projById = Object.fromEntries(projects.map(p => [p.id, p]));
+  const acctByContact = {};
+  for (const a of accounts) for (const c of a.contacts) acctByContact[c.id] = a;
+
+  const items = opportunities.map(o => {
+    const proj = o.projectId ? projById[o.projectId] : null;
+    const acct = acctByContact[o.customerId];
+    const amount = Number(o.amount != null ? o.amount : (o.value != null ? o.value : (proj ? proj.value : 0))) || 0;
+    const stage = convNorm(o.stage);
+    const prob = o.probability != null ? Number(o.probability) / (Number(o.probability) > 1 ? 100 : 1) : (CONV_STAGE_PROB[stage] != null ? CONV_STAGE_PROB[stage] : 0.3);
+    const dateStr = o.expectedInvoiceDate || o.expectedCloseDate || '';
+    const ym = /^\d{4}-\d{2}/.test(dateStr) ? dateStr.slice(0, 7) : 'unscheduled';
+    const owner = o.owner || o.ownerName || (typeof _currentUser !== 'undefined' && _currentUser && _currentUser.email) || 'Me';
+    return { o, proj, acct, amount, prob, weighted: amount * prob, ym, owner, stage };
+  });
+
+  // group by month
+  const months = {};
+  for (const it of items) {
+    if (!months[it.ym]) months[it.ym] = { ym: it.ym, count: 0, gross: 0, weighted: 0, owners: {} };
+    const m = months[it.ym];
+    m.count++; m.gross += it.amount; m.weighted += it.weighted;
+    m.owners[it.owner] = (m.owners[it.owner] || 0) + it.weighted;
+  }
+  const ordered = Object.values(months).sort((a, b) => {
+    if (a.ym === 'unscheduled') return 1; if (b.ym === 'unscheduled') return -1;
+    return a.ym.localeCompare(b.ym);
+  });
+  const maxW = Math.max(1, ...ordered.map(m => m.weighted));
+  const totalGross = items.reduce((s, i) => s + i.amount, 0);
+  const totalWeighted = items.reduce((s, i) => s + i.weighted, 0);
+
+  const allOwners = [...new Set(items.map(i => i.owner))];
+
+  const kpi = (label, val, sub) => convCard(`<div style="font-size:23px;font-weight:700;color:var(--vic-orange-dark)">${val}</div><div style="font-size:12px;font-weight:700">${escape(label)}</div>${sub ? `<div style="font-size:11px;color:var(--vic-grey-500)">${escape(sub)}</div>` : ''}`, '13px');
+
+  const monthRows = ordered.length ? ordered.map(m => `
+    <tr style="border-bottom:1px solid var(--vic-grey-100)">
+      <td style="padding:7px 8px;font-weight:700">${escape(convMonthLabel(m.ym))}</td>
+      <td style="text-align:center">${m.count}</td>
+      <td style="text-align:right">${convMoney(m.gross, 'AUD')}</td>
+      <td style="text-align:right;font-weight:700;color:var(--vic-orange-dark)">${convMoney(m.weighted, 'AUD')}</td>
+      <td style="width:42%">${convPctBar((m.weighted / maxW) * 100, 'var(--vic-orange)')}</td>
+    </tr>`).join('') : `<tr><td colspan="5" style="padding:14px;color:var(--vic-grey-700)">No opportunities with an expected close/invoice date yet. Add opportunities and set their expected date to build the monthly landing forecast.</td></tr>`;
+
+  // owner breakdown matrix (multi-user view): owner x month weighted
+  let ownerBlock = '';
+  if (allOwners.length > 1) {
+    const head = `<tr style="border-bottom:2px solid var(--vic-grey-300)"><th style="text-align:left;padding:6px 8px">Owner</th>${ordered.map(m => `<th style="text-align:right;padding:6px 6px;font-size:11px">${escape(convMonthLabel(m.ym))}</th>`).join('')}<th style="text-align:right">Total</th></tr>`;
+    const orows = allOwners.map(ow => {
+      let tot = 0;
+      const cells = ordered.map(m => { const v = m.owners[ow] || 0; tot += v; return `<td style="text-align:right;padding:5px 6px">${v ? convMoney(v, 'AUD') : '·'}</td>`; }).join('');
+      return `<tr style="border-bottom:1px solid var(--vic-grey-100)"><td style="padding:6px 8px;font-weight:600">${escape(ow)}</td>${cells}<td style="text-align:right;font-weight:700">${convMoney(tot, 'AUD')}</td></tr>`;
+    }).join('');
+    ownerBlock = `<div style="height:24px"></div>${convSectionTitle('Weighted pipeline by owner & month', 'Collated across all users (once team-sharing is enabled in Supabase, every rep’s opportunities roll up here)')}
+      ${convCard(`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">${head}${orows}</table></div>`)}`;
+  }
+
+  return `
+    ${convSectionTitle('Pipeline by invoice-landing month', 'Every opportunity rolled up by the month it is likely to invoice. Weighted = value × stage probability.')}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px">
+      ${kpi('Open opportunities', items.length)}
+      ${kpi('Gross pipeline', convMoney(totalGross, 'AUD'))}
+      ${kpi('Weighted forecast', convMoney(totalWeighted, 'AUD'), 'value × probability')}
+      ${kpi('Contributing users', allOwners.length)}
+    </div>
+    ${convCard(`<table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
+        <th style="padding:6px 8px">Invoice month</th><th style="text-align:center">Opps</th>
+        <th style="text-align:right">Gross</th><th style="text-align:right">Weighted</th><th>Weighted distribution</th></tr></thead>
+      <tbody>${monthRows}</tbody></table>`)}
+    ${ownerBlock}
+    <div style="font-size:11px;color:var(--vic-grey-500);margin-top:10px">Probability is taken from each opportunity’s own field when present, otherwise inferred from its stage. Amounts use the opportunity value, falling back to the linked project value.</div>`;
 }
 </script>
 </body>
