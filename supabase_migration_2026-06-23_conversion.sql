@@ -120,6 +120,88 @@ where not exists (
 
 
 -- ============================================================================
+-- PART A.5 — SAMPLE DATA  (OPTIONAL · so the Conversion HQ populates instantly)
+-- ----------------------------------------------------------------------------
+-- Adds ~10 must-have projects (spanning 2026 / 2027 / 2028+), matching
+-- opportunities, and a little acceptance data so the value-by-year table,
+-- penetration bars and pipeline all show real numbers. Each links to the
+-- Tier-1 accounts seeded in PART A. Idempotent. Remove anytime with the
+-- CLEANUP block at the very bottom of this file.
+-- Run PART A first (the accounts must exist).
+-- ============================================================================
+
+-- ---- Sample must-have projects ---------------------------------------------
+insert into public.projects (user_id, name, status, customer_ids, value, must_have, expected_invoice_date, probability, market, sector)
+select auth.uid(), v.name, v.status,
+  array(select id from public.customers c where c.user_id = auth.uid() and lower(c.company) = lower(v.company) limit 1),
+  v.value, true, v.inv::date, v.prob, v.market, v.sector
+from (values
+  ('Footscray Hospital — Mechanical Services', 'In-build', 'AE Smith',                            1800000, '2026-09-01', 70, 'Building Svces', 'Health'),
+  ('Western Sydney Hyperscale DC (WS3)',       'Tender',   'Mechanical One (Lendlease Services)',  3200000, '2026-11-01', 60, 'Data Centre',    'Mission-critical'),
+  ('Perth Resources Process Facility',         'Lead',     'Intech Engineers',                     900000,  '2026-06-01', 55, 'Mining',         'Resources'),
+  ('Auckland City Hospital — Plant Upgrade',   'In-build', 'Economech',                            1200000, '2026-10-01', 50, 'Building Svces', 'Health'),
+  ('Sydney CBD Commercial Tower',              'Lead',     'JCI / York Mechanical Services',       1600000, '2027-01-01', 40, 'Building Svces', 'Commercial'),
+  ('Brisbane Live Precinct — Tower B',         'Tender',   'Stowe Australia',                      1400000, '2027-03-01', 45, 'Building Svces', 'Commercial'),
+  ('Datagrid Invercargill — AI Factory',       'Tender',   'Aquaheat New Zealand',                 4000000, '2027-05-01', 40, 'Data Centre',    'Mission-critical'),
+  ('Melbourne Big Build — New Hospital',       'Lead',     'Hastie Group / Ventia Mechanical',     2100000, '2027-07-01', 40, 'Building Svces', 'Health'),
+  ('Adelaide Industrial Cold Store',           'Tender',   'Nilsen (Electrical & Mechanical)',     700000,  '2027-10-01', 50, 'Industrial',     'Cold chain'),
+  ('QLD Defence Facility — Stage 1',           'Lead',     'Watpac Mechanical / BGIS',             2600000, '2028-02-01', 35, 'Infrastructure', 'Defence')
+) as v(name, status, company, value, inv, prob, market, sector)
+where exists (select 1 from public.customers c where c.user_id = auth.uid() and lower(c.company) = lower(v.company))
+  and not exists (select 1 from public.projects p where p.user_id = auth.uid() and p.name = v.name);
+
+-- ---- Sample opportunities (feed the Pipeline-by-month tab) ------------------
+insert into public.opportunities (user_id, customer_id, project_id, stage, expected_close_date, expected_invoice_date, amount, probability, owner_name)
+select auth.uid(),
+  (select id from public.customers c where c.user_id = auth.uid() and lower(c.company) = lower(v.company) limit 1),
+  (select id from public.projects p where p.user_id = auth.uid() and p.name = v.proj limit 1),
+  v.stage, v.dt::date, v.dt::date, v.amount, v.prob, 'JK'
+from (values
+  ('AE Smith',                           'Footscray Hospital — Mechanical Services', 'convert',     '2026-09-01', 1800000, 70),
+  ('Mechanical One (Lendlease Services)','Western Sydney Hyperscale DC (WS3)',       'demonstrate', '2026-11-01', 3200000, 60),
+  ('Intech Engineers',                   'Perth Resources Process Facility',         'demonstrate', '2026-06-01', 900000,  55),
+  ('Economech',                          'Auckland City Hospital — Plant Upgrade',   'convert',     '2026-10-01', 1200000, 50),
+  ('Stowe Australia',                    'Brisbane Live Precinct — Tower B',         'demonstrate', '2027-03-01', 1400000, 45),
+  ('Aquaheat New Zealand',               'Datagrid Invercargill — AI Factory',       'engage',      '2027-05-01', 4000000, 40)
+) as v(company, proj, stage, dt, amount, prob)
+where exists (select 1 from public.projects p where p.user_id = auth.uid() and p.name = v.proj)
+  and not exists (
+    select 1 from public.opportunities o join public.projects p on p.id = o.project_id
+    where o.user_id = auth.uid() and p.name = v.proj);
+
+-- ---- Sample acceptance (drives Victaulic penetration % on key accounts) -----
+-- Attaches a few product statuses to the anchor contact of each company, using
+-- the user's existing products ranked by sort_order (prod 1, 2, 3 ...).
+with prod as (
+  select id, row_number() over (order by sort_order, id) as rn
+  from public.products where user_id = auth.uid()
+), cust as (
+  select id, company, row_number() over (partition by lower(company) order by id) as rn
+  from public.customers where user_id = auth.uid()
+)
+insert into public.acceptance (user_id, customer_id, product_id, status)
+select auth.uid(), cu.id, pr.id, s.status
+from (values
+  ('AE Smith',                            1, 'approved'),
+  ('AE Smith',                            2, 'specified'),
+  ('AE Smith',                            3, 'in_progress'),
+  ('Mechanical One (Lendlease Services)', 1, 'approved'),
+  ('Mechanical One (Lendlease Services)', 2, 'approved'),
+  ('Economech',                           1, 'approved'),
+  ('Economech',                           2, 'specified'),
+  ('Stowe Australia',                     1, 'in_progress'),
+  ('Aquaheat New Zealand',                1, 'specified')
+) as s(company, prodrank, status)
+join cust cu on lower(cu.company) = lower(s.company) and cu.rn = 1
+join prod pr on pr.rn = s.prodrank
+where not exists (
+  select 1 from public.acceptance a
+  where a.user_id = auth.uid() and a.customer_id = cu.id and a.product_id = pr.id);
+
+-- Verify A.5:  select name, value, expected_invoice_date, probability from public.projects where must_have order by expected_invoice_date;
+
+
+-- ============================================================================
 -- PART B — TEAM SHARING (OPTIONAL · SECURITY-SENSITIVE · read before running)
 -- ----------------------------------------------------------------------------
 -- WHAT THIS DOES: replaces the "each user only sees their own rows" policies
@@ -166,3 +248,37 @@ end$$;
 -- After enabling PART B, set owner_name on opportunities so the pipeline-by-
 -- owner table reads nicely across users, e.g.:
 --   update public.opportunities set owner_name = 'JK' where user_id = auth.uid() and owner_name is null;
+
+
+-- ============================================================================
+-- CLEANUP — remove the PART A.5 sample data (run only if you want it gone)
+-- ----------------------------------------------------------------------------
+-- Deletes the sample opportunities, projects and acceptance added above.
+-- The seeded Tier-1 "Account anchor —" contacts are left in place (they are
+-- useful real accounts); delete those manually if you don't want them.
+-- Uncomment to run:
+/*
+delete from public.opportunities
+  where user_id = auth.uid()
+    and project_id in (
+      select id from public.projects where user_id = auth.uid() and name = any (array[
+        'Footscray Hospital — Mechanical Services','Western Sydney Hyperscale DC (WS3)',
+        'Perth Resources Process Facility','Auckland City Hospital — Plant Upgrade',
+        'Sydney CBD Commercial Tower','Brisbane Live Precinct — Tower B',
+        'Datagrid Invercargill — AI Factory','Melbourne Big Build — New Hospital',
+        'Adelaide Industrial Cold Store','QLD Defence Facility — Stage 1']));
+
+delete from public.projects
+  where user_id = auth.uid() and name = any (array[
+    'Footscray Hospital — Mechanical Services','Western Sydney Hyperscale DC (WS3)',
+    'Perth Resources Process Facility','Auckland City Hospital — Plant Upgrade',
+    'Sydney CBD Commercial Tower','Brisbane Live Precinct — Tower B',
+    'Datagrid Invercargill — AI Factory','Melbourne Big Build — New Hospital',
+    'Adelaide Industrial Cold Store','QLD Defence Facility — Stage 1']);
+
+-- (optional) clear the sample acceptance from the anchor contacts:
+-- delete from public.acceptance a using public.customers c
+--   where a.user_id = auth.uid() and a.customer_id = c.id
+--     and c.company in ('AE Smith','Mechanical One (Lendlease Services)','Economech',
+--                       'Stowe Australia','Aquaheat New Zealand');
+*/

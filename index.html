@@ -9662,21 +9662,28 @@ function convRenderProjects(accounts, data) {
     const flag = r.mustHave
       ? `<span title="Must-have" style="color:var(--vic-orange);cursor:pointer" onclick="convToggleMustHave(${r.p.id},false)">★</span>`
       : `<span title="${r.suggested ? 'Suggested must-have — click to confirm' : 'Mark must-have'}" style="color:${r.suggested ? 'var(--vic-orange)' : 'var(--vic-grey-300)'};cursor:pointer" onclick="convToggleMustHave(${r.p.id},true)">${r.suggested ? '☆' : '☆'}</span>`;
-    const landLabel = r.landDate ? (/^\d{4}-\d{2}/.test(r.landDate) ? convMonthLabel(r.landDate.slice(0, 7)) : r.year) : null;
-    const landCell = landLabel
-      ? convChip(landLabel, (r.year && Number(r.year) <= baseYear) ? 'var(--vic-orange)' : 'var(--vic-grey-700)')
-      : '<span style="color:var(--vic-grey-300)">—</span>';
+    // editable expected-invoice month (project's own value) + win probability
+    const ownYm = (r.p.expectedInvoiceDate && /^\d{4}-\d{2}/.test(r.p.expectedInvoiceDate)) ? r.p.expectedInvoiceDate.slice(0, 7) : '';
+    const inheritNote = (!ownYm && r.landDate)
+      ? `<div style="font-size:10px;color:var(--vic-grey-500);margin-top:2px">via opp: ${escape(/^\d{4}-\d{2}/.test(r.landDate) ? convMonthLabel(r.landDate.slice(0, 7)) : r.year)}</div>`
+      : '';
+    const probVal = r.prob != null ? Math.round(r.prob * 100) : '';
+    const inStyle = 'padding:4px 6px;border:1px solid var(--vic-grey-300);border-radius:2px;font-family:inherit;font-size:12px;background:#fff';
     return `<tr style="border-bottom:1px solid var(--vic-grey-100)">
       <td style="text-align:center;font-size:16px">${flag}</td>
       <td style="padding:7px 8px;font-weight:600">${escape(r.p.name || 'Untitled')}</td>
       <td>${r.acct ? escape(r.acct.company) : '<span style="color:var(--vic-grey-500)">—</span>'}</td>
       <td>${escape(r.p.status || '')}</td>
-      <td style="white-space:nowrap">${landCell}</td>
+      <td style="white-space:nowrap">
+        <input id="conv-inv-${r.p.id}" type="month" value="${ownYm}" onchange="convSetProjectField(${r.p.id},'expectedInvoiceDate',this.value ? this.value+'-01' : '')" style="${inStyle};width:128px">
+        ${inheritNote}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <input id="conv-prob-${r.p.id}" type="number" min="0" max="100" value="${probVal}" onchange="convSetProjectField(${r.p.id},'probability',this.value)" style="${inStyle};width:50px;text-align:right">%</td>
       <td style="text-align:right;font-weight:700">${r.value ? convMoney(r.value, r.acct && r.acct.country === 'AU' ? 'AUD' : 'NZD') : '—'}</td>
       <td style="min-width:120px">${convPctBar(r.pen, r.pen >= 60 ? 'var(--vic-success)' : r.pen >= 30 ? 'var(--vic-orange)' : 'var(--vic-grey-500)')}
           <div style="font-size:11px;color:var(--vic-grey-700);margin-top:2px">${r.pen}% specified/approved${r.acct ? ` (${r.acct.penetration.won}/${r.acct.penetration.total})` : ''}</div></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7" style="padding:14px;color:var(--vic-grey-700)">No projects yet. Add projects (with a value and linked contacts) to track penetration.</td></tr>`;
+  }).join('') : `<tr><td colspan="8" style="padding:14px;color:var(--vic-grey-700)">No projects yet. Add projects (with a value and linked contacts) to track penetration.</td></tr>`;
 
   const kpi = (label, val) => convCard(`<div style="font-size:24px;font-weight:700;color:var(--vic-orange-dark)">${val}</div><div style="font-size:12px;font-weight:700">${escape(label)}</div>`, '13px');
 
@@ -9690,11 +9697,11 @@ function convRenderProjects(accounts, data) {
     ${convSectionTitle('Must-have value by year', 'When the value is likely to land — by invoice year')}
     ${yearSummary}
     <div style="height:22px"></div>
-    ${convSectionTitle('Must-have projects', 'Star to flag · “Lands” shows the expected invoice month/year')}
+    ${convSectionTitle('Must-have projects', 'Star to flag · set the expected invoice month and win % inline to populate the year table above')}
     ${convCard(`<table style="width:100%;border-collapse:collapse;font-size:12.5px">
       <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
         <th style="text-align:center;padding:6px 4px">★</th><th>Project</th><th>Account</th><th>Status</th>
-        <th>Lands</th><th style="text-align:right">Value</th><th>Victaulic penetration</th></tr></thead>
+        <th>Expected invoice</th><th style="text-align:center">Win %</th><th style="text-align:right">Value</th><th>Victaulic penetration</th></tr></thead>
       <tbody>${tableRows}</tbody></table>
       ${!anyFlagged && rows.length ? '<div style="font-size:11px;color:var(--vic-grey-500);margin-top:8px">☆ Highlighted rows are auto-suggested must-haves (top by value). Click a star to confirm.</div>' : ''}`)}`;
 }
@@ -9708,6 +9715,27 @@ async function convToggleMustHave(projectId, val) {
     console.warn('[conv] mustHave save failed', e);
     if (typeof toastError === 'function') toastError('Could not save the must-have flag yet.\nRun the conversion migration in Supabase (adds the must_have column), then try again.');
     else if (typeof toast === 'function') toast('Run the conversion migration first to save must-have flags.');
+  }
+}
+
+// Inline-save a single project field from the Must-Have Projects table
+// (expected invoice month, or win probability). Re-renders so the value-by-year
+// summary updates immediately. Degrades gracefully before the migration.
+async function convSetProjectField(projectId, field, value) {
+  try {
+    let v = value;
+    if (field === 'probability') {
+      v = (value === '' || value == null) ? null : Math.max(0, Math.min(100, parseInt(value, 10) || 0));
+    } else if (field === 'expectedInvoiceDate') {
+      v = value || null;
+    }
+    await db.projects.update(projectId, { [field]: v });
+    if (typeof toast === 'function') toast('Saved');
+    render();
+  } catch (e) {
+    console.warn('[conv] project field save failed', e);
+    if (typeof toastError === 'function') toastError('Could not save yet.\nRun the conversion migration in Supabase (adds expected_invoice_date / probability to projects), then try again.');
+    else if (typeof toast === 'function') toast('Run the conversion migration first to save this.');
   }
 }
 
