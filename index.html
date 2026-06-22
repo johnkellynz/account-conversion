@@ -9289,12 +9289,18 @@ function convPctBar(pct, color) {
 // Segmented 5-stage conversion progress bar (Identify -> Grow). Fills each
 // segment up to the account's current stage in that stage's colour, with a
 // "3/5 · DEMONSTRATE" label underneath — quick to read at a glance.
-function convStageBar(stageId) {
+function convStageBar(stageId, opts) {
+  opts = opts || {};
+  const editable = !!(opts.editable && opts.companyKey);
+  const ck = (opts.companyKey || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const idx = CONV_STAGE_IDS.indexOf(stageId);
   const cur = CONV_STAGE_BY[stageId];
   const segs = CONV_STAGES.map((s, i) => {
     const on = idx >= 0 && i <= idx;
-    return `<div title="${escape(s.n + '. ' + s.name)}" style="flex:1;height:9px;border-radius:2px;background:${on ? (cur ? cur.color : 'var(--vic-orange)') : 'var(--vic-grey-100)'}"></div>`;
+    const handlers = editable
+      ? ` onclick="convSetAccountStage('${ck}','${s.id}')" onmouseover="this.style.outline='2px solid var(--vic-orange)';this.style.outlineOffset='1px'" onmouseout="this.style.outline='none'"`
+      : '';
+    return `<div title="${escape((editable ? 'Set to ' : '') + s.n + '. ' + s.name)}"${handlers} style="flex:1;height:${editable ? '12' : '9'}px;border-radius:2px;${editable ? 'cursor:pointer;' : ''}background:${on ? (cur ? cur.color : 'var(--vic-orange)') : 'var(--vic-grey-100)'}"></div>`;
   }).join('');
   return `<div style="min-width:140px">
     <div style="display:flex;gap:3px">${segs}</div>
@@ -9314,6 +9320,28 @@ function convStatusToStage(statusText) {
   if (s.includes('grow')) return 'demonstrate';
   if (s.includes('target') || s.includes('low')) return 'engage';
   return 'identify';
+}
+
+// Set a whole account's conversion stage from the Tier-1 hit list (clicking a
+// segment in its progress bar). Writes conversionStage to every contact at that
+// company so the derived account stage stays consistent, then re-renders.
+// Degrades gracefully before the migration adds the conversion_stage column.
+async function convSetAccountStage(companyKey, stageId) {
+  try {
+    const all = await getAllCustomers();
+    const targets = all.filter(c => convKey(c.company) === companyKey);
+    if (!targets.length) {
+      if (typeof toast === 'function') toast('Add this account to the CRM first to set its stage');
+      return;
+    }
+    for (const c of targets) await db.customers.update(c.id, { conversionStage: stageId });
+    if (typeof toast === 'function') toast('Stage set to ' + ((CONV_STAGE_BY[stageId] || {}).name || stageId));
+    render();
+  } catch (e) {
+    console.warn('[conv] set account stage failed', e);
+    if (typeof toastError === 'function') toastError('Could not save the stage yet.\nRun the conversion migration in Supabase (adds conversion_stage to customers), then try again.');
+    else if (typeof toast === 'function') toast('Run the conversion migration first to set stages.');
+  }
 }
 
 // ====================================================================
@@ -9430,7 +9458,7 @@ function convRenderMarkets(accounts) {
         <td style="padding:6px 7px;font-weight:700">${escape(h.company)}</td>
         <td>${escape(h.hq)}</td><td style="color:var(--vic-grey-700)">${escape(h.sectors)}</td>
         <td>${escape(h.rev)}</td>
-        <td>${convStageBar(stage)}<div style="font-size:10px;color:var(--vic-grey-500);margin-top:2px">${escape(h.status)}${matched ? '' : ' · not in CRM (indicative)'}</div></td>
+        <td>${convStageBar(stage, { editable: !!matched, companyKey: matched ? convKey(matched.company) : '' })}<div style="font-size:10px;color:var(--vic-grey-500);margin-top:2px">${escape(h.status)}${matched ? '' : ' · not in CRM (indicative)'}</div></td>
         <td style="text-align:center">${matched ? convChip('YES', 'var(--vic-success)') : convChip('add', 'var(--vic-grey-500)')}</td></tr>`;
     }).join('')}</tbody></table>`;
 
@@ -9447,7 +9475,7 @@ function convRenderMarkets(accounts) {
     ${convCard(liveTable)}
 
     <div style="height:24px"></div>
-    ${convSectionTitle('Tier-1 priority hit list — Australia', 'From the May 2026 strategy')}
+    ${convSectionTitle('Tier-1 priority hit list — Australia', 'From the May 2026 strategy · click a progress segment to set an in-CRM account’s stage')}
     ${convCard(hitList('AU'))}
     <div style="height:16px"></div>
     ${convSectionTitle('Tier-1 priority targets — New Zealand', 'Modelled from public research — confirm & refine')}
@@ -9739,6 +9767,33 @@ async function convSetProjectField(projectId, field, value) {
   }
 }
 
+// Inline-save a single opportunity field from the Pipeline tab — owner (rep),
+// expected invoice month, amount or win probability. Re-renders so the monthly
+// and per-rep roll-ups update instantly. Degrades gracefully pre-migration.
+async function convSetOppField(oppId, field, value) {
+  try {
+    let v = value;
+    if (field === 'amount') {
+      v = (value === '' || value == null) ? null : Math.max(0, Number(value) || 0);
+    } else if (field === 'probability') {
+      v = (value === '' || value == null) ? null : Math.max(0, Math.min(100, parseInt(value, 10) || 0));
+    } else if (field === 'expectedInvoiceDate') {
+      v = value || null;
+    } else if (field === 'ownerName') {
+      v = (value || '').trim() || null;
+    } else if (field === 'stage') {
+      v = value || null;
+    }
+    await db.opportunities.update(oppId, { [field]: v });
+    if (typeof toast === 'function') toast('Saved');
+    render();
+  } catch (e) {
+    console.warn('[conv] opportunity field save failed', e);
+    if (typeof toastError === 'function') toastError('Could not save yet.\nRun the conversion migration in Supabase (creates the opportunities table + amount/probability/owner_name columns), then try again.');
+    else if (typeof toast === 'function') toast('Run the conversion migration first to save this.');
+  }
+}
+
 // Best-guess "when does this project land / invoice" date: the project's own
 // expected invoice date, else the earliest linked opportunity's expected
 // invoice/close date. Returns '' when unknown.
@@ -9811,9 +9866,38 @@ function convRenderPipeline(accounts, data) {
       const cells = ordered.map(m => { const v = m.owners[ow] || 0; tot += v; return `<td style="text-align:right;padding:5px 6px">${v ? convMoney(v, 'AUD') : '·'}</td>`; }).join('');
       return `<tr style="border-bottom:1px solid var(--vic-grey-100)"><td style="padding:6px 8px;font-weight:600">${escape(ow)}</td>${cells}<td style="text-align:right;font-weight:700">${convMoney(tot, 'AUD')}</td></tr>`;
     }).join('');
-    ownerBlock = `<div style="height:24px"></div>${convSectionTitle('Weighted pipeline by owner & month', 'Collated across all users (once team-sharing is enabled in Supabase, every rep’s opportunities roll up here)')}
+    ownerBlock = `<div style="height:24px"></div>${convSectionTitle('Weighted pipeline by rep & month', 'Each rep’s weighted forecast. Once team-sharing is enabled (migration Part B), every rep’s opportunities roll up here automatically.')}
       ${convCard(`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">${head}${orows}</table></div>`)}`;
   }
+
+  // ---- editable opportunities detail (owner / month / amount / win %) -------
+  const repOptions = allOwners.filter(Boolean).map(o => `<option value="${escape(o)}">`).join('');
+  const inS = 'padding:4px 6px;border:1px solid var(--vic-grey-300);border-radius:2px;font-family:inherit;font-size:12px;background:#fff';
+  const itemsSorted = [...items].sort((a, b) =>
+    (a.ym === 'unscheduled' ? 1 : b.ym === 'unscheduled' ? -1 : a.ym.localeCompare(b.ym)) || (b.weighted - a.weighted));
+  const oppRows = items.length ? itemsSorted.map(it => {
+    const oid = it.o.id;
+    const label = (it.acct ? it.acct.company : 'Unlinked') + (it.proj ? ' · ' + it.proj.name : '');
+    const ownYm = (it.o.expectedInvoiceDate && /^\d{4}-\d{2}/.test(it.o.expectedInvoiceDate)) ? it.o.expectedInvoiceDate.slice(0, 7)
+                : (it.o.expectedCloseDate && /^\d{4}-\d{2}/.test(it.o.expectedCloseDate)) ? it.o.expectedCloseDate.slice(0, 7) : '';
+    const amt = it.o.amount != null ? it.o.amount : (it.o.value != null ? it.o.value : '');
+    const probPct = it.o.probability != null ? Number(it.o.probability) : Math.round(it.prob * 100);
+    const ownerVal = it.o.ownerName || it.o.owner || '';
+    return `<tr style="border-bottom:1px solid var(--vic-grey-100)">
+      <td style="padding:6px 8px;font-weight:600">${escape(label)}</td>
+      <td><input id="conv-opp-owner-${oid}" list="conv-rep-list" value="${escape(ownerVal)}" placeholder="rep" onchange="convSetOppField(${oid},'ownerName',this.value)" style="${inS};width:104px"></td>
+      <td><input id="conv-opp-inv-${oid}" type="month" value="${ownYm}" onchange="convSetOppField(${oid},'expectedInvoiceDate',this.value ? this.value+'-01' : '')" style="${inS};width:120px"></td>
+      <td style="text-align:right"><input id="conv-opp-amt-${oid}" type="number" min="0" step="1000" value="${amt}" onchange="convSetOppField(${oid},'amount',this.value)" style="${inS};width:106px;text-align:right"></td>
+      <td style="text-align:center;white-space:nowrap"><input id="conv-opp-prob-${oid}" type="number" min="0" max="100" value="${probPct}" onchange="convSetOppField(${oid},'probability',this.value)" style="${inS};width:46px;text-align:right">%</td>
+      <td style="text-align:right;font-weight:700;color:var(--vic-orange-dark)">${convMoney(it.weighted, 'AUD')}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" style="padding:14px;color:var(--vic-grey-700)">No opportunities yet. Run the sample data (migration PART A.5) or add opportunities to populate this.</td></tr>`;
+  const oppTable = `<datalist id="conv-rep-list">${repOptions}</datalist>
+    ${convCard(`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr style="text-align:left;border-bottom:2px solid var(--vic-grey-300)">
+        <th style="padding:6px 8px">Opportunity</th><th>Owner (rep)</th><th>Invoice month</th>
+        <th style="text-align:right">Amount</th><th style="text-align:center">Win %</th><th style="text-align:right">Weighted</th></tr></thead>
+      <tbody>${oppRows}</tbody></table></div>`)}`;
 
   return `
     ${convSectionTitle('Pipeline by invoice-landing month', 'Every opportunity rolled up by the month it is likely to invoice. Weighted = value × stage probability.')}
@@ -9829,6 +9913,9 @@ function convRenderPipeline(accounts, data) {
         <th style="text-align:right">Gross</th><th style="text-align:right">Weighted</th><th>Weighted distribution</th></tr></thead>
       <tbody>${monthRows}</tbody></table>`)}
     ${ownerBlock}
+    <div style="height:24px"></div>
+    ${convSectionTitle('Opportunities — edit owner, month & value', 'Change a rep, expected invoice month, amount or win % and the roll-ups above update instantly')}
+    ${oppTable}
     <div style="font-size:11px;color:var(--vic-grey-500);margin-top:10px">Probability is taken from each opportunity’s own field when present, otherwise inferred from its stage. Amounts use the opportunity value, falling back to the linked project value.</div>`;
 }
 </script>

@@ -151,19 +151,23 @@ where exists (select 1 from public.customers c where c.user_id = auth.uid() and 
   and not exists (select 1 from public.projects p where p.user_id = auth.uid() and p.name = v.name);
 
 -- ---- Sample opportunities (feed the Pipeline-by-month tab) ------------------
+-- owner_name spreads across a few reps so the per-rep roll-up is meaningful.
+-- All editable inline in the Pipeline tab (owner / month / amount / win %).
 insert into public.opportunities (user_id, customer_id, project_id, stage, expected_close_date, expected_invoice_date, amount, probability, owner_name)
 select auth.uid(),
   (select id from public.customers c where c.user_id = auth.uid() and lower(c.company) = lower(v.company) limit 1),
   (select id from public.projects p where p.user_id = auth.uid() and p.name = v.proj limit 1),
-  v.stage, v.dt::date, v.dt::date, v.amount, v.prob, 'JK'
+  v.stage, v.dt::date, v.dt::date, v.amount, v.prob, v.owner
 from (values
-  ('AE Smith',                           'Footscray Hospital — Mechanical Services', 'convert',     '2026-09-01', 1800000, 70),
-  ('Mechanical One (Lendlease Services)','Western Sydney Hyperscale DC (WS3)',       'demonstrate', '2026-11-01', 3200000, 60),
-  ('Intech Engineers',                   'Perth Resources Process Facility',         'demonstrate', '2026-06-01', 900000,  55),
-  ('Economech',                          'Auckland City Hospital — Plant Upgrade',   'convert',     '2026-10-01', 1200000, 50),
-  ('Stowe Australia',                    'Brisbane Live Precinct — Tower B',         'demonstrate', '2027-03-01', 1400000, 45),
-  ('Aquaheat New Zealand',               'Datagrid Invercargill — AI Factory',       'engage',      '2027-05-01', 4000000, 40)
-) as v(company, proj, stage, dt, amount, prob)
+  ('AE Smith',                           'Footscray Hospital — Mechanical Services', 'convert',     '2026-09-01', 1800000, 70, 'JK'),
+  ('Mechanical One (Lendlease Services)','Western Sydney Hyperscale DC (WS3)',       'demonstrate', '2026-11-01', 3200000, 60, 'Sarah M'),
+  ('Intech Engineers',                   'Perth Resources Process Facility',         'demonstrate', '2026-06-01', 900000,  55, 'Dave R'),
+  ('Economech',                          'Auckland City Hospital — Plant Upgrade',   'convert',     '2026-10-01', 1200000, 50, 'Mere T'),
+  ('Stowe Australia',                    'Brisbane Live Precinct — Tower B',         'demonstrate', '2027-03-01', 1400000, 45, 'Sarah M'),
+  ('Aquaheat New Zealand',               'Datagrid Invercargill — AI Factory',       'engage',      '2027-05-01', 4000000, 40, 'Mere T'),
+  ('JCI / York Mechanical Services',     'Sydney CBD Commercial Tower',              'engage',      '2027-01-01', 1600000, 40, 'JK'),
+  ('Hastie Group / Ventia Mechanical',   'Melbourne Big Build — New Hospital',       'demonstrate', '2027-07-01', 2100000, 40, 'Dave R')
+) as v(company, proj, stage, dt, amount, prob, owner)
 where exists (select 1 from public.projects p where p.user_id = auth.uid() and p.name = v.proj)
   and not exists (
     select 1 from public.opportunities o join public.projects p on p.id = o.project_id
