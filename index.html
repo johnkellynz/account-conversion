@@ -1403,6 +1403,7 @@ select.add-field-btn-select option {
     <div class="nav-item" data-view="reports" onclick="setView('reports')"><span class="nav-icon">▥</span> Reports</div>
     <div class="nav-item" data-view="org" onclick="setView('org')"><span class="nav-icon">⚏</span> Org Charts</div>
     <div class="nav-item" data-view="matrix" onclick="setView('matrix')"><span class="nav-icon">▦</span> Acceptance Matrix</div>
+    <div class="nav-item" data-view="accountconversion" onclick="setView('accountconversion')"><span class="nav-icon">▦</span> Account Conversion</div>
     <div class="nav-item" data-view="map" onclick="setView('map'); state.mapShow='customers'; render();"><span class="nav-icon">⌖</span> Contact Map</div>
     <div class="nav-item" data-view="map" onclick="setView('map'); state.mapShow='projects'; render();"><span class="nav-icon">⌗</span> Project Map</div>
     <div class="nav-section">Tools</div>
@@ -1774,6 +1775,7 @@ const state = {
   matrixWindowDays: 30,
   matrixSortMode: 'name_asc',
   mapShow: 'all',
+  mapCountry: '',   // '' = all countries, 'AU' = Australia only, 'NZ' = NZ only
   heatmap: false,
   llFollowupDays: 90,
 };
@@ -2602,7 +2604,7 @@ function debouncedRender() {
 let _lastContactMapSig = '';
 let _lastProjectMapSig = '';
 function _contactMapSig() {
-  return JSON.stringify({ f: state.filters, h: !!state.heatmap });
+  return JSON.stringify({ f: state.filters, h: !!state.heatmap, mc: state.mapCountry });
 }
 function _projectMapSig() {
   return JSON.stringify({ f: state.projectFilters, h: !!state.projectHeatmap });
@@ -2621,6 +2623,7 @@ async function render() {
   if (state.view === 'reports')     html = await renderReports();
   if (state.view === 'org')         html = await renderOrg();
   if (state.view === 'matrix')      html = await renderMatrix();
+  if (state.view === 'accountconversion') html = await renderMatrix();
   if (state.view === 'map')         html = await renderMapView();
   if (state.view === 'followup')    html = await renderFollowup();
   if (state.view === 'actions')     html = await renderActions();
@@ -2918,7 +2921,11 @@ async function setupMap() {
   const all = (await getAllCustomers()).filter(c => !c.deletedAt);
   // Apply all dashboard filters (region, category, importance, market) so
   // the map matches what the KPI cards and Needs-Follow-up list show.
-  const allFiltered = applyDashFilters(all);
+  let allFiltered = applyDashFilters(all);
+  // Country filter — AU / NZ / All — set from the map view toggle.
+  if (state.mapCountry) {
+    allFiltered = allFiltered.filter(c => (c.country || '').toUpperCase() === state.mapCountry);
+  }
 
   // Each customer becomes a pin. If they have a precise (lat, lng) we use it;
   // otherwise we fall back to their region's centroid so they still appear
@@ -6385,12 +6392,12 @@ async function computeMovement(daysBack) {
 
 function setMatrixWindow(days) {
   state.matrixWindowDays = days;
-  if (state.view === 'matrix') render();
+  if (state.view === 'matrix' || state.view === 'accountconversion') render();
 }
 
 function setMatrixSort(mode) {
   state.matrixSortMode = mode;
-  if (state.view === 'matrix') render();
+  if (state.view === 'matrix' || state.view === 'accountconversion') render();
 }
 
 // ===========================================================================
@@ -6581,7 +6588,7 @@ async function renderMatrix() {
   return `
     <div class="page-header">
       <div>
-        <div class="page-title">Acceptance Matrix</div>
+        <div class="page-title">${state.view === 'accountconversion' ? 'Account Conversion' : 'Acceptance Matrix'}</div>
         <div class="page-sub">${activeFilter ? visibleCompanies.length + ' of ' + companies.length + ' companies · filtered' : 'Track Victaulic product specification &amp; approval status by company'}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -6823,7 +6830,7 @@ async function saveCompanyCells(productId) {
 
   toast(changes ? 'Updated ' + changes + ' contact' + (changes===1?'':'s') : 'No changes');
   closeModal();
-  if (state.view === 'matrix') render();
+  if (state.view === 'matrix' || state.view === 'accountconversion') render();
 }
 
 async function openCompanyDetail(companyName) {
@@ -6999,7 +7006,7 @@ async function openMovementReport() {
 
 function setMatrixFilter(statusId) {
   state.matrixStatusFilter = (state.matrixStatusFilter === statusId) ? null : statusId;
-  if (state.view === 'matrix') render();
+  if (state.view === 'matrix' || state.view === 'accountconversion') render();
 }
 
 async function seedAcceptanceTestData() {
@@ -7428,6 +7435,7 @@ async function renderProjects() {
             <div style="margin-bottom:8px"><span class="project-status status-${p.status||'open'}">${escape(p.status||'open')}</span></div>
             <div style="font-size:12px;color:var(--vic-grey-700);margin-bottom:8px">${escape(p.description||'')}</div>
             ${p.value ? `<div style="font-weight:700">$${Number(p.value).toLocaleString()}</div>` : ''}
+            ${p.ownerName ? `<div style="margin-top:6px;font-size:11px;color:var(--vic-grey-700)">👤 ${escape(p.ownerName)}</div>` : ''}
             <div style="margin-top:8px;font-size:11px;color:var(--vic-grey-500)">
               ${(p.customerIds||[]).map(id => byId[id] ? escape(byId[id].name) : '').filter(Boolean).join(' · ') || 'No customers linked'}
             </div>
@@ -7460,6 +7468,10 @@ async function openProjectModal(id = null) {
                 </select>
               </div>
               <div class="field"><label>Estimated value ($)</label><input class="input" type="number" name="value" value="${p.value||''}"></div>
+            </div>
+            <div class="field">
+              <label>Project owner <span style="font-weight:400;text-transform:none;color:var(--vic-grey-700)">— defaults to you; nominate a different rep if needed</span></label>
+              <input class="input" name="ownerName" value="${escape(p.ownerName || (typeof _currentUser !== 'undefined' && _currentUser ? (_currentUser.user_metadata?.full_name || _currentUser.email || '') : ''))}" placeholder="Rep name or email">
             </div>
             <div class="field"><label>Description</label><textarea class="textarea" name="description">${escape(p.description||'')}</textarea></div>
 
@@ -7568,6 +7580,9 @@ async function saveProject(id) {
   if (country) record.country = country;
   if (lat !== null && !isNaN(lat)) record.lat = lat;
   if (lng !== null && !isNaN(lng)) record.lng = lng;
+  // Project owner — defaults to the logged-in user; can be overridden to any rep name.
+  const ownerName = (fd.get('ownerName') || '').trim();
+  if (ownerName) record.ownerName = ownerName;
   // Victaulic products selected for this project (multi-select pills).
   const vicProducts = (fd.get('vicProducts') || '').split(',').map(s => s.trim()).filter(Boolean);
   if (vicProducts.length) record.vicProducts = vicProducts;
@@ -8107,16 +8122,34 @@ async function renderMapView() {
       </div>
     </div>
 
+    <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="window-picker">
+        <span>Country</span>
+        <div class="window-buttons">
+          <button class="${!state.mapCountry?'active':''}" onclick="setMapCountry('')">All</button>
+          <button class="${state.mapCountry==='AU'?'active':''}" onclick="setMapCountry('AU')">🇦🇺 Australia</button>
+          <button class="${state.mapCountry==='NZ'?'active':''}" onclick="setMapCountry('NZ')">🇳🇿 New Zealand</button>
+        </div>
+      </div>
+    </div>
     <div style="margin-bottom:12px">
       <span class="region-pill ${!regionFilterActive() ? 'active' : ''}" onclick="clearRegionFilter()">All regions</span>
       ${regions.map(r => `<span class="region-pill ${regionFilterIncludes(r) ? 'active' : ''}" data-region="${escape(r)}" onclick="toggleRegionFilter(this.dataset.region)">${escape(r)}</span>`).join('')}
     </div>
-    <div id="dash-map" style="height:calc(100vh - 280px)"></div>
+    <div id="dash-map" style="height:calc(100vh - 320px)"></div>
   `;
 }
 
 function setMapShow(mode) {
   state.mapShow = mode;
+  if (state.view === 'map' || state.view === 'dashboard') render();
+}
+
+function setMapCountry(country) {
+  state.mapCountry = country;
+  // Also clear any region filters that would conflict with the country switch
+  // so the user doesn't end up with an AU region pill active while viewing NZ.
+  state.filters.region = [];
   if (state.view === 'map' || state.view === 'dashboard') render();
 }
 
