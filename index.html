@@ -225,13 +225,13 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .stat-card .stat-label { font-size: 9px; color: var(--g500); margin-top: 2px; text-transform: uppercase; letter-spacing: .4px; font-weight: 600; }
 
 /* Horizontal funnel chart */
-.funnel-chart { margin-top: 8px; }
-.funnel-row { display: flex; align-items: center; margin-bottom: 4px; gap: 8px; border-radius: var(--radius-xs); padding: 4px 6px; margin-left: -6px; margin-right: -6px; transition: background .15s; }
+.funnel-chart { margin-top: 4px; }
+.funnel-row { display: flex; align-items: center; margin-bottom: 2px; gap: 10px; border-radius: var(--radius-xs); padding: 2px 6px; margin-left: -6px; margin-right: -6px; transition: background .15s; }
 .funnel-row:hover { background: var(--g50); }
-.funnel-row-label { width: 80px; font-size: 11px; font-weight: 600; text-align: right; color: var(--g600); text-transform: uppercase; letter-spacing: .3px; flex-shrink: 0; }
-.funnel-row-bar-wrap { flex: 1; height: 20px; background: var(--g100); border-radius: 6px; overflow: hidden; position: relative; }
-.funnel-row-bar { height: 100%; background: var(--vic-orange); border-radius: 6px; transition: width .5s ease; display: flex; align-items: center; padding-left: 10px; min-width: 24px; }
-.funnel-row-bar span { font-size: 12px; font-weight: 700; color: var(--white); }
+.funnel-row-label { width: 90px; font-size: 11px; font-weight: 600; text-align: right; color: var(--g600); text-transform: uppercase; letter-spacing: .3px; flex-shrink: 0; }
+.funnel-row-bar-wrap { flex: 1; height: 22px; background: var(--g100); border-radius: 4px; overflow: hidden; position: relative; }
+.funnel-row-bar { height: 100%; background: var(--vic-orange); border-radius: 4px; transition: width .5s ease; display: flex; align-items: center; padding-left: 10px; min-width: 24px; }
+.funnel-row-bar span { font-size: 11px; font-weight: 700; color: var(--white); }
 .funnel-row-count { width: 32px; font-size: 13px; font-weight: 600; color: var(--g700); text-align: center; }
 
 /* Weakness indicators */
@@ -249,6 +249,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 @media (max-width: 768px) { .leaflet-map-container { height: 320px; } }
 .leaflet-popup-content-wrapper { border-radius: 8px !important; }
 .leaflet-popup-content { margin: 10px 14px !important; font-family: inherit !important; font-size: 13px !important; }
+.map-tip { font-size: 12px; font-weight: 600; padding: 4px 8px; }
 .map-popup-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
 .map-popup-stat { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
 .map-popup-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
@@ -259,11 +260,11 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .heatmap-count { font-size: 28px; font-weight: 800; line-height: 1.2; }
 .heatmap-stages { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; justify-content: center; }
 .heatmap-stage-dot { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 8px; color: #fff; }
-.heatmap-stage-dot.stage-1 { background: #F58220; }
-.heatmap-stage-dot.stage-2 { background: #F59E0B; }
-.heatmap-stage-dot.stage-3 { background: #3B82F6; }
-.heatmap-stage-dot.stage-4 { background: #10B981; }
-.heatmap-stage-dot.stage-5 { background: #059669; }
+.heatmap-stage-dot.stage-1 { background: #94A3B8; }
+.heatmap-stage-dot.stage-2 { background: #38BDF8; }
+.heatmap-stage-dot.stage-3 { background: #34D399; }
+.heatmap-stage-dot.stage-4 { background: #FBBF24; }
+.heatmap-stage-dot.stage-5 { background: #F58220; }
 .heatmap-empty { font-size: 12px; color: var(--g400); margin-top: 2px; }
 @media (max-width: 480px) { .heatmap-grid { grid-template-columns: repeat(2, 1fr); } }
 
@@ -284,14 +285,14 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* Dashboard toggle */
 .dash-toggle { display: flex; background: var(--g50); border-radius: var(--radius-sm); padding: 2px; margin: 0 16px 14px; border: 0.5px solid var(--g200); }
 .dash-toggle button { flex: 1; padding: 7px; border-radius: var(--radius-xs); font-size: 12px; font-weight: 500; color: var(--g400); transition: all .15s; letter-spacing: .2px; }
-.dash-toggle button.active { background: var(--white); color: var(--vic-black); border: 0.5px solid var(--g200); }
+.dash-toggle button.active { background: #FFF7ED; color: var(--vic-orange); border: 1px solid var(--vic-orange); font-weight: 600; }
 
 /* Filter dropdowns */
 .fd-row { display: flex; gap: 6px; padding: 0 16px 8px; flex-wrap: wrap; }
 .fd-wrap { position: relative; flex: 1; min-width: 90px; }
 .fd-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-radius: var(--radius-sm); border: 1px solid var(--g200); background: var(--white); font-size: 12px; font-weight: 600; color: var(--g500); cursor: pointer; white-space: nowrap; }
 .fd-btn.has-val { border-color: var(--vic-orange); color: var(--vic-orange); }
-.fd-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; z-index: 50; background: var(--white); border: 1px solid var(--g200); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,.1); margin-top: 2px; max-height: 280px; overflow-y: auto; white-space: nowrap; }
+.fd-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; z-index: 50; background: var(--white); border: 1px solid var(--g200); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,.1); margin-top: 2px; max-height: 70vh; overflow-y: auto; white-space: nowrap; }
 .fd-wrap.open .fd-menu { display: block; }
 .fd-item { padding: 6px 10px; font-size: 12px; font-weight: 500; color: var(--g600); cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .fd-item:hover { background: var(--g50); }
@@ -535,7 +536,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 <div id="main-app">
   <!-- Header -->
   <header id="app-header" style="display:none">
-    <button class="hamburger-btn" onclick="toggleDrawer()">
+    <button id="header-back-btn" class="hamburger-btn" onclick="goBack()" style="display:none" title="Back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+    <button id="header-hamburger-btn" class="hamburger-btn" onclick="toggleDrawer()">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="3" y1="6" x2="21" y2="6"/>
           <line x1="3" y1="12" x2="21" y2="12"/>
@@ -567,13 +573,13 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       <span>Dashboard</span>
     </button>
-    <button class="nav-drawer-item" data-view="playbook" onclick="showView('playbook')">
-      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-      <span>Playbook</span>
-    </button>
     <button class="nav-drawer-item" data-view="accounts" onclick="showView('accounts')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Accounts</span>
+    </button>
+    <button class="nav-drawer-item" data-view="matrix" onclick="showView('matrix')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Matrix</span>
     </button>
     <button class="nav-drawer-item" data-view="heatmap" onclick="showView('heatmap')">
       <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -583,13 +589,17 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       <span>Reports</span>
     </button>
+    <button class="nav-drawer-item" data-view="profile" onclick="showView('profile')">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </button>
     <button class="nav-drawer-item" data-view="team" onclick="showView('team')">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       <span>Teams</span>
     </button>
-    <button class="nav-drawer-item" data-view="profile" onclick="showView('profile')">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span>Profile</span>
+    <button class="nav-drawer-item" data-view="playbook" onclick="showView('playbook')">
+      <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Playbook</span>
     </button>
     <button class="nav-drawer-item admin-only" data-view="admin" onclick="showView('admin')" style="display:none">
       <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -603,12 +613,30 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     <div id="view-accounts" class="view active">
       <div class="view-header">
         <h1>Accounts</h1>
-        <button class="btn-add" onclick="showAddAccount()">+ Add</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="acct-clear-btn"></span>
+          <button class="btn-add" onclick="showAddAccount()">+ Add</button>
+        </div>
       </div>
-      <div class="search-bar">
-        <input type="text" id="search-accounts" placeholder="Search accounts..." oninput="renderAccountsList()">
+      <div style="display:flex;gap:8px;padding:0 16px 8px;align-items:center">
+        <div style="flex:1"><input type="text" id="search-accounts" placeholder="Search accounts..." oninput="renderAccountsList()" style="width:100%;padding:8px 12px 8px 36px;border:1px solid var(--g200);border-radius:var(--radius-sm);font-size:13px;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:10px center"></div>
+        <div class="fd-wrap" id="af-sort" onclick="toggleFilterDrop('af-sort',event)" style="flex:none;min-width:auto">
+          <div class="fd-btn" style="padding:8px 12px;font-size:12px;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+            <span id="af-sort-label">Name</span>
+            <span style="font-size:10px;opacity:.5">▼</span>
+          </div>
+          <div class="fd-menu" style="min-width:140px;right:0;left:auto">
+            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('name')">Name</div>
+            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('tier')">Tier</div>
+            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('stage')">Stage</div>
+            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('city')">City</div>
+            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('rep')">Rep</div>
+            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('revenue')">Revenue</div>
+          </div>
+        </div>
       </div>
-      <div class="filters" id="account-filters"></div>
+      <div id="account-filters"></div>
       <div id="accounts-list"></div>
     </div>
 
@@ -619,6 +647,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     <div id="view-dashboard" class="view"></div>
 
     <!-- PROFILE -->
+    <div id="view-matrix" class="view"></div>
     <div id="view-heatmap" class="view"></div>
     <div id="view-playbook" class="view"></div>
     <div id="view-reporting" class="view"></div>
@@ -770,6 +799,8 @@ let state = {
   checklist: {},   // { accountId: [{ stage, item_key, completed, ... }] }
   contacts: {},    // { accountId: [...] }
   notes: {},       // { accountId: [...] }
+  matrixConfig: { rows: [], cols: [], statuses: [] },
+  matrixData: {},  // { accountId: [{ id, account_id, row_id, col_id, status_id }] }
   profiles: [],    // all user profiles (for manager view)
   currentView: 'accounts',
   currentAccountId: null,
@@ -781,17 +812,18 @@ let state = {
   dashFilterCountry: 'all',
   dashFilterStage: 'all',
   dashFilterTier: 'all',
-  dashSortCol: 'tier',
-  dashSortDir: 'asc',
+  dashSortCol: 'progress',
+  dashSortDir: 'desc',
   sbSortCol: 'name',
   sbSortDir: 'asc',
   dashFiltersOpen: true,
   dashCurrency: 'AUD',
+  stalledDays: 60,
+  stalledSortCol: 'activity',
+  stalledSortDir: 'asc',
+  acctSortCol: 'name',
+  acctSortDir: 'asc',
   fxRates: null,
-  filterCountry: 'all',
-  filterRegion: 'all',
-  filterTier: 'all',
-  filterStage: 'all',
   isOnline: navigator.onLine,
   syncStatus: 'synced'
 };
@@ -818,8 +850,9 @@ db.version(1).stores({
 // ======================== HELPERS ========================
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function getRoleTitle(profile) {
+  if (profile.role === 'director') return 'Divisional Manager';
   if (profile.role === 'rep') return 'Territory Manager';
-  const mgrs = (state.profiles || []).filter(p => p.role === 'manager' || p.role === 'admin');
+  const mgrs = (state.profiles || []).filter(p => p.role === 'manager' || p.role === 'admin' || p.role === 'director');
   if (!profile.reports_to || !mgrs.some(m => m.id === profile.reports_to)) return 'Divisional Manager';
   return 'Regional Manager';
 }
@@ -877,11 +910,7 @@ function setSyncStatus(s) {
 }
 
 function getVisibleAccounts() {
-  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin';
-  if (isManager) return state.accounts;
-  const country = state.profile?.country;
-  if (!country) return state.accounts;
-  return state.accounts.filter(a => a.country === country);
+  return state.accounts;
 }
 
 function toggleFilterDrop(id, evt) {
@@ -897,14 +926,14 @@ function removeTag(key, val) {
     const idx = state[key].indexOf(val);
     if (idx >= 0) state[key].splice(idx, 1);
     if (key === 'dashFilterManager') {
-      const allReports = [];
+      const allPeople = [...state.dashFilterManager];
       let parentIds = [...state.dashFilterManager];
       while (parentIds.length) {
         const children = (state.profiles||[]).filter(p => parentIds.includes(p.reports_to)).map(p=>p.id);
-        allReports.push(...children);
+        allPeople.push(...children);
         parentIds = children;
       }
-      state.dashFilterRep = allReports.filter(id => !state.dashFilterManager.includes(id));
+      state.dashFilterRep = state.dashFilterManager.length ? [...new Set(allPeople)] : [];
     }
   } else {
     state[key] = 'all';
@@ -915,6 +944,11 @@ function removeTag(key, val) {
 function sbSort(col) {
   if (state.sbSortCol === col) state.sbSortDir = state.sbSortDir === 'asc' ? 'desc' : 'asc';
   else { state.sbSortCol = col; state.sbSortDir = col === 'name' ? 'asc' : 'desc'; }
+  renderDashboard();
+}
+function stalledSort(col) {
+  if (state.stalledSortCol === col) state.stalledSortDir = state.stalledSortDir === 'asc' ? 'desc' : 'asc';
+  else { state.stalledSortCol = col; state.stalledSortDir = col === 'name' || col === 'rep' ? 'asc' : 'desc'; }
   renderDashboard();
 }
 function clearDashFilters() {
@@ -930,14 +964,14 @@ function setDashFilter(key, val) {
     else arr.push(val);
     // When manager selection changes, recursively select all reports
     if (key === 'dashFilterManager') {
-      const allReports = [];
+      const allPeople = [...state.dashFilterManager];
       let parentIds = [...state.dashFilterManager];
       while (parentIds.length) {
         const children = (state.profiles||[]).filter(p => parentIds.includes(p.reports_to)).map(p=>p.id);
-        allReports.push(...children);
+        allPeople.push(...children);
         parentIds = children;
       }
-      state.dashFilterRep = allReports.filter(id => !state.dashFilterManager.includes(id));
+      state.dashFilterRep = [...new Set(allPeople)];
     }
   } else {
     state[key] = state[key] === val ? 'all' : val;
@@ -953,19 +987,10 @@ function getDashFilteredAccounts() {
   let accts = getVisibleAccounts();
   if (state.dashFilterRep.length > 0) accts = accts.filter(a => state.dashFilterRep.includes(a.assigned_to));
   if (state.dashFilterRegion.length > 0) {
-    const auRegionSet = new Set(['NT','QLD','WA','SA','NSW','ACT','VIC','TAS']);
-    const nzGroupMap = {'Upper North':['NTL','AKL','WKO','BOP','TKI'],'Lower North':['GIS','HKB','MWT','WGN','TSM'],'South Island':['NSN','MBH','WTC','CAN','OTA','STL']};
-    const allCodes = state.dashFilterRegion.flatMap(r => nzGroupMap[r] || [r]);
-    const selectedAU = state.dashFilterRegion.some(r => auRegionSet.has(r));
-    const selectedNZ = state.dashFilterRegion.some(r => !auRegionSet.has(r));
+    const selected = new Set(state.dashFilterRegion);
     accts = accts.filter(a => {
       const regs = (a.regions||'').split(',').map(s=>s.trim());
-      const matches = regs.some(r => allCodes.includes(r));
-      if (!matches) return false;
-      // If TAS selected on AU row, don't match NZ accounts (Tasman vs Tasmania)
-      if (selectedAU && !selectedNZ && a.country === 'NZ') return false;
-      if (selectedNZ && !selectedAU && a.country === 'AU') return false;
-      return true;
+      return regs.some(r => selected.has(r));
     });
   }
   if (state.dashFilterCountry !== 'all') accts = accts.filter(a => a.country === state.dashFilterCountry);
@@ -987,8 +1012,10 @@ function isStageComplete(accountId, stageNum) {
 }
 
 function canAccessStage(accountId, stageNum) {
-  if (stageNum === 1) return true;
-  return isStageComplete(accountId, stageNum - 1);
+  if (stageNum <= 4) return true;
+  // Stage 5 (Grow & Retain) requires all prior stages complete
+  for (let s = 1; s <= 4; s++) { if (!isStageComplete(accountId, s)) return false; }
+  return true;
 }
 
 function recalcCurrentStage(accountId) {
@@ -1152,7 +1179,14 @@ function enterApp() {
   // Show admin nav for managers/admins
   const isAdmin = state.profile?.role === 'admin';
   document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? '' : 'none');
+  state.currentView = null;
+  viewHistory.length = 0;
+  // Restore saved currency preference
+  const savedCurrency = localStorage.getItem('kac_currency_' + state.user?.id);
+  if (savedCurrency && ['AUD','NZD','USD'].includes(savedCurrency)) state.dashCurrency = savedCurrency;
+  // Default dashboard: reps see only their own accounts, managers see all
   showView('dashboard');
+  updateBackBtn();
   renderFilters();
   // Start auto-sync every 10 seconds
   if (autoSyncInterval) clearInterval(autoSyncInterval);
@@ -1250,6 +1284,19 @@ async function initialSync() {
     const { data: profiles } = await supa.from('profiles').select('*');
     state.profiles = profiles || [];
 
+    // Load matrix config (product rows, milestone columns, statuses)
+    await loadMatrixConfig();
+
+    // Bulk-load all matrix data for master matrix view
+    try {
+      const { data: allMatrix } = await supa.from('kac_matrix_data').select('*');
+      state.matrixData = {};
+      (allMatrix || []).forEach(d => {
+        if (!state.matrixData[d.account_id]) state.matrixData[d.account_id] = [];
+        state.matrixData[d.account_id].push(d);
+      });
+    } catch (e) { console.error('Bulk matrix load error:', e); }
+
     setSyncStatus('synced');
   } catch (e) {
     console.error('Sync error:', e);
@@ -1282,6 +1329,30 @@ async function loadAccountDetails(accountId) {
     // Fallback to local
     state.contacts[accountId] = await db.contacts.where('account_id').equals(accountId).toArray();
     state.notes[accountId] = await db.notes.where('account_id').equals(accountId).reverse().sortBy('created_at');
+  }
+}
+
+async function loadMatrixConfig() {
+  try {
+    const { data, error } = await supa.from('kac_matrix_config').select('*').order('sort_order');
+    if (error) throw error;
+    state.matrixConfig = { rows: [], cols: [], statuses: [] };
+    (data || []).forEach(d => {
+      if (d.config_type === 'row') state.matrixConfig.rows.push(d);
+      else if (d.config_type === 'col') state.matrixConfig.cols.push(d);
+      else if (d.config_type === 'status') state.matrixConfig.statuses.push(d);
+    });
+  } catch (e) { console.error('Matrix config load error:', e); }
+}
+
+async function loadMatrixData(accountId) {
+  try {
+    const { data, error } = await supa.from('kac_matrix_data').select('*').eq('account_id', accountId);
+    if (error) throw error;
+    state.matrixData[accountId] = data || [];
+  } catch (e) {
+    console.error('Matrix data load error:', e);
+    if (!state.matrixData[accountId]) state.matrixData[accountId] = [];
   }
 }
 
@@ -1440,6 +1511,24 @@ async function processQueue() {
 }
 
 // ======================== NAVIGATION ========================
+const viewHistory = [];
+function pushHistory(entry) {
+  viewHistory.push(entry);
+  updateBackBtn();
+}
+function updateBackBtn() {
+  const back = document.getElementById('header-back-btn');
+  const ham = document.getElementById('header-hamburger-btn');
+  if (viewHistory.length > 0) { back.style.display = ''; ham.style.display = 'none'; }
+  else { back.style.display = 'none'; ham.style.display = ''; }
+}
+function goBack() {
+  if (!viewHistory.length) return;
+  const prev = viewHistory.pop();
+  updateBackBtn();
+  if (prev.type === 'detail') { showView(prev.view, true); }
+  else { showView(prev.view, true); }
+}
 function toggleDrawer() {
   document.querySelector('.nav-drawer').classList.toggle('open');
   document.querySelector('.nav-drawer-overlay').classList.toggle('open');
@@ -1458,7 +1547,7 @@ function closeDrawer() {
 
 // Hover-to-open sidebar (desktop)
 (function(){
-  const hamburger = document.querySelector('.hamburger-btn');
+  const hamburger = document.getElementById('header-hamburger-btn');
   const drawer = document.querySelector('.nav-drawer');
   let ht = null;
   function isDsk(){ return window.innerWidth >= 1024; }
@@ -1481,12 +1570,14 @@ function closeDrawer() {
   drawer.addEventListener('mouseleave', ()=>{ if(isDsk()) hoverClose(); });
 })();
 
-function showView(name) {
+function showView(name, fromBack) {
   closeDrawer();
   // Clean up Leaflet map when leaving heatmap view
   if (leafletMap && state.currentView === 'heatmap' && name !== 'heatmap') {
     leafletMap.remove(); leafletMap = null;
   }
+  // Top-level navigation clears history; only drilldowns (showAccountDetail) push
+  if (!fromBack) { viewHistory.length = 0; updateBackBtn(); }
   state.currentView = name;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
@@ -1494,8 +1585,9 @@ function showView(name) {
   const view = document.getElementById('view-' + name);
   if (view) view.classList.add('active');
 
-  if (name === 'accounts') renderAccountsList();
+  if (name === 'accounts') { renderFilters(); renderAccountsList(); }
   else if (name === 'dashboard') renderDashboard();
+  else if (name === 'matrix') renderMatrixView();
   else if (name === 'heatmap') renderHeatmapView();
   else if (name === 'playbook') renderPlaybook();
   else if (name === 'reporting') renderReporting();
@@ -1505,12 +1597,14 @@ function showView(name) {
 }
 
 function showAccountDetail(id) {
+  if (state.currentView) pushHistory({ type: 'view', view: state.currentView });
   state.currentAccountId = id;
+  state.currentView = 'detail';
   state.detailTab = 'checklist';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-detail').classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  loadAccountDetails(id).then(() => renderAccountDetail());
+  Promise.all([loadAccountDetails(id), loadMatrixData(id)]).then(() => renderAccountDetail());
   renderAccountDetail(); // render immediately with cached data
 }
 
@@ -1519,88 +1613,154 @@ const AU_STATES = AU_REGIONS; // alias for filter display
 
 function renderFilters() {
   const el = document.getElementById('account-filters');
-  const hasFilter = state.filterCountry!=='all'||state.filterRegion!=='all'||state.filterTier!=='all'||state.filterStage!=='all';
-  const regions = state.filterCountry === 'AU' ? AU_STATES : state.filterCountry === 'NZ' ? NZ_REGIONS : null;
+  // Remove any old region row
+  if (el._regionRow) { el._regionRow.remove(); el._regionRow = null; }
+
+  const allAccounts = getVisibleAccounts();
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier !== 'all';
+
+  const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
+  const scopedReps = state.dashFilterCountry !== 'all' ? reps.filter(p => p.country === state.dashFilterCountry) : reps;
+  const hasReports = new Set(scopedReps.filter(p => p.reports_to).map(p => p.reports_to));
+  const managers = scopedReps.filter(p => hasReports.has(p.id));
+  const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
+
+  const auRegions = ['NT','QLD','WA','SA','NSW','ACT','VIC','TAS'];
+  const nzRegionCodes = ['NTL','AKL','WKO','BOP','GIS','HKB','TKI','MWT','WGN','TSM','NSN','MBH','WTC','CAN','OTA','STL'];
+  const acctRegions = new Set();
+  state.accounts.forEach(a => (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(r => acctRegions.add(r)));
+  const activeNZ = nzRegionCodes.filter(r => acctRegions.has(r));
+  const activeAU = auRegions.filter(r => acctRegions.has(r));
+  const visibleRegions = state.dashFilterCountry === 'AU' ? activeAU : state.dashFilterCountry === 'NZ' ? activeNZ : [...activeAU, ...activeNZ];
+
+  const mgrOrder = ['Steve','David','Josh','Ben'];
+  const filteredMgrs = [...managers];
+  filteredMgrs.sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
+
+  const isMulti = k => k === 'dashFilterRep' || k === 'dashFilterManager' || k === 'dashFilterRegion';
+  const fdItem = (label, key, val, dropId) => {
+    const active = isMulti(key) ? state[key].includes(val) : state[key] === val;
+    const reopen = isMulti(key) && dropId ? `setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.classList.add('open')},0);` : '';
+    return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');renderFilters();renderAccountsList();${reopen}">${label}</div>`;
+  };
+
+  const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
+  const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
+  const tierLabel = state.dashFilterTier !== 'all' ? 'T' + state.dashFilterTier : 'Tier';
+  const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
+  const mgrLabel = state.dashFilterManager.length ? state.dashFilterManager.length + ' selected' : 'Manager';
+  const repLabel = state.dashFilterRep.length ? state.dashFilterRep.length + ' selected' : 'Rep';
+
+  // Build active tags
+  const tags = [];
+  if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
+  state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
+  if (state.dashFilterTier !== 'all') tags.push({ label: 'T' + state.dashFilterTier, key: 'dashFilterTier', val: state.dashFilterTier, css: 't-tier' });
+  if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
+  state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: p?.full_name||'—', key: 'dashFilterManager', val: id, css: 't-manager' }); });
+  state.dashFilterRep.filter(id => !state.dashFilterManager.includes(id)).map(id => { const p = (state.profiles||[]).find(x=>x.id===id); return { label: p?.full_name||'—', key: 'dashFilterRep', val: id, css: 't-rep' }; }).sort((a,b) => a.label.localeCompare(b.label)).forEach(t => tags.push(t));
+
+  const acctRemoveTag = (key, val) => `event.stopPropagation();removeTag('${key}','${val}');renderFilters();renderAccountsList()`;
+
   el.innerHTML = `
-    ${hasFilter ? `<button class="filter-chip" onclick="clearAllFilters()" style="color:#fff;background:var(--danger);border-color:var(--danger);font-weight:700">✕ Clear</button><span style="width:1px;height:20px;background:var(--g200);margin:0 4px"></span>` : ''}
-    <button class="filter-chip ${state.filterCountry==='all'?'active':''}" onclick="setFilter('country','all')">All</button>
-    <button class="filter-chip ${state.filterCountry==='AU'?'active':''}" onclick="setFilter('country','AU')">Australia</button>
-    <button class="filter-chip ${state.filterCountry==='NZ'?'active':''}" onclick="setFilter('country','NZ')">New Zealand</button>
-    <button class="filter-chip ${state.filterTier==='all'?'active':''}" onclick="setFilter('tier','all')">All Tiers</button>
-    <button class="filter-chip ${state.filterTier==='1'?'active':''}" onclick="setFilter('tier','1')">Tier 1</button>
-    <button class="filter-chip ${state.filterTier==='2'?'active':''}" onclick="setFilter('tier','2')">Tier 2</button>
-    <button class="filter-chip ${state.filterTier==='3'?'active':''}" onclick="setFilter('tier','3')">Tier 3</button>
-    <span style="width:1px;height:20px;background:var(--g200);margin:0 4px"></span>
-    <button class="filter-chip ${state.filterStage==='all'?'active':''}" onclick="setFilter('stage','all')">All Stages</button>
-    ${[1,2,3,4,5].map(s => `<button class="filter-chip ${state.filterStage===String(s)?'active':''}" onclick="setFilter('stage','${s}')">${STAGES[s].name}</button>`).join('')}
-  `;
-  if (regions) {
-    const row2 = document.createElement('div');
-    row2.className = 'filters';
-    row2.style.paddingTop = '0';
-    row2.innerHTML = `<button class="filter-chip ${state.filterRegion==='all'?'active':''}" onclick="setFilter('region','all')">All ${state.filterCountry === 'AU' ? 'States' : 'Regions'}</button>` +
-      regions.map(r => `<button class="filter-chip ${state.filterRegion===r?'active':''}" onclick="setFilter('region','${r}')">${r}</button>`).join('');
-    el.parentNode.insertBefore(row2, el.nextSibling);
-    // Remove any previous region row
-    if (el._regionRow) el._regionRow.remove();
-    el._regionRow = row2;
-  } else if (el._regionRow) {
-    el._regionRow.remove();
-    el._regionRow = null;
-  }
+    <div class="fd-row" style="flex-wrap:wrap">
+      <div class="fd-wrap" id="af-country" onclick="toggleFilterDrop('af-country',event)">
+        <div class="fd-btn${state.dashFilterCountry!=='all'?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${fdItem('AU','dashFilterCountry','AU','af-country')}${fdItem('NZ','dashFilterCountry','NZ','af-country')}</div>
+      </div>
+      <div class="fd-wrap" id="af-region" onclick="toggleFilterDrop('af-region',event)">
+        <div class="fd-btn${state.dashFilterRegion.length?' has-val':''}">${regionLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${visibleRegions.map(r => fdItem(r,'dashFilterRegion',r,'af-region')).join('')}</div>
+      </div>
+      <div class="fd-wrap" id="af-tier" onclick="toggleFilterDrop('af-tier',event)">
+        <div class="fd-btn${state.dashFilterTier!=='all'?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${fdItem('Tier 1','dashFilterTier','1','af-tier')}${fdItem('Tier 2','dashFilterTier','2','af-tier')}${fdItem('Tier 3','dashFilterTier','3','af-tier')}</div>
+      </div>
+      <div class="fd-wrap" id="af-stage" onclick="toggleFilterDrop('af-stage',event)">
+        <div class="fd-btn${state.dashFilterStage!=='all'?' has-val':''}">${stageLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${[1,2,3,4,5].map(s => fdItem(STAGES[s].name,'dashFilterStage',String(s),'af-stage')).join('')}</div>
+      </div>
+      <div class="fd-wrap" id="af-mgr" onclick="toggleFilterDrop('af-mgr',event)">
+        <div class="fd-btn${state.dashFilterManager.length?' has-val':''}">${mgrLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${filteredMgrs.map(p => fdItem(p.full_name||'—','dashFilterManager',p.id,'af-mgr')).join('')}</div>
+      </div>
+      <div class="fd-wrap" id="af-rep" onclick="toggleFilterDrop('af-rep',event)">
+        <div class="fd-btn${state.dashFilterRep.length?' has-val':''}">${repLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${activeReps.map(p => fdItem(p.full_name||'—','dashFilterRep',p.id,'af-rep')).join('')}</div>
+      </div>
+    </div>
+    ${tags.length ? `<div class="fd-tags">${tags.map(t => `<div class="fd-tag ${t.css}" onclick="${acctRemoveTag(t.key, t.val)}">${t.label} ×</div>`).join('')}</div>` : ''}`;
+
+  // Update header clear button
+  const clearEl = document.getElementById('acct-clear-btn');
+  if (clearEl) clearEl.innerHTML = hasFilter ? `<button onclick="clearDashFilters();renderFilters();renderAccountsList()" style="padding:8px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;border:none">✕ Clear</button>` : '';
 }
 function setFilter(type, val) {
-  if (type === 'country') { state.filterCountry = val; state.filterRegion = 'all'; }
-  else if (type === 'region') state.filterRegion = val;
-  else if (type === 'stage') state.filterStage = val;
-  else state.filterTier = val;
+  if (type === 'country') { setDashFilter('dashFilterCountry', val); }
+  else if (type === 'region') { setDashFilter('dashFilterRegion', val); }
+  else if (type === 'stage') { setDashFilter('dashFilterStage', val); }
+  else { setDashFilter('dashFilterTier', val); }
   renderFilters();
   renderAccountsList();
 }
 function clearAllFilters() {
-  state.filterCountry = 'all';
-  state.filterRegion = 'all';
-  state.filterTier = 'all';
-  state.filterStage = 'all';
+  clearDashFilters();
   renderFilters();
   renderAccountsList();
 }
 function filterByStage(stageNum) {
-  state.filterStage = String(stageNum);
+  clearDashFilters();
+  state.dashFilterStage = String(stageNum);
   showView('accounts');
   renderFilters();
 }
 function filterByCountry(country) {
-  state.filterCountry = country;
-  state.filterRegion = 'all';
-  state.filterTier = 'all';
-  state.filterStage = 'all';
+  clearDashFilters();
+  state.dashFilterCountry = country;
   showView('accounts');
   renderFilters();
 }
 function filterByTier(tier) {
-  state.filterTier = String(tier);
-  state.filterCountry = 'all';
-  state.filterRegion = 'all';
-  state.filterStage = 'all';
+  clearDashFilters();
+  state.dashFilterTier = String(tier);
   showView('accounts');
   renderFilters();
+}
+function filterToActiveThisMonth() {
+  state.dashMode = 'table';
+  state.dashSortCol = 'activity';
+  state.dashSortDir = 'desc';
+  renderDashboard();
+  // Scroll to table
+  document.getElementById('dash-content')?.scrollIntoView({ behavior: 'smooth' });
 }
 function filterToAccounts() {
-  state.filterCountry = 'all';
-  state.filterRegion = 'all';
-  state.filterTier = 'all';
-  state.filterStage = 'all';
+  clearDashFilters();
   showView('accounts');
   renderFilters();
 }
+function filterToStalled() {
+  state.dashMode = 'summary';
+  renderDashboard();
+  setTimeout(() => document.getElementById('stalled-section')?.scrollIntoView({behavior:'smooth'}), 100);
+}
 function filterConverting() {
-  state.filterCountry = 'all';
-  state.filterRegion = 'all';
-  state.filterTier = 'all';
-  state.filterStage = '4';
+  clearDashFilters();
+  state.dashFilterStage = '4';
   showView('accounts');
   renderFilters();
+}
+
+function setAcctSort(col) {
+  if (state.acctSortCol === col) state.acctSortDir = state.acctSortDir === 'asc' ? 'desc' : 'asc';
+  else { state.acctSortCol = col; state.acctSortDir = col === 'revenue' || col === 'stage' ? 'desc' : 'asc'; }
+  document.querySelectorAll('#af-sort .fd-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('af-sort')?.classList.remove('open');
+  const labels = { name:'Name', tier:'Tier', stage:'Stage', city:'City', rep:'Rep', revenue:'Revenue' };
+  const arrow = state.acctSortDir === 'asc' ? '↑' : '↓';
+  const lbl = document.getElementById('af-sort-label');
+  if (lbl) lbl.textContent = labels[col] + ' ' + arrow;
+  renderAccountsList();
 }
 
 // ======================== RENDER: ACCOUNTS LIST ========================
@@ -1608,15 +1768,25 @@ function renderAccountsList() {
   // Recalc stages from checklist truth
   state.accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
   const search = (document.getElementById('search-accounts')?.value || '').toLowerCase();
-  let accounts = state.accounts.filter(a => {
-    if (state.filterCountry !== 'all' && a.country !== state.filterCountry) return false;
-    if (state.filterRegion !== 'all' && !(a.regions || '').split(',').map(s=>s.trim()).includes(state.filterRegion)) return false;
-    if (state.filterTier !== 'all' && a.tier !== parseInt(state.filterTier)) return false;
-    if (state.filterStage !== 'all' && a.current_stage !== parseInt(state.filterStage)) return false;
-    if (search && !a.company_name.toLowerCase().includes(search) && !(a.hq_city||'').toLowerCase().includes(search) && !(a.regions||'').toLowerCase().includes(search)) return false;
-    return true;
+  let accounts = getDashFilteredAccounts();
+  if (search) {
+    accounts = accounts.filter(a => a.company_name.toLowerCase().includes(search) || (a.hq_city||'').toLowerCase().includes(search) || (a.regions||'').toLowerCase().includes(search));
+  }
+  // Sort
+  const dir = state.acctSortDir === 'asc' ? 1 : -1;
+  const getRepName = id => (state.profiles||[]).find(p=>p.id===id)?.full_name || '';
+  accounts.sort((a, b) => {
+    let cmp = 0;
+    switch (state.acctSortCol) {
+      case 'name': cmp = a.company_name.localeCompare(b.company_name); break;
+      case 'tier': cmp = a.tier - b.tier; break;
+      case 'stage': cmp = a.current_stage - b.current_stage; break;
+      case 'city': cmp = (a.hq_city||'').localeCompare(b.hq_city||''); break;
+      case 'rep': cmp = getRepName(a.assigned_to).localeCompare(getRepName(b.assigned_to)); break;
+      case 'revenue': cmp = (a.estimated_annual_revenue||0) - (b.estimated_annual_revenue||0); break;
+    }
+    return cmp * dir || a.company_name.localeCompare(b.company_name);
   });
-  accounts.sort((a, b) => a.tier - b.tier || a.company_name.localeCompare(b.company_name));
 
   const el = document.getElementById('accounts-list');
   if (!accounts.length) {
@@ -1632,7 +1802,7 @@ function renderAccountsList() {
     const tierClass = 'badge-tier' + a.tier;
     const countryClass = 'badge-' + a.country.toLowerCase();
     // Stage status bar
-    const stageColors = ['','var(--vic-orange)','var(--vic-orange)','#F59E0B','var(--success)','#059669'];
+    const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
     let statusHtml = '<div class="stage-tracker">';
     for (let s = 1; s <= 5; s++) {
       const comp = getStageCompletion(a.id, s);
@@ -1652,10 +1822,14 @@ function renderAccountsList() {
     }
     statusHtml += '</div>';
 
+    const repProfile = (state.profiles||[]).find(p => p.id === a.assigned_to);
+    const repName = repProfile?.full_name || '';
+
     return `<div class="account-card" onclick="showAccountDetail('${a.id}')">
       <div class="account-card-header">
-        <h3>${esc(a.company_name)}${a.hq_city ? ' — '+esc(a.hq_city) : ''}</h3>
+        <h3>${esc(a.company_name)}</h3>
         <div class="badges">
+          ${repName ? `<span class="badge" style="background:#E1F5EE;color:#085041">${esc(repName)}</span>` : ''}
           <span class="badge ${tierClass}">T${a.tier}</span>
           <span class="badge ${countryClass}">${a.country}</span>
           ${a.hq_city ? `<span class="badge badge-region">${esc(a.hq_city)}</span>` : ''}
@@ -1706,7 +1880,7 @@ function renderAccountDetail() {
 
   el.innerHTML = `
     <div class="detail-header">
-      <button class="detail-back" onclick="showView('accounts')">
+      <button class="detail-back" onclick="goBack()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         Back
       </button>
@@ -1740,6 +1914,7 @@ function renderAccountDetail() {
 
     <div class="detail-tabs">
       <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
+      <button class="detail-tab ${state.detailTab==='acceptance'?'active':''}" onclick="switchDetailTab('acceptance')">Acceptance</button>
       <button class="detail-tab ${state.detailTab==='contacts'?'active':''}" onclick="switchDetailTab('contacts')">Contacts</button>
       <button class="detail-tab ${state.detailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')">Notes</button>
     </div>
@@ -1760,8 +1935,211 @@ function renderDetailTab() {
   const el = document.getElementById('detail-tab-content');
   if (!el) return;
   if (state.detailTab === 'checklist') renderChecklist(el);
+  else if (state.detailTab === 'acceptance') renderAcceptanceTab(el);
   else if (state.detailTab === 'contacts') renderContacts(el);
   else if (state.detailTab === 'notes') renderNotes(el);
+}
+
+// ======================== RENDER: ACCEPTANCE MATRIX ========================
+function renderAcceptanceTab(container) {
+  const accountId = state.currentAccountId;
+  const rows = state.matrixConfig.rows;
+  const cols = state.matrixConfig.cols;
+  const statuses = state.matrixConfig.statuses;
+  const data = state.matrixData[accountId] || [];
+
+  if (!rows.length || !cols.length) {
+    container.innerHTML = '<div style="padding:24px;text-align:center;color:var(--g400)">No acceptance matrix configured yet. An admin can set up product rows and milestone columns in the Admin panel.</div>';
+    return;
+  }
+
+  const getCell = (rowId, colId) => data.find(d => d.row_id === rowId && d.col_id === colId);
+  const getStatus = (statusId) => statuses.find(s => s.id === statusId);
+  const defaultStatus = statuses.find(s => s.label === 'Not Started') || statuses[0];
+
+  let html = `<div style="overflow-x:auto;padding:4px 0">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr>
+        <th style="text-align:left;padding:10px 12px;border-bottom:2px solid var(--g200);font-weight:600;color:var(--g600);min-width:140px">Product</th>
+        ${cols.map(c => `<th style="text-align:center;padding:10px 8px;border-bottom:2px solid var(--g200);font-weight:600;color:var(--g600);min-width:100px">${esc(c.label)}</th>`).join('')}
+      </tr></thead>
+      <tbody>`;
+
+  rows.forEach(row => {
+    html += `<tr>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--g100);font-weight:500">${esc(row.label)}</td>`;
+    cols.forEach(col => {
+      const cell = getCell(row.id, col.id);
+      const status = cell ? getStatus(cell.status_id) : defaultStatus;
+      const color = status?.color || '#94A3B8';
+      const label = status?.label || 'Not Started';
+      html += `<td style="padding:6px 8px;border-bottom:1px solid var(--g100);text-align:center">
+        <div class="matrix-cell" onclick="showMatrixPicker('${accountId}','${row.id}','${col.id}',this)"
+          style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:${color}18;color:${color};border:1.5px solid ${color}40"
+          title="Click to change">
+          <span style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0"></span>
+          ${esc(label)}
+        </div>
+      </td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+
+  // ---- ACCEPTANCE SCORECARD ----
+  const totalCells = rows.length * cols.length;
+  const statusCounts = {};
+  statuses.forEach(s => statusCounts[s.id] = 0);
+  data.forEach(d => { if (statusCounts[d.status_id] !== undefined) statusCounts[d.status_id]++; });
+
+  const approvedStatus = statuses.find(s => s.label === 'Approved');
+  const rejectedStatus = statuses.find(s => s.label === 'Rejected');
+  const naStatus = statuses.find(s => s.label === 'N/A');
+  const approvedCount = approvedStatus ? (statusCounts[approvedStatus.id] || 0) : 0;
+  const rejectedCount = rejectedStatus ? (statusCounts[rejectedStatus.id] || 0) : 0;
+  const naCount = naStatus ? (statusCounts[naStatus.id] || 0) : 0;
+  const eligibleCells = totalCells - naCount;
+  const acceptanceRate = eligibleCells > 0 ? Math.round(approvedCount / eligibleCells * 100) : 0;
+  const activeCells = data.filter(d => { const st = getStatus(d.status_id); return st && st.label !== 'Not Started' && st.label !== 'N/A'; }).length;
+
+  // Acceptance score color
+  const scoreColor = acceptanceRate >= 75 ? '#34D399' : acceptanceRate >= 40 ? '#FBBF24' : acceptanceRate > 0 ? '#F58220' : '#94A3B8';
+
+  html += `<div style="margin-top:16px;padding:16px;background:var(--g50);border-radius:8px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <h4 style="margin:0;font-size:14px;color:var(--g700)">Acceptance Score</h4>
+      <div style="font-size:28px;font-weight:700;color:${scoreColor}">${acceptanceRate}%</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">`;
+
+  // Status breakdown chips
+  statuses.forEach(s => {
+    const count = statusCounts[s.id] || 0;
+    if (count > 0 || s.label === 'Approved') {
+      html += `<div style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;background:${s.color}18;color:${s.color};border:1px solid ${s.color}30">
+        <span style="width:6px;height:6px;border-radius:50%;background:${s.color}"></span>
+        ${esc(s.label)}: ${count}
+      </div>`;
+    }
+  });
+
+  html += `</div>`;
+
+  // Progress bar showing acceptance across all products
+  if (eligibleCells > 0) {
+    html += `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--g500);margin-bottom:4px">
+        <span>${approvedCount} of ${eligibleCells} eligible products accepted</span>
+        <span>${activeCells} in progress</span>
+      </div>
+      <div style="height:8px;background:var(--g200);border-radius:4px;overflow:hidden;display:flex">
+        ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#34D399"></div>` : ''}
+        ${activeCells - approvedCount > 0 ? `<div style="width:${(activeCells-approvedCount)/eligibleCells*100}%;background:#38BDF8"></div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Per-product acceptance summary
+  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px">`;
+  rows.forEach(row => {
+    const rowData = data.filter(d => d.row_id === row.id);
+    const rowApproved = rowData.filter(d => approvedStatus && d.status_id === approvedStatus.id).length;
+    const rowNA = rowData.filter(d => naStatus && d.status_id === naStatus.id).length;
+    const rowEligible = cols.length - rowNA;
+    const rowPct = rowEligible > 0 ? Math.round(rowApproved / rowEligible * 100) : 0;
+    const furthestCol = (() => {
+      // Find the rightmost column with a non-Not Started / non-N/A status
+      for (let i = cols.length - 1; i >= 0; i--) {
+        const cell = rowData.find(d => d.col_id === cols[i].id);
+        if (cell) {
+          const st = getStatus(cell.status_id);
+          if (st && st.label !== 'Not Started' && st.label !== 'N/A') return cols[i].label;
+        }
+      }
+      return '—';
+    })();
+    const pColor = rowPct >= 75 ? '#34D399' : rowPct >= 40 ? '#FBBF24' : rowPct > 0 ? '#F58220' : '#94A3B8';
+    html += `<div style="padding:8px 10px;background:var(--white);border-radius:6px;border:1px solid var(--g150)">
+      <div style="font-size:12px;font-weight:600;color:var(--g700);margin-bottom:2px">${esc(row.label)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:18px;font-weight:700;color:${pColor}">${rowPct}%</span>
+        <span style="font-size:10px;color:var(--g400)">${furthestCol}</span>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  html += `</div>`;
+
+  container.innerHTML = html;
+}
+
+function showMatrixPicker(accountId, rowId, colId, el) {
+  // Remove any existing picker
+  document.querySelectorAll('.matrix-picker').forEach(p => p.remove());
+
+  const statuses = state.matrixConfig.statuses;
+  const picker = document.createElement('div');
+  picker.className = 'matrix-picker';
+  picker.style.cssText = 'position:absolute;z-index:200;background:var(--white);border:1px solid var(--g200);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);padding:4px;min-width:140px';
+
+  statuses.forEach(s => {
+    const opt = document.createElement('div');
+    opt.style.cssText = `padding:8px 12px;cursor:pointer;border-radius:6px;font-size:13px;display:flex;align-items:center;gap:8px;transition:background .1s`;
+    opt.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${esc(s.label)}`;
+    opt.onmouseover = () => opt.style.background = 'var(--g50)';
+    opt.onmouseout = () => opt.style.background = '';
+    opt.onclick = (e) => { e.stopPropagation(); setMatrixCell(accountId, rowId, colId, s.id); picker.remove(); };
+    picker.appendChild(opt);
+  });
+
+  // Position relative to the clicked cell
+  const rect = el.getBoundingClientRect();
+  picker.style.position = 'fixed';
+  picker.style.left = rect.left + 'px';
+  picker.style.top = (rect.bottom + 4) + 'px';
+
+  document.body.appendChild(picker);
+
+  // Close on outside click
+  const close = (e) => { if (!picker.contains(e.target)) { picker.remove(); document.removeEventListener('click', close); } };
+  setTimeout(() => document.addEventListener('click', close), 0);
+}
+
+async function setMatrixCell(accountId, rowId, colId, statusId) {
+  const now = new Date().toISOString();
+  const existing = (state.matrixData[accountId] || []).find(d => d.row_id === rowId && d.col_id === colId);
+
+  if (existing) {
+    existing.status_id = statusId;
+    existing.updated_at = now;
+    existing.updated_by = state.user?.id;
+  } else {
+    const newEntry = { id: uuid(), account_id: accountId, row_id: rowId, col_id: colId, status_id: statusId, updated_at: now, updated_by: state.user?.id };
+    if (!state.matrixData[accountId]) state.matrixData[accountId] = [];
+    state.matrixData[accountId].push(newEntry);
+  }
+
+  // Re-render immediately
+  const el = document.getElementById('detail-tab-content');
+  if (el && state.detailTab === 'acceptance') renderAcceptanceTab(el);
+
+  // Save to Supabase
+  try {
+    const { error } = await supa.from('kac_matrix_data').upsert({
+      account_id: accountId,
+      row_id: rowId,
+      col_id: colId,
+      status_id: statusId,
+      updated_at: now,
+      updated_by: state.user?.id
+    }, { onConflict: 'account_id,row_id,col_id' });
+    if (error) throw error;
+  } catch (e) {
+    console.error('Matrix save error:', e);
+    toast('Failed to save — will retry on sync');
+  }
 }
 
 // ======================== RENDER: CHECKLIST ========================
@@ -1797,15 +2175,17 @@ function renderChecklist(container) {
       const cl = (state.checklist[accountId] || []).find(c => c.stage === s && c.item_key === item.key);
       const checked = cl && cl.completed;
       const disabled = !accessible;
+      const doneDate = checked && cl.completed_at ? new Date(cl.completed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '';
       html += `<div class="check-item ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}">
         <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}
           onchange="handleChecklistToggle('${accountId}', ${s}, '${item.key}', this.checked)">
-        <label>${esc(item.label)}</label>
+        <label style="flex:1">${esc(item.label)}</label>
+        ${doneDate ? `<span onclick="event.stopPropagation();editCompletionDate('${accountId}',${s},'${item.key}')" style="font-size:11px;color:var(--g400);white-space:nowrap;margin-left:8px;cursor:pointer;border-bottom:1px dashed var(--g300)" title="Click to edit date">${doneDate}</span>` : ''}
       </div>`;
     });
 
-    if (!accessible && s > 1) {
-      html += `<div style="padding:14px 16px;font-size:13px;color:var(--g500);font-style:italic">Complete Stage ${s-1} to unlock this stage</div>`;
+    if (!accessible && s === 5) {
+      html += `<div style="padding:14px 16px;font-size:13px;color:var(--g500);font-style:italic">Complete all prior stages to unlock Grow & Retain</div>`;
     }
 
     html += '</div></div>';
@@ -1821,6 +2201,46 @@ async function handleChecklistToggle(accountId, stage, itemKey, completed) {
   await toggleChecklistItem(accountId, stage, itemKey, completed);
   renderAccountDetail();
   toast(completed ? 'Task completed' : 'Task unchecked');
+}
+
+function editCompletionDate(accountId, stage, itemKey) {
+  const cl = (state.checklist[accountId] || []).find(c => c.stage === stage && c.item_key === itemKey);
+  if (!cl || !cl.completed) return;
+  const current = cl.completed_at ? cl.completed_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:var(--white);border-radius:12px;padding:24px;width:300px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <h3 style="margin:0 0 16px;font-size:16px">Edit Completion Date</h3>
+    <input type="date" id="edit-comp-date" value="${current}" max="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:10px;border:1px solid var(--g300);border-radius:8px;font-size:14px;box-sizing:border-box">
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--g300);border-radius:8px;background:var(--white);cursor:pointer;font-size:14px">Cancel</button>
+      <button onclick="saveCompletionDate('${accountId}',${stage},'${itemKey}')" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--vic-orange);color:white;cursor:pointer;font-size:14px;font-weight:600">Save</button>
+    </div>
+  </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+async function saveCompletionDate(accountId, stage, itemKey) {
+  const input = document.getElementById('edit-comp-date');
+  if (!input || !input.value) return;
+  const newDate = new Date(input.value + 'T12:00:00').toISOString();
+  const cl = (state.checklist[accountId] || []).find(c => c.stage === stage && c.item_key === itemKey);
+  if (!cl) return;
+  cl.completed_at = newDate;
+  cl.updated_at = new Date().toISOString();
+  await db.checklist.put({ ...cl });
+  try {
+    const { error } = await supa.from('kac_checklist').upsert({ ...cl }, { onConflict: 'account_id,stage,item_key' });
+    if (error) throw error;
+    setSyncStatus('synced');
+  } catch (e) {
+    await db.sync_queue.add({ table_name: 'kac_checklist', operation: 'upsert', record_id: cl.id, data: JSON.stringify(cl), created_at: new Date().toISOString() });
+    setSyncStatus('offline');
+  }
+  document.querySelector('div[style*="fixed"][style*="inset"]')?.remove();
+  renderAccountDetail();
+  toast('Date updated');
 }
 
 // ======================== RENDER: CONTACTS ========================
@@ -1906,23 +2326,27 @@ async function handleAddNote(accountId) {
 function renderDashboard() {
   fetchFxRates();
   const el = document.getElementById('view-dashboard');
-  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin';
+  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const allAccounts = getVisibleAccounts();
   const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier !== 'all';
 
   // Dropdown filter system
   let filterHtml = '';
-  if (isManager) {
-    const reps = (state.profiles || []).filter(p => p.role === 'rep' || p.role === 'manager' || p.role === 'admin').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
+  {
+    const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
     const scopedAccounts = state.dashFilterCountry !== 'all' ? allAccounts.filter(a => a.country === state.dashFilterCountry) : allAccounts;
     const scopedReps = state.dashFilterCountry !== 'all' ? reps.filter(p => p.country === state.dashFilterCountry) : reps;
     const hasReports = new Set(scopedReps.filter(p => p.reports_to).map(p => p.reports_to));
     const managers = scopedReps.filter(p => hasReports.has(p.id));
-    const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).filter(p=>scopedAccounts.some(a=>a.assigned_to===p.id));
+    const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
 
     const auRegions = ['NT','QLD','WA','SA','NSW','ACT','VIC','TAS'];
-    const nzRegions = ['Upper North','Lower North','South Island'];
-    const visibleRegions = state.dashFilterCountry === 'AU' ? auRegions : state.dashFilterCountry === 'NZ' ? nzRegions : [...auRegions, ...nzRegions];
+    const nzRegionCodes = ['NTL','AKL','WKO','BOP','GIS','HKB','TKI','MWT','WGN','TSM','NSN','MBH','WTC','CAN','OTA','STL'];
+    const acctRegions = new Set();
+    allAccounts.forEach(a => (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(r => acctRegions.add(r)));
+    const activeNZ = nzRegionCodes.filter(r => acctRegions.has(r));
+    const activeAU = auRegions.filter(r => acctRegions.has(r));
+    const visibleRegions = state.dashFilterCountry === 'AU' ? activeAU : state.dashFilterCountry === 'NZ' ? activeNZ : [...activeAU, ...activeNZ];
 
     const mgrOrder = ['Steve','David','Josh','Ben'];
     const filteredMgrs = [...managers];
@@ -1946,8 +2370,8 @@ function renderDashboard() {
     state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
     if (state.dashFilterTier !== 'all') tags.push({ label: 'T' + state.dashFilterTier, key: 'dashFilterTier', val: state.dashFilterTier, css: 't-tier' });
     if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
-    state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: (p?.full_name||'').split(' ')[0], key: 'dashFilterManager', val: id, css: 't-manager' }); });
-    state.dashFilterRep.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: (p?.full_name||'').split(' ')[0], key: 'dashFilterRep', val: id, css: 't-rep' }); });
+    state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: p?.full_name||'—', key: 'dashFilterManager', val: id, css: 't-manager' }); });
+    state.dashFilterRep.filter(id => !state.dashFilterManager.includes(id)).map(id => { const p = (state.profiles||[]).find(x=>x.id===id); return { label: p?.full_name||'—', key: 'dashFilterRep', val: id, css: 't-rep' }; }).sort((a,b) => a.label.localeCompare(b.label)).forEach(t => tags.push(t));
 
     filterHtml = `
     <div class="fd-row">
@@ -1969,11 +2393,11 @@ function renderDashboard() {
       </div>
       <div class="fd-wrap" id="fd-mgr" onclick="toggleFilterDrop('fd-mgr',event)">
         <div class="fd-btn${state.dashFilterManager.length?' has-val':''}">${mgrLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
-        <div class="fd-menu">${filteredMgrs.map(p => fdItem((p.full_name||'').split(' ')[0],'dashFilterManager',p.id)).join('')}</div>
+        <div class="fd-menu">${filteredMgrs.map(p => fdItem(p.full_name||'—','dashFilterManager',p.id)).join('')}</div>
       </div>
       <div class="fd-wrap" id="fd-rep" onclick="toggleFilterDrop('fd-rep',event)">
         <div class="fd-btn${state.dashFilterRep.length?' has-val':''}">${repLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
-        <div class="fd-menu">${activeReps.map(p => fdItem((p.full_name||'').split(' ')[0],'dashFilterRep',p.id)).join('')}</div>
+        <div class="fd-menu">${activeReps.map(p => fdItem(p.full_name||'—','dashFilterRep',p.id)).join('')}</div>
       </div>
     </div>
     ${tags.length ? `<div class="fd-tags">${tags.map(t => `<div class="fd-tag ${t.css}" onclick="event.stopPropagation();removeTag('${t.key}','${t.val}')">${t.label} ×</div>`).join('')}</div>` : ''}`;
@@ -1985,29 +2409,86 @@ function renderDashboard() {
     <div class="view-header">
       <h1>Dashboard ${hasFilter?'<span style="font-size:14px;font-weight:400;color:var(--g400)">— '+filtered.length+' of '+allAccounts.length+' accounts</span>':''}</h1>
       <div style="display:flex;gap:8px;align-items:center">
+        ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;border:none">✕ Clear</button>` : ''}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
           <div class="fd-btn" style="padding:8px 12px;font-size:13px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
           <div class="fd-menu" style="min-width:90px">
-            <div class="fd-item${state.dashCurrency==='AUD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='AUD';renderDashboard()">AUD$</div>
-            <div class="fd-item${state.dashCurrency==='USD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='USD';renderDashboard()">USD$</div>
-            <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';renderDashboard()">NZD$</div>
+            <div class="fd-item${state.dashCurrency==='AUD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='AUD';localStorage.setItem('kac_currency_'+state.user?.id,'AUD');renderDashboard()">AUD$</div>
+            <div class="fd-item${state.dashCurrency==='USD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='USD';localStorage.setItem('kac_currency_'+state.user?.id,'USD');renderDashboard()">USD$</div>
+            <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';localStorage.setItem('kac_currency_'+state.user?.id,'NZD');renderDashboard()">NZD$</div>
           </div>
         </div>
-        ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;border:none">✕ Clear</button>` : ''}
         <button onclick="generatePDFReport()" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
       </div>
     </div>
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Summary</button>
-      <button class="${state.dashMode==='table'?'active':''}" onclick="state.dashMode='table';renderDashboard()">Table</button>
+      <button class="${state.dashMode==='table'?'active':''}" onclick="state.dashMode='table';state.dashSortCol='progress';state.dashSortDir='asc';renderDashboard()">Table</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
     </div>
     ${filterHtml}
+    <div id="dash-metrics"></div>
     <div id="dash-content"></div>
   `;
+  renderDashMetrics();
   if (state.dashMode === 'summary') renderDashboardSummary();
   else if (state.dashMode === 'table') renderDashboardTable();
   else renderDashboardHeatmap();
+}
+
+function renderDashMetrics() {
+  const mel = document.getElementById('dash-metrics');
+  if (!mel) return;
+  const accounts = getDashFilteredAccounts();
+  accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
+  const stalledCutoff = new Date(Date.now() - state.stalledDays*24*60*60*1000).toISOString();
+  const stalled = accounts.filter(a => {
+    const cl = state.checklist[a.id] || [];
+    if (!cl.length) return true;
+    const latest = cl.reduce((max,c) => c.completed_at && c.completed_at > max ? c.completed_at : max, '');
+    return !latest || latest < stalledCutoff;
+  }).length;
+  const thisMonth = new Date().toISOString().slice(0,7);
+  const active = accounts.filter(a => {
+    const cl = state.checklist[a.id] || [];
+    return cl.some(c => c.completed_at && c.completed_at.slice(0,7) === thisMonth);
+  }).length;
+  const avgProgress = Math.round(accounts.reduce((sum,a) => { let total=0,done=0; for(let s=1;s<=5;s++){const c=getStageCompletion(a.id,s); total+=c.total; done+=c.done;} return sum+(total?done/total*100:0); },0)/(accounts.length||1));
+  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
+  const au = accounts.filter(a => a.country === 'AU');
+  const nz = accounts.filter(a => a.country === 'NZ');
+  const fx = fxSymbol();
+  const auRev = au.reduce((s,a) => s + toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency), 0);
+  const nzRev = nz.reduce((s,a) => s + toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency), 0);
+  const totalRev = auRev + nzRev;
+  // Always show AU/NZ split from actual filtered account data
+  const auPct = totalRev > 0 ? (auRev / totalRev * 100) : 50;
+  const nzPct = totalRev > 0 ? (nzRev / totalRev * 100) : 50;
+  const oppHtml = `<div class="dash-section" style="padding:12px 16px">
+    <h3>Opportunity <span style="font-size:13px;font-weight:700;color:var(--vic-black)">${fx}${formatNumber(Math.round(totalRev))}</span></h3>
+    <div style="display:flex;height:22px;border-radius:4px;overflow:hidden;cursor:pointer">
+      ${auRev > 0 ? `<div onclick="setDashFilter('dashFilterCountry','AU')" style="width:${Math.max(auPct,5)}%;background:var(--vic-orange);display:flex;align-items:center;justify-content:center;transition:width .3s">
+        <span style="font-size:11px;font-weight:700;color:#fff">AU ${Math.round(auPct)}%</span>
+      </div>` : ''}
+      ${nzRev > 0 ? `<div onclick="setDashFilter('dashFilterCountry','NZ')" style="width:${Math.max(nzPct,5)}%;background:#3b82f6;display:flex;align-items:center;justify-content:center;transition:width .3s">
+        <span style="font-size:11px;font-weight:700;color:#fff">NZ ${Math.round(nzPct)}%</span>
+      </div>` : ''}
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;font-weight:600">
+      ${auRev > 0 ? `<span style="color:var(--vic-orange)">AU ${fx}${formatNumber(Math.round(auRev))}</span>` : ''}
+      ${nzRev > 0 ? `<span style="color:#3b82f6;margin-left:auto">NZ ${fx}${formatNumber(Math.round(nzRev))}</span>` : ''}
+    </div>
+  </div>`;
+
+  mel.innerHTML = `<div class="dash-section" style="padding:10px 0">
+    <div style="display:flex;text-align:center">
+      <div onclick="filterToAccounts()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:var(--vic-black)">${accounts.length}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Accounts</div></div>
+      <div onclick="filterToStalled()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:${stalled > 0 ? '#ef4444' : 'var(--success)'}">${stalled}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Stalled</div></div>
+      <div onclick="filterToActiveThisMonth()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:#3b82f6">${active}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Active This Month</div></div>
+      <div style="flex:1"><span style="font-size:20px;font-weight:700;color:var(--success)">${avgProgress}%</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Avg Progress</div></div>
+    </div>
+  </div>
+  ${oppHtml}`;
 }
 
 function renderDashboardSummary() {
@@ -2015,7 +2496,7 @@ function renderDashboardSummary() {
   const accounts = getDashFilteredAccounts();
   // Always recalc stages from checklist truth before rendering
   accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
-  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin';
+  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const au = accounts.filter(a => a.country === 'AU');
   const nz = accounts.filter(a => a.country === 'NZ');
   const stageCounts = [0, 0, 0, 0, 0];
@@ -2033,101 +2514,49 @@ function renderDashboardSummary() {
   weaknesses.sort((a, b) => a.pct - b.pct);
 
   let html = `
-    <div class="dash-section" style="padding:10px 0">
-      <div style="display:flex;text-align:center">
-        <div onclick="filterToAccounts()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:var(--vic-black)">${accounts.length}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Accounts</div></div>
-        ${isManager ? `<div onclick="filterByCountry('AU')" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:var(--vic-orange)">${au.length}</span><div style="font-size:10px;color:var(--g400);font-weight:600;margin-top:2px">AU</div></div>
-        <div onclick="filterByCountry('NZ')" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:#3b82f6">${nz.length}</span><div style="font-size:10px;color:var(--g400);font-weight:600;margin-top:2px">NZ</div></div>` : ''}
-        <div onclick="filterConverting()" style="cursor:pointer;flex:1"><span style="font-size:20px;font-weight:700;color:var(--success)">${accounts.filter(a => a.current_stage >= 4).length}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Converting</div></div>
+    <div class="dash-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h3 style="margin:0">Conversion Funnel</h3>
+        <div style="display:flex;gap:12px;font-size:11px;color:var(--g500)">
+          ${['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'].map((c,i) => `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:${c}"></span>${STAGES[i+1].name}</span>`).join('')}
+        </div>
       </div>
-    </div>
-
-    ${(() => {
-      const fx = fxSymbol();
-      const auRev = au.reduce((s,a) => s + toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency), 0);
-      const nzRev = nz.reduce((s,a) => s + toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency), 0);
-      const totalRev = auRev + nzRev;
-      let pipelineCountries = null;
-      const selectedIds = [...state.dashFilterRep, ...state.dashFilterManager];
-      if (selectedIds.length > 0) {
-        pipelineCountries = new Set((state.profiles || []).filter(p => selectedIds.includes(p.id)).map(p => p.country).filter(Boolean));
-      } else if (!isManager && state.profile?.country) {
-        pipelineCountries = new Set([state.profile.country]);
-      }
-      const showAU = pipelineCountries ? pipelineCountries.has('AU') : au.length > 0;
-      const showNZ = pipelineCountries ? pipelineCountries.has('NZ') : nz.length > 0;
-      const auPct = totalRev > 0 ? (auRev / totalRev * 100) : 50;
-      const nzPct = totalRev > 0 ? (nzRev / totalRev * 100) : 50;
-      const singleCountry = showAU && !showNZ ? 'AU' : !showAU && showNZ ? 'NZ' : null;
-      return `<div class="dash-section" style="padding:12px 16px">
-        <div style="display:flex;align-items:baseline;justify-content:center;gap:8px;margin-bottom:6px">
-          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g500)">Opportunity${singleCountry ? ' — '+singleCountry : ''}</span>
-          <span style="font-size:11px;font-weight:700;color:var(--vic-black)">${fx}${formatNumber(Math.round(totalRev))}</span>
-        </div>
-        ${singleCountry ? (() => { const cRev = singleCountry==='AU' ? auRev : nzRev; return `
-        <div style="height:24px;border-radius:6px;overflow:hidden;background:${singleCountry==='AU'?'var(--vic-orange)':'#3b82f6'};display:flex;align-items:center;justify-content:center">
-          <span style="font-size:11px;font-weight:700;color:#fff">${fx}${formatNumber(Math.round(cRev))}</span>
-        </div>`; })() : `
-        <div style="display:flex;height:24px;border-radius:6px;overflow:hidden;cursor:pointer">
-          <div onclick="setDashFilter('dashFilterCountry','AU')" style="width:${Math.max(auPct,5)}%;background:var(--vic-orange);display:flex;align-items:center;justify-content:center;transition:width .3s">
-            <span style="font-size:11px;font-weight:700;color:#fff">AU ${Math.round(auPct)}%</span>
-          </div>
-          <div onclick="setDashFilter('dashFilterCountry','NZ')" style="width:${Math.max(nzPct,5)}%;background:#3b82f6;display:flex;align-items:center;justify-content:center;transition:width .3s">
-            <span style="font-size:11px;font-weight:700;color:#fff">NZ ${Math.round(nzPct)}%</span>
-          </div>
-        </div>
-        `}
-      </div>`;
-    })()}
-
-    <div class="dash-grid">
-      <div class="dash-section">
-        <h3>Conversion Funnel</h3>
-        <div class="funnel-chart">
-          ${[1,2,3,4,5].map(s => `
-            <div class="funnel-row" onclick="filterByStage(${s})" style="cursor:pointer" title="View ${STAGES[s].name} accounts">
-              <div class="funnel-row-label">${STAGES[s].name}</div>
-              <div class="funnel-row-bar-wrap">
-                <div class="funnel-row-bar" style="width:${Math.max(stageCounts[s-1]/maxCount*100, 8)}%;background:${s<=2?'var(--vic-orange)':s<=3?'#F59E0B':s<=4?'var(--success)':'#059669'}">
-                  <span>${stageCounts[s-1]}</span>
-                </div>
+      <div class="funnel-chart">
+        ${[1,2,3,4,5].map(s => `
+          <div class="funnel-row" onclick="filterByStage(${s})" style="cursor:pointer" title="View ${STAGES[s].name} accounts">
+            <div class="funnel-row-label">${STAGES[s].name}</div>
+            <div class="funnel-row-bar-wrap">
+              <div class="funnel-row-bar" style="width:${Math.max(stageCounts[s-1]/maxCount*100, 8)}%;background:${s===1?'#94A3B8':s===2?'#38BDF8':s===3?'#34D399':s===4?'#FBBF24':'#F58220'}">
+                <span>${stageCounts[s-1]}</span>
               </div>
             </div>
-          `).join('')}
-        </div>
-      </div>
-      <div class="dash-section">
-        <h3>Tier Breakdown</h3>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          ${[1,2,3].map(t => `<div class="stat-card" onclick="filterByTier(${t})" style="cursor:pointer">
-            <div class="stat-value" style="font-size:20px">${accounts.filter(a=>a.tier===t).length}</div>
-            <div class="stat-label">Tier ${t}</div>
-          </div>`).join('')}
-        </div>
+          </div>
+        `).join('')}
       </div>
     </div>`;
 
-  // Team Scoreboard (managers only)
-  if (isManager) {
+  // Team Scoreboard (all users)
+  {
     const filteredAccounts = accounts;
-    const repProfiles = (state.profiles||[]).filter(p => p.role === 'rep' || p.role === 'manager' || p.role === 'admin');
+    const repProfiles = (state.profiles||[]).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director' && !state.dashFilterManager.includes(p.id) && (state.dashFilterRep.length === 0 || state.dashFilterRep.includes(p.id)));
     const repData = repProfiles.map(p => {
       const pAccts = filteredAccounts.filter(a => a.assigned_to === p.id);
       const rev = pAccts.reduce((s,a) => s + toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency), 0);
       const stages = [0,0,0,0,0];
       pAccts.forEach(a => stages[a.current_stage-1]++);
       const avgStage = pAccts.length ? (pAccts.reduce((s,a)=>s+a.current_stage,0)/pAccts.length) : 0;
-      return { ...p, accts: pAccts.length, rev, stages, avgStage };
-    }).filter(d => d.accts > 0);
+      const avgProg = Math.round(pAccts.reduce((sum,a) => { let total=0,done=0; for(let s=1;s<=5;s++){const c=getStageCompletion(a.id,s); total+=c.total; done+=c.done;} return sum+(total?done/total*100:0); },0)/(pAccts.length||1));
+      return { ...p, accts: pAccts.length, rev, stages, avgStage, avgProg };
+    });
 
     // Sort scoreboard
     const sbDir = state.sbSortDir === 'asc' ? 1 : -1;
     if (state.sbSortCol === 'name') repData.sort((a,b) => sbDir * (a.full_name||'').localeCompare(b.full_name||''));
     else if (state.sbSortCol === 'accts') repData.sort((a,b) => sbDir * (a.accts - b.accts));
+    else if (state.sbSortCol === 'prog') repData.sort((a,b) => sbDir * (a.avgProg - b.avgProg));
     else if (state.sbSortCol === 'opp') repData.sort((a,b) => sbDir * (a.rev - b.rev));
 
-    const maxAccts = Math.max(...repData.map(d=>d.accts), 1);
-    const stageColors = ['#F58220','#f59e0b','#3b82f6','#10b981','#059669'];
+    const stageColors = ['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
     const sbIcon = (col) => {
       if (state.sbSortCol !== col) return '<span style="opacity:.3;font-size:10px"> ⇅</span>';
       return state.sbSortDir === 'asc' ? '<span style="font-size:10px"> ↑</span>' : '<span style="font-size:10px"> ↓</span>';
@@ -2135,32 +2564,34 @@ function renderDashboardSummary() {
 
     if (repData.length) {
       let rows = repData.map(d => `
-        <div onclick="setDashFilter('dashFilterRep','${d.id}')" style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--g100);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
-          <div style="width:130px;flex-shrink:0">
+        <div onclick="setDashFilter('dashFilterRep','${d.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g100);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+          <div style="width:140px;flex-shrink:0">
             <div style="font-weight:600;font-size:13px;color:var(--g700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.full_name||'—')}</div>
-            <div style="font-size:10px;color:var(--g400)">${d.country||'—'}</div>
           </div>
-          <div style="flex:1;display:flex;gap:1px;height:22px;border-radius:4px;overflow:hidden;max-width:${(d.accts/maxAccts*100)}%">
-            ${d.stages.map((c,i) => c > 0 ? `<div style="flex:${c};background:${stageColors[i]};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff" title="${STAGES[i+1].name}: ${c}">${c}</div>` : '').join('')}
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:1px;height:22px;border-radius:4px;overflow:hidden;width:100%${d.accts?'':''}">
+              ${d.accts ? d.stages.map((c,i) => c > 0 ? `<div style="flex:${c};background:${stageColors[i]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff" title="${STAGES[i+1].name}: ${c}">${c}</div>` : '').join('') : `<div style="flex:1;background:var(--g100);border-radius:4px"></div>`}
+            </div>
           </div>
-          <div style="width:80px;flex-shrink:0;text-align:right;font-size:12px;color:var(--g500)">
-            <span style="font-weight:700;color:var(--g700)">${d.accts}</span> accts
+          <div style="width:44px;flex-shrink:0;text-align:center;font-size:13px;color:var(--g600)">
+            ${d.accts}
           </div>
-          <div style="width:90px;flex-shrink:0;text-align:right;font-size:12px;color:var(--g500)">
-            ${fxSymbol()}${formatNumber(Math.round(d.rev))}
+          <div style="width:56px;flex-shrink:0;text-align:center;font-size:13px;color:var(--g600)">
+            ${d.avgProg}%
+          </div>
+          <div style="width:100px;flex-shrink:0;text-align:right;font-size:13px;color:var(--g600)">
+            $${formatNumber(Math.round(d.rev))}
           </div>
         </div>
       `).join('');
-      html += `<div class="dash-section">
+      html += `<div class="dash-section" style="padding:12px">
         <h3 style="margin-bottom:4px">Team Scoreboard</h3>
-        <div style="display:flex;gap:10px;font-size:10px;color:var(--g400);margin-bottom:8px">
-          ${stageColors.map((c,i) => `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${c}"></span>${STAGES[i+1].name}</span>`).join('')}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--g200)">
-          <div onclick="sbSort('name')" style="width:130px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Name${sbIcon('name')}</div>
+        <div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid var(--g200)">
+          <div onclick="sbSort('name')" style="width:140px;flex-shrink:0;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Name${sbIcon('name')}</div>
           <div style="flex:1"></div>
-          <div onclick="sbSort('accts')" style="width:80px;flex-shrink:0;text-align:right;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Accts${sbIcon('accts')}</div>
-          <div onclick="sbSort('opp')" style="width:90px;flex-shrink:0;text-align:right;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Opportunity${sbIcon('opp')}</div>
+          <div onclick="sbSort('accts')" style="width:44px;flex-shrink:0;text-align:center;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Accts${sbIcon('accts')}</div>
+          <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Prog${sbIcon('prog')}</div>
+          <div onclick="sbSort('opp')" style="width:100px;flex-shrink:0;text-align:right;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Opportunity${sbIcon('opp')}</div>
         </div>
         <div>
           ${rows}
@@ -2169,17 +2600,72 @@ function renderDashboardSummary() {
     }
   }
 
-  if (weaknesses.length) {
-    html += `<div class="dash-section">
-      <h3>Needs Attention</h3>
-      <ul class="weakness-list">
-        ${weaknesses.slice(0, 10).map(w => `<li class="weakness-item" onclick="showAccountDetail('${w.id}')" style="cursor:pointer">
-          <span class="weakness-dot ${w.pct === 0 ? 'red' : 'amber'}"></span>
-          <span style="flex:1"><strong>${esc(w.name)}</strong> — stuck at ${w.stage} (${w.pct}% complete)</span>
-          <span class="badge badge-tier${w.tier}">T${w.tier}</span>
-        </li>`).join('')}
-      </ul>
-    </div>`;
+  const stalledCutoff = new Date(Date.now() - state.stalledDays*24*60*60*1000).toISOString();
+  const stalledAccounts = accounts.filter(a => {
+    const cl = state.checklist[a.id] || [];
+    if (!cl.length) return true;
+    const latest = cl.reduce((max,c) => c.completed_at && c.completed_at > max ? c.completed_at : max, '');
+    return !latest || latest < stalledCutoff;
+  });
+  // Sort stalled accounts
+  const stDir = state.stalledSortDir === 'asc' ? 1 : -1;
+  stalledAccounts.sort((a,b) => {
+    if (state.stalledSortCol === 'name') return stDir * a.company_name.localeCompare(b.company_name);
+    if (state.stalledSortCol === 'progress') return stDir * (a.current_stage - b.current_stage);
+    if (state.stalledSortCol === 'rep') {
+      const ra = (state.profiles.find(p=>p.id===a.assigned_to)?.full_name)||'';
+      const rb = (state.profiles.find(p=>p.id===b.assigned_to)?.full_name)||'';
+      return stDir * ra.localeCompare(rb);
+    }
+    // activity
+    const aD = (state.checklist[a.id]||[]).reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
+    const bD = (state.checklist[b.id]||[]).reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
+    return stDir * aD.localeCompare(bD);
+  });
+  if (stalledAccounts.length) {
+    const repName = (uid) => { const p = state.profiles.find(pr => pr.id === uid); return p ? p.full_name : '—'; };
+    const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
+    const stIcon = (col) => state.stalledSortCol === col ? (state.stalledSortDir === 'asc' ? ' ↑' : ' ↓') : '';
+    const stalledRows = stalledAccounts.slice(0,15).map(a => {
+      const cl = state.checklist[a.id] || [];
+      const latest = cl.reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
+      const lastTxt = latest ? new Date(latest).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '<span style="color:#ef4444">Never</span>';
+      const comp = getStageCompletion(a.id, a.current_stage);
+      let statusBar = '<div style="display:flex;gap:3px;align-items:center">';
+      for (let s = 1; s <= 5; s++) {
+        const sc = getStageCompletion(a.id, s);
+        const done = isStageComplete(a.id, s);
+        const isCur = s === a.current_stage;
+        const bg = done ? stageColors[s] : stageColors[s] + '40';
+        statusBar += `<div style="flex:1;min-width:16px;height:8px;background:${bg};border-radius:4px;overflow:hidden;position:relative">`;
+        if (isCur) statusBar += `<div style="width:${sc.pct}%;height:100%;background:${stageColors[s]};border-radius:2px"></div>`;
+        statusBar += '</div>';
+      }
+      statusBar += `<span style="font-size:11px;font-weight:600;color:var(--g500);white-space:nowrap;margin-left:6px">${STAGES[a.current_stage].name.split(' ')[0]} ${comp.done}/${comp.total}</span></div>`;
+      return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
+        <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
+        <td>${statusBar}</td>
+        <td style="font-size:13px;color:var(--g500)">${esc(repName(a.assigned_to))}</td>
+        <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
+      </tr>`;
+    }).join('');
+    html += `<div id="stalled-section" class="dash-section"><div class="table-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 8px">
+        <h3 style="color:#ef4444;margin:0">Stalled Accounts</h3>
+        <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
+          ${[14,30,60,90,120].map(d => `<option value="${d}"${state.stalledDays===d?' selected':''}>${d} days</option>`).join('')}
+        </select>
+      </div>
+      <table class="data-table">
+        <thead><tr>
+          <th style="cursor:pointer;user-select:none" onclick="stalledSort('name')">Company${stIcon('name')}</th>
+          <th style="min-width:180px;cursor:pointer;user-select:none" onclick="stalledSort('progress')">Progress${stIcon('progress')}</th>
+          <th style="cursor:pointer;user-select:none" onclick="stalledSort('rep')">Rep${stIcon('rep')}</th>
+          <th style="text-align:center;cursor:pointer;user-select:none" onclick="stalledSort('activity')">Last Activity${stIcon('activity')}</th>
+        </tr></thead>
+        <tbody>${stalledRows}</tbody>
+      </table>
+    </div></div>`;
   }
 
   el.innerHTML = html;
@@ -2205,16 +2691,21 @@ function renderDashboardTable() {
   const progCache = {};
   accounts.forEach(a => { progCache[a.id] = getStageCompletion(a.id, a.current_stage); });
 
+  // Pre-compute last activity for sorting
+  const actCache = {};
+  accounts.forEach(a => {
+    const cl = state.checklist[a.id] || [];
+    actCache[a.id] = cl.reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
+  });
+
   accounts.sort((a, b) => {
     let v = 0;
     switch (state.dashSortCol) {
       case 'company': v = a.company_name.localeCompare(b.company_name); break;
-      case 'country': v = (a.country||'').localeCompare(b.country||''); break;
-      case 'tier': v = a.tier - b.tier; break;
-      case 'stage': v = a.current_stage - b.current_stage; break;
-      case 'progress': v = progCache[a.id].pct - progCache[b.id].pct; break;
+      case 'progress': v = (a.current_stage - b.current_stage) || (progCache[a.id].pct - progCache[b.id].pct); break;
       case 'rep': v = repName(a.assigned_to).localeCompare(repName(b.assigned_to)); break;
       case 'revenue': v = toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency) - toDisplayCurrency(parseFloat(b.estimated_revenue)||0, b.currency); break;
+      case 'activity': v = (actCache[a.id]||'').localeCompare(actCache[b.id]||''); break;
       default: v = a.tier - b.tier;
     }
     return v * dir || a.company_name.localeCompare(b.company_name);
@@ -2226,39 +2717,327 @@ function renderDashboardTable() {
   };
   const thStyle = 'cursor:pointer;user-select:none;white-space:nowrap';
 
+  const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
   el.innerHTML = `<div class="dash-section"><div class="table-wrap">
     <table class="data-table">
       <thead><tr>
         <th style="${thStyle}" onclick="dashSort('company')">Company${sortIcon('company')}</th>
-        <th style="${thStyle}" onclick="dashSort('country')">Country${sortIcon('country')}</th>
-        <th style="${thStyle}" onclick="dashSort('tier')">Tier${sortIcon('tier')}</th>
-        <th style="${thStyle}" onclick="dashSort('stage')">Stage${sortIcon('stage')}</th>
-        <th style="${thStyle}" onclick="dashSort('progress')">Progress${sortIcon('progress')}</th>
+        <th style="${thStyle};min-width:180px" onclick="dashSort('progress')">Progress${sortIcon('progress')}</th>
         <th style="${thStyle}" onclick="dashSort('revenue')">Revenue${sortIcon('revenue')}</th>
         <th style="${thStyle}" onclick="dashSort('rep')">Rep${sortIcon('rep')}</th>
+        <th style="${thStyle};text-align:center" onclick="dashSort('activity')">Last Activity${sortIcon('activity')}</th>
       </tr></thead>
       <tbody>
         ${accounts.map(a => {
           const comp = progCache[a.id];
           const rev = toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency);
+          let statusBar = '<div style="display:flex;gap:3px;align-items:center">';
+          for (let s = 1; s <= 5; s++) {
+            const sc = getStageCompletion(a.id, s);
+            const done = isStageComplete(a.id, s);
+            const isCur = s === a.current_stage;
+            const bg = done ? stageColors[s] : stageColors[s] + '40';
+            statusBar += `<div style="flex:1;min-width:16px;height:8px;background:${bg};border-radius:4px;overflow:hidden;position:relative">`;
+            if (isCur) statusBar += `<div style="width:${sc.pct}%;height:100%;background:${stageColors[s]};border-radius:2px"></div>`;
+            statusBar += '</div>';
+          }
+          statusBar += `<span style="font-size:11px;font-weight:600;color:var(--g500);white-space:nowrap;margin-left:6px">${STAGES[a.current_stage].name.split(' ')[0]} ${comp.done}/${comp.total}</span></div>`;
           return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
-            <td><strong>${esc(a.company_name)}</strong></td>
-            <td><span class="badge badge-${a.country.toLowerCase()}">${a.country}</span></td>
-            <td><span class="badge badge-tier${a.tier}">T${a.tier}</span></td>
-            <td>${STAGES[a.current_stage].name}</td>
-            <td><div style="display:flex;align-items:center;gap:8px">
-              <div style="flex:1;height:6px;background:var(--g200);border-radius:3px;overflow:hidden">
-                <div style="width:${comp.pct}%;height:100%;background:var(--vic-orange);border-radius:3px"></div>
-              </div>
-              <span style="font-size:12px;font-weight:600;color:var(--g500)">${comp.done}/${comp.total}</span>
-            </div></td>
+            <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
+            <td>${statusBar}</td>
             <td style="font-size:13px;color:var(--g500)">${fxSymbol()}${formatNumber(Math.round(rev))}</td>
             <td style="font-size:13px;color:var(--g500)">${repName(a.assigned_to)}</td>
+            <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${actCache[a.id] ? new Date(actCache[a.id]).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '<span style="color:#ef4444">Never</span>'}</td>
           </tr>`;
         }).join('')}
       </tbody>
     </table>
   </div></div>`;
+}
+
+// ======================== RENDER: MASTER MATRIX VIEW ========================
+function renderMatrixView() {
+  const el = document.getElementById('view-matrix');
+  const allAccounts = getVisibleAccounts();
+  const rows = state.matrixConfig.rows;
+  const cols = state.matrixConfig.cols;
+  const statuses = state.matrixConfig.statuses;
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier !== 'all';
+
+  if (!rows.length || !cols.length) {
+    el.innerHTML = '<div class="view-header"><h1>Acceptance Matrix</h1></div><div style="padding:24px;text-align:center;color:var(--g400)">No matrix configured yet. Set up product rows and milestone columns in Admin.</div>';
+    return;
+  }
+
+  // Build filters (same pattern as dashboard)
+  const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
+  const scopedReps = state.dashFilterCountry !== 'all' ? reps.filter(p => p.country === state.dashFilterCountry) : reps;
+  const hasReports = new Set(scopedReps.filter(p => p.reports_to).map(p => p.reports_to));
+  const managers = scopedReps.filter(p => hasReports.has(p.id));
+  const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
+  const auRegions = ['NT','QLD','WA','SA','NSW','ACT','VIC','TAS'];
+  const nzRegionCodes = ['NTL','AKL','WKO','BOP','GIS','HKB','TKI','MWT','WGN','TSM','NSN','MBH','WTC','CAN','OTA','STL'];
+  const acctRegions = new Set();
+  allAccounts.forEach(a => (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(r => acctRegions.add(r)));
+  const activeNZ = nzRegionCodes.filter(r => acctRegions.has(r));
+  const activeAU = auRegions.filter(r => acctRegions.has(r));
+  const visibleRegions = state.dashFilterCountry === 'AU' ? activeAU : state.dashFilterCountry === 'NZ' ? activeNZ : [...activeAU, ...activeNZ];
+  const mgrOrder = ['Steve','David','Josh','Ben'];
+  const filteredMgrs = [...managers].sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
+
+  const mxFd = (label, key, val) => {
+    const active = (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion') ? state[key].includes(val) : state[key] === val;
+    return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');renderMatrixView()">${label}</div>`;
+  };
+
+  const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
+  const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
+  const tierLabel = state.dashFilterTier !== 'all' ? 'T' + state.dashFilterTier : 'Tier';
+  const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
+  const mgrLabel = state.dashFilterManager.length ? state.dashFilterManager.length + ' selected' : 'Manager';
+  const repLabel = state.dashFilterRep.length ? state.dashFilterRep.length + ' selected' : 'Rep';
+
+  const tags = [];
+  if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
+  state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
+  if (state.dashFilterTier !== 'all') tags.push({ label: 'T' + state.dashFilterTier, key: 'dashFilterTier', val: state.dashFilterTier, css: 't-tier' });
+  if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
+  state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: p?.full_name||'—', key: 'dashFilterManager', val: id, css: 't-manager' }); });
+  state.dashFilterRep.filter(id => !state.dashFilterManager.includes(id)).map(id => { const p = (state.profiles||[]).find(x=>x.id===id); return { label: p?.full_name||'—', key: 'dashFilterRep', val: id, css: 't-rep' }; }).sort((a,b) => a.label.localeCompare(b.label)).forEach(t => tags.push(t));
+
+  const filterHtml = `
+    <div class="fd-row">
+      <div class="fd-wrap" id="mx-fd-country" onclick="toggleFilterDrop('mx-fd-country',event)">
+        <div class="fd-btn${state.dashFilterCountry!=='all'?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${mxFd('AU','dashFilterCountry','AU')}${mxFd('NZ','dashFilterCountry','NZ')}</div>
+      </div>
+      <div class="fd-wrap" id="mx-fd-region" onclick="toggleFilterDrop('mx-fd-region',event)">
+        <div class="fd-btn${state.dashFilterRegion.length?' has-val':''}">${regionLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${visibleRegions.map(r => mxFd(r,'dashFilterRegion',r)).join('')}</div>
+      </div>
+      <div class="fd-wrap" id="mx-fd-tier" onclick="toggleFilterDrop('mx-fd-tier',event)">
+        <div class="fd-btn${state.dashFilterTier!=='all'?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${mxFd('Tier 1','dashFilterTier','1')}${mxFd('Tier 2','dashFilterTier','2')}${mxFd('Tier 3','dashFilterTier','3')}</div>
+      </div>
+      <div class="fd-wrap" id="mx-fd-stage" onclick="toggleFilterDrop('mx-fd-stage',event)">
+        <div class="fd-btn${state.dashFilterStage!=='all'?' has-val':''}">${stageLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${[1,2,3,4,5].map(s => mxFd(STAGES[s].name,'dashFilterStage',String(s))).join('')}</div>
+      </div>
+      <div class="fd-wrap" id="mx-fd-mgr" onclick="toggleFilterDrop('mx-fd-mgr',event)">
+        <div class="fd-btn${state.dashFilterManager.length?' has-val':''}">${mgrLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${filteredMgrs.map(p => mxFd(p.full_name||'—','dashFilterManager',p.id)).join('')}</div>
+      </div>
+      <div class="fd-wrap" id="mx-fd-rep" onclick="toggleFilterDrop('mx-fd-rep',event)">
+        <div class="fd-btn${state.dashFilterRep.length?' has-val':''}">${repLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${activeReps.map(p => mxFd(p.full_name||'—','dashFilterRep',p.id)).join('')}</div>
+      </div>
+    </div>
+    ${tags.length ? `<div class="fd-tags">${tags.map(t => `<div class="fd-tag ${t.css}" onclick="event.stopPropagation();removeTag('${t.key}','${t.val}');renderMatrixView()">${t.label} ×</div>`).join('')}</div>` : ''}`;
+
+  const accts = getDashFilteredAccounts().sort((a,b) => a.company_name.localeCompare(b.company_name));
+
+  // ---- KPI SCORECARDS ----
+  const approvedStatus = statuses.find(s => s.label === 'Approved');
+  const rejectedStatus = statuses.find(s => s.label === 'Rejected');
+  const naStatus = statuses.find(s => s.label === 'N/A');
+  const inProgressStatus = statuses.find(s => s.label === 'In Progress');
+
+  let totalApproved = 0, totalRejected = 0, totalInProgress = 0, totalNA = 0, totalCells = 0;
+  const perProduct = {};
+  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0 });
+
+  accts.forEach(a => {
+    const data = state.matrixData[a.id] || [];
+    rows.forEach(row => {
+      cols.forEach(col => {
+        totalCells++;
+        perProduct[row.id].total++;
+        const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
+        if (cell) {
+          if (approvedStatus && cell.status_id === approvedStatus.id) { totalApproved++; perProduct[row.id].approved++; }
+          else if (rejectedStatus && cell.status_id === rejectedStatus.id) { totalRejected++; perProduct[row.id].rejected++; }
+          else if (naStatus && cell.status_id === naStatus.id) { totalNA++; }
+          else if (cell.status_id && (!naStatus || cell.status_id !== naStatus.id)) {
+            const st = statuses.find(s => s.id === cell.status_id);
+            if (st && st.label !== 'Not Started') { totalInProgress++; perProduct[row.id].inProgress++; }
+          }
+        }
+      });
+      perProduct[row.id].eligible = perProduct[row.id].total - (naStatus ? (state.matrixData[accts[0]?.id] || []).filter(d => d.row_id === row.id && naStatus && d.status_id === naStatus.id).length * 0 : 0);
+    });
+  });
+
+  // Recalc eligible per product properly
+  rows.forEach(r => {
+    let naCount = 0;
+    accts.forEach(a => {
+      const data = state.matrixData[a.id] || [];
+      cols.forEach(col => {
+        const cell = data.find(d => d.row_id === r.id && d.col_id === col.id);
+        if (cell && naStatus && cell.status_id === naStatus.id) naCount++;
+      });
+    });
+    perProduct[r.id].eligible = perProduct[r.id].total - naCount;
+  });
+
+  const totalEligible = totalCells - totalNA;
+  const overallRate = totalEligible > 0 ? Math.round(totalApproved / totalEligible * 100) : 0;
+  const scoreColor = overallRate >= 75 ? '#34D399' : overallRate >= 40 ? '#FBBF24' : overallRate > 0 ? '#F58220' : '#94A3B8';
+
+  // Per-account acceptance for scoring
+  const acctScores = accts.map(a => {
+    const data = state.matrixData[a.id] || [];
+    let approved = 0, eligible = 0;
+    rows.forEach(row => cols.forEach(col => {
+      const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
+      if (cell && naStatus && cell.status_id === naStatus.id) return;
+      eligible++;
+      if (cell && approvedStatus && cell.status_id === approvedStatus.id) approved++;
+    }));
+    return { ...a, mxApproved: approved, mxEligible: eligible, mxRate: eligible > 0 ? Math.round(approved / eligible * 100) : 0 };
+  });
+
+  // Movement KPIs — count accounts by acceptance tier
+  const fullyAccepted = acctScores.filter(a => a.mxRate === 100 && a.mxEligible > 0).length;
+  const highAcceptance = acctScores.filter(a => a.mxRate >= 75 && a.mxRate < 100).length;
+  const midAcceptance = acctScores.filter(a => a.mxRate >= 25 && a.mxRate < 75).length;
+  const lowAcceptance = acctScores.filter(a => a.mxRate > 0 && a.mxRate < 25).length;
+  const noAcceptance = acctScores.filter(a => a.mxRate === 0).length;
+
+  let kpiHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px">
+    <div style="background:var(--white);border:1px solid var(--g150);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:${scoreColor}">${overallRate}%</div>
+      <div style="font-size:10px;text-transform:uppercase;font-weight:600;color:var(--g400);margin-top:2px">Overall Acceptance</div>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--g150);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#34D399">${totalApproved}</div>
+      <div style="font-size:10px;text-transform:uppercase;font-weight:600;color:var(--g400);margin-top:2px">Approved</div>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--g150);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#38BDF8">${totalInProgress}</div>
+      <div style="font-size:10px;text-transform:uppercase;font-weight:600;color:var(--g400);margin-top:2px">In Progress</div>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--g150);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:#EF4444">${totalRejected}</div>
+      <div style="font-size:10px;text-transform:uppercase;font-weight:600;color:var(--g400);margin-top:2px">Rejected</div>
+    </div>
+    <div style="background:var(--white);border:1px solid var(--g150);border-radius:8px;padding:12px;text-align:center">
+      <div style="font-size:28px;font-weight:700;color:var(--vic-orange)">${fullyAccepted}</div>
+      <div style="font-size:10px;text-transform:uppercase;font-weight:600;color:var(--g400);margin-top:2px">Fully Accepted</div>
+    </div>
+  </div>`;
+
+  // Per-product acceptance bars
+  kpiHtml += `<div style="background:var(--white);border:1px solid var(--g150);border-radius:8px;padding:12px 16px;margin-bottom:12px">
+    <h4 style="font-size:13px;margin:0 0 10px;color:var(--g600)">Product Acceptance</h4>
+    <div style="display:flex;flex-direction:column;gap:8px">`;
+  rows.forEach(r => {
+    const pp = perProduct[r.id];
+    const pct = pp.eligible > 0 ? Math.round(pp.approved / pp.eligible * 100) : 0;
+    const pColor = pct >= 75 ? '#34D399' : pct >= 40 ? '#FBBF24' : pct > 0 ? '#F58220' : '#94A3B8';
+    kpiHtml += `<div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:12px;font-weight:600;min-width:120px;color:var(--g700)">${esc(r.label)}</span>
+      <div style="flex:1;height:16px;background:var(--g100);border-radius:4px;overflow:hidden;display:flex">
+        ${pp.approved ? `<div style="width:${pp.approved/pp.eligible*100}%;background:#34D399;transition:width .3s"></div>` : ''}
+        ${pp.inProgress ? `<div style="width:${pp.inProgress/pp.eligible*100}%;background:#38BDF8;transition:width .3s"></div>` : ''}
+        ${pp.rejected ? `<div style="width:${pp.rejected/pp.eligible*100}%;background:#EF4444;transition:width .3s"></div>` : ''}
+      </div>
+      <span style="font-size:13px;font-weight:700;min-width:40px;text-align:right;color:${pColor}">${pct}%</span>
+    </div>`;
+  });
+  kpiHtml += `</div></div>`;
+
+  // Movement KPI bar
+  kpiHtml += `<div style="background:var(--white);border:1px solid var(--g150);border-radius:8px;padding:12px 16px;margin-bottom:16px">
+    <h4 style="font-size:13px;margin:0 0 8px;color:var(--g600)">Account Acceptance Distribution</h4>
+    <div style="display:flex;gap:6px;font-size:12px">
+      <div style="flex:1;text-align:center;padding:8px;border-radius:6px;background:#34D39918;border:1px solid #34D39930">
+        <div style="font-size:18px;font-weight:700;color:#34D399">${fullyAccepted}</div><div style="color:var(--g500);font-size:10px;text-transform:uppercase;font-weight:600">100%</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:8px;border-radius:6px;background:#FBBF2418;border:1px solid #FBBF2430">
+        <div style="font-size:18px;font-weight:700;color:#FBBF24">${highAcceptance}</div><div style="color:var(--g500);font-size:10px;text-transform:uppercase;font-weight:600">75%+</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:8px;border-radius:6px;background:#F5822018;border:1px solid #F5822030">
+        <div style="font-size:18px;font-weight:700;color:#F58220">${midAcceptance}</div><div style="color:var(--g500);font-size:10px;text-transform:uppercase;font-weight:600">25–74%</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:8px;border-radius:6px;background:#EF444418;border:1px solid #EF444430">
+        <div style="font-size:18px;font-weight:700;color:#EF4444">${lowAcceptance}</div><div style="color:var(--g500);font-size:10px;text-transform:uppercase;font-weight:600">1–24%</div>
+      </div>
+      <div style="flex:1;text-align:center;padding:8px;border-radius:6px;background:var(--g50);border:1px solid var(--g200)">
+        <div style="font-size:18px;font-weight:700;color:var(--g400)">${noAcceptance}</div><div style="color:var(--g500);font-size:10px;text-transform:uppercase;font-weight:600">None</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ---- MASTER GRID ----
+  const getStatus = (statusId) => statuses.find(s => s.id === statusId);
+  const defaultStatus = statuses.find(s => s.label === 'Not Started') || statuses[0];
+
+  // Build the account × product best-status grid
+  // For each account+product, show the furthest milestone status
+  let gridHtml = `<div class="table-wrap" style="max-height:60vh"><table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead style="position:sticky;top:0;background:var(--white);z-index:5"><tr>
+      <th style="text-align:left;padding:8px 10px;border-bottom:2px solid var(--g200);font-weight:600;min-width:160px;position:sticky;left:0;background:var(--white);z-index:6">Account</th>
+      <th style="text-align:center;padding:8px 6px;border-bottom:2px solid var(--g200);font-weight:600;min-width:50px;color:var(--g500)">Score</th>
+      ${rows.map(r => `<th style="text-align:center;padding:8px 6px;border-bottom:2px solid var(--g200);font-weight:600;min-width:90px">${esc(r.label)}</th>`).join('')}
+    </tr></thead>
+    <tbody>`;
+
+  acctScores.sort((a,b) => b.mxRate - a.mxRate).forEach(a => {
+    const data = state.matrixData[a.id] || [];
+    const rateColor = a.mxRate >= 75 ? '#34D399' : a.mxRate >= 40 ? '#FBBF24' : a.mxRate > 0 ? '#F58220' : '#94A3B8';
+    const repProfile = (state.profiles||[]).find(p => p.id === a.assigned_to);
+    const repName = repProfile?.full_name || '';
+
+    gridHtml += `<tr style="cursor:pointer" onclick="showAccountDetail('${a.id}')">
+      <td style="padding:8px 10px;border-bottom:1px solid var(--g100);position:sticky;left:0;background:var(--white);z-index:1">
+        <div style="font-weight:600;color:var(--g800)">${esc(a.company_name)}</div>
+        ${repName ? `<div style="font-size:10px;color:var(--g400)">${esc(repName)}</div>` : ''}
+      </td>
+      <td style="text-align:center;padding:8px 6px;border-bottom:1px solid var(--g100)">
+        <span style="font-weight:700;color:${rateColor}">${a.mxRate}%</span>
+      </td>`;
+
+    rows.forEach(row => {
+      // For each product, find the best (rightmost) milestone with a meaningful status
+      let bestStatus = defaultStatus;
+      let bestColIdx = -1;
+      cols.forEach((col, ci) => {
+        const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
+        if (cell) {
+          const st = getStatus(cell.status_id);
+          if (st && st.label !== 'Not Started') {
+            bestStatus = st;
+            bestColIdx = ci;
+          }
+        }
+      });
+      const color = bestStatus?.color || '#94A3B8';
+      const label = bestStatus?.label || 'Not Started';
+      const shortLabel = label === 'Not Started' ? '—' : label === 'In Progress' ? 'In Prog' : label === 'Approved' ? '✓' : label === 'Rejected' ? '✗' : label === 'N/A' ? 'N/A' : label;
+
+      gridHtml += `<td style="text-align:center;padding:4px 4px;border-bottom:1px solid var(--g100)">
+        <div style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${color}18;color:${color};border:1px solid ${color}30">
+          <span style="width:5px;height:5px;border-radius:50%;background:${color};flex-shrink:0"></span>${shortLabel}
+        </div>
+      </td>`;
+    });
+    gridHtml += `</tr>`;
+  });
+
+  gridHtml += `</tbody></table></div>`;
+
+  el.innerHTML = `
+    <div class="view-header">
+      <h1>Acceptance Matrix ${hasFilter?'<span style="font-size:14px;font-weight:400;color:var(--g400)">— '+accts.length+' of '+allAccounts.length+' accounts</span>':''}</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${hasFilter ? `<button onclick="clearDashFilters();renderMatrixView()" style="padding:8px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;border:none">✕ Clear</button>` : ''}
+      </div>
+    </div>
+    ${filterHtml}
+    ${kpiHtml}
+    ${gridHtml}
+  `;
 }
 
 // ======================== RENDER: DASHBOARD HEATMAP ========================
@@ -2273,10 +3052,10 @@ function renderDashboardHeatmap(targetId) {
   const accounts = targetId ? state.accounts : getDashFilteredAccounts();
 
   // AU states + NZ regions — show based on user's country (managers see both)
-  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin';
+  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const userCountry = state.profile?.country;
-  const showAU = isManager || userCountry === 'AU' || !userCountry;
-  const showNZ = isManager || userCountry === 'NZ';
+  const showAU = accounts.some(a => a.country === 'AU') || !accounts.length;
+  const showNZ = accounts.some(a => a.country === 'NZ') || !accounts.length;
   const auStates = ['NSW','VIC','QLD','WA','SA','TAS','ACT','NT'];
   const nzRegions = ['NTL','AKL','WKO','BOP','GIS','HKB','TKI','MWT','WGN','TSM','NSN','MBH','WTC','CAN','OTA','STL'];
 
@@ -2309,7 +3088,29 @@ function renderDashboardHeatmap(targetId) {
     return '#F58220';
   }
 
-  function initLeafletMap(containerId, regions, counts) {
+  // City coordinates for pin placement
+  const CITY_COORDS = {
+    'Sydney':[-33.87,151.21],'Melbourne':[-37.81,144.96],'Brisbane':[-27.47,153.03],'Perth':[-31.95,115.86],
+    'Adelaide':[-34.93,138.60],'Hobart':[-42.88,147.33],'Darwin':[-12.46,130.84],'Canberra':[-35.28,149.13],
+    'Gold Coast':[-28.0,153.43],'Newcastle':[-32.93,151.78],'Wollongong':[-34.42,150.89],'Geelong':[-38.15,144.36],
+    'Cairns':[-16.92,145.77],'Townsville':[-19.26,146.80],'Toowoomba':[-27.56,151.95],'Ballarat':[-37.56,143.85],
+    'Bendigo':[-36.76,144.28],'Launceston':[-41.44,147.14],'Mackay':[-21.14,149.19],'Rockhampton':[-23.38,150.51],
+    'Bunbury':[-33.33,115.64],'Bundaberg':[-24.87,152.35],'Hervey Bay':[-25.29,152.85],'Wagga Wagga':[-35.11,147.37],
+    'Mildura':[-34.21,142.16],'Shepparton':[-36.38,145.40],'Gladstone':[-23.85,151.26],'Albury':[-36.08,146.92],
+    'Auckland':[-36.85,174.76],'Wellington':[-41.29,174.78],'Christchurch':[-43.53,172.64],'Hamilton':[-37.79,175.28],
+    'Tauranga':[-37.69,176.17],'Dunedin':[-45.87,170.50],'Palmerston North':[-40.35,175.62],'Napier':[-39.49,176.91],
+    'Nelson':[-41.27,173.28],'Rotorua':[-38.14,176.25],'New Plymouth':[-39.07,174.08],'Whangarei':[-35.73,174.32],
+    'Invercargill':[-46.41,168.35],'Hastings':[-39.64,176.84],'Blenheim':[-41.51,173.95],'Greymouth':[-42.45,171.21],
+    'Timaru':[-44.40,171.25],'Ashburton':[-43.90,171.73],'Levin':[-40.63,175.27],'Manukau':[-36.99,174.88],
+    'Pakuranga':[-36.89,174.90],'Mt Albert':[-36.88,174.72],'Ryde':[-33.82,151.11],'Concord':[-33.86,151.10],
+    'Mona Vale':[-33.68,151.30],'Manly':[-33.80,151.29],'Castle Hill':[-33.73,151.00],'Blacktown':[-33.77,150.91],
+    'Bankstown':[-33.92,151.03],'Chatswood':[-33.80,151.18],'Auburn':[-33.85,151.03],'Armadale':[-32.15,116.01],
+    'Beenleigh':[-27.71,153.20],'Capalaba':[-27.53,153.19],'Beaudesert':[-27.99,153.06],'Berwick':[-38.03,145.35],
+    'Caboolture':[-27.09,152.95],'Campbelltown':[-34.07,150.81],'Cranbourne':[-38.10,145.28],'Dandenong':[-37.99,145.21],
+    'Westfield':[-31.91,115.80]
+  };
+
+  function initLeafletMap(containerId, regions, counts, filteredAccounts) {
     if (leafletMap) { leafletMap.remove(); leafletMap = null; }
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -2321,48 +3122,140 @@ function renderDashboardHeatmap(targetId) {
     else if (hasAU) { center = [-28, 134]; zoom = 4; }
     else { center = [-41, 174]; zoom = 6; }
 
-    leafletMap = L.map(containerId, { scrollWheelZoom: false, zoomControl: true, attributionControl: false }).setView(center, zoom);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 10, minZoom: 3
+    leafletMap = L.map(containerId, { scrollWheelZoom: false, zoomControl: true, attributionControl: false, background: '#dce9f5' }).setView(center, zoom);
+    leafletMap.getContainer().style.background = '#dce9f5';
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+      maxZoom: 12, minZoom: 3
     }).addTo(leafletMap);
 
     const maxCount = Math.max(...Object.values(counts).map(c => c.total), 1);
-    const stageColors = ['','#F58220','#F59E0B','#3B82F6','#10B981','#059669'];
+    const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
     const stageNames = ['','Identify','Engage','Demonstrate','Convert','Grow & Retain'];
 
-    regions.forEach(r => {
-      const coord = MAP_CENTROIDS[r];
-      if (!coord) return;
-      const c = counts[r] || { total:0,stage1:0,stage2:0,stage3:0,stage4:0,stage5:0 };
-      if (c.total === 0) return;
-      const radius = Math.min(12 + c.total * 5, 40);
-      const intensity = c.total / maxCount;
-      const fillColor = intensity <= 0.33 ? '#FEF3C7' : intensity <= 0.66 ? '#FDBA74' : '#F58220';
+    // Map region codes to GeoJSON property names
+    const AU_CODE_MAP = {NSW:'New South Wales',VIC:'Victoria',QLD:'Queensland',WA:'Western Australia',SA:'South Australia',TAS:'Tasmania',ACT:'Australian Capital Territory',NT:'Northern Territory'};
+    const NZ_CODE_MAP = {NTL:'Northland',AKL:'Auckland',WKO:'Waikato',BOP:'Bay of Plenty',GIS:'Gisborne',HKB:"Hawke's Bay",TKI:'Taranaki',MWT:'Manawatu-Wanganui',WGN:'Wellington',TSM:'Tasman',NSN:'Nelson',MBH:'Marlborough',WTC:'West Coast',CAN:'Canterbury',OTA:'Otago',STL:'Southland'};
 
-      const circle = L.circleMarker(coord, {
-        radius, fillColor, color: '#F58220',
-        weight: 2, opacity: 1, fillOpacity: 0.85
-      }).addTo(leafletMap);
+    function choroplethColor(count) {
+      if (count === 0) return '#f5f5f5';
+      const t = Math.min(count / Math.max(maxCount, 1), 1);
+      // 5-step orange gradient
+      if (t <= 0.2) return '#FEF3C7';
+      if (t <= 0.4) return '#FDE68A';
+      if (t <= 0.6) return '#FDBA74';
+      if (t <= 0.8) return '#FB923C';
+      return '#F58220';
+    }
 
-      // Count label overlay
-      if (c.total > 0) {
-        L.marker(coord, { interactive: false, icon: L.divIcon({
-          className: '', iconSize: [40, 20], iconAnchor: [20, 10],
-          html: `<div style="text-align:center;font-weight:800;font-size:14px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)">${c.total}</div>`
-        })}).addTo(leafletMap);
+    // Load and render GeoJSON boundaries
+    async function loadGeoJSON() {
+      const geoLayers = [];
+
+      if (hasAU) {
+        try {
+          const auGeo = await fetch('https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson').then(r => r.json());
+          const auLayer = L.geoJSON(auGeo, {
+            style: feature => {
+              return { fillColor: '#f5f5f5', fillOpacity: 0.4, color: '#ccc', weight: 1.5, opacity: 1 };
+            },
+            onEachFeature: (feature, layer) => {
+              const name = feature.properties.STATE_NAME || feature.properties.name || '';
+              const code = Object.entries(AU_CODE_MAP).find(([k,v]) => v === name || name.includes(v));
+              const regionCode = code ? code[0] : null;
+              const c = regionCode && counts[regionCode] ? counts[regionCode] : {total:0,stage1:0,stage2:0,stage3:0,stage4:0,stage5:0};
+              let popup = `<div class="map-popup-title">${REGION_NAMES[regionCode]||name}</div>`;
+              popup += `<div class="map-popup-stat"><strong>Total</strong><strong>${c.total}</strong></div>`;
+              for (let s = 1; s <= 5; s++) {
+                if (c['stage'+s]) popup += `<div class="map-popup-stat"><span><span class="map-popup-dot" style="background:${stageColors[s]}"></span>${stageNames[s]}</span><span>${c['stage'+s]}</span></div>`;
+              }
+              layer.bindPopup(popup, { maxWidth: 220 });
+              if (regionCode) layer.on('click', () => { setFilter('region', regionCode); showView('accounts'); });
+            }
+          }).addTo(leafletMap);
+          geoLayers.push(auLayer);
+        } catch(e) { console.warn('AU GeoJSON failed', e); }
       }
 
-      // Popup with stage breakdown
-      if (c.total > 0) {
-        let html = `<div class="map-popup-title">${REGION_NAMES[r]||r}</div>`;
-        html += `<div class="map-popup-stat"><strong>Total</strong><strong>${c.total}</strong></div>`;
-        for (let s = 1; s <= 5; s++) {
-          if (c['stage'+s]) html += `<div class="map-popup-stat"><span><span class="map-popup-dot" style="background:${stageColors[s]}"></span>${stageNames[s]}</span><span>${c['stage'+s]}</span></div>`;
+      if (hasNZ) {
+        const NZ_NAME_MAP = {'Northland':'NTL','Auckland':'AKL','Waikato':'WKO','Bay of Plenty':'BOP',
+          'Gisborne District':'GIS','Gisborne':'GIS',"Hawke's Bay":'HKB','Taranaki':'TKI',
+          'Manawatu-Wanganui':'MWT','Manawatū-Whanganui':'MWT','Wellington':'WGN',
+          'Tasman District':'TSM','Tasman':'TSM','Nelson City':'NSN','Nelson':'NSN',
+          'Marlborough District':'MBH','Marlborough':'MBH','West Coast':'WTC',
+          'Canterbury':'CAN','Otago':'OTA','Southland':'STL'};
+        try {
+          const neResp = await fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson');
+          const neJson = await neResp.json();
+          const nzFeatures = neJson.features.filter(f => f.properties.iso_a2 === 'NZ' && NZ_NAME_MAP[f.properties.name]);
+          const nzGeo = { type: 'FeatureCollection', features: nzFeatures };
+          const nzLayer = L.geoJSON(nzGeo, {
+            style: feature => {
+              return { fillColor: '#f5f5f5', fillOpacity: 0.4, color: '#ccc', weight: 1.5, opacity: 1 };
+            },
+            onEachFeature: (feature, layer) => {
+              const code = NZ_NAME_MAP[feature.properties.name];
+              const c = code && counts[code] ? counts[code] : {total:0,stage1:0,stage2:0,stage3:0,stage4:0,stage5:0};
+              let popup = `<div class="map-popup-title">${REGION_NAMES[code]||feature.properties.name}</div>`;
+              popup += `<div class="map-popup-stat"><strong>Total</strong><strong>${c.total}</strong></div>`;
+              for (let s = 1; s <= 5; s++) {
+                if (c['stage'+s]) popup += `<div class="map-popup-stat"><span><span class="map-popup-dot" style="background:${stageColors[s]}"></span>${stageNames[s]}</span><span>${c['stage'+s]}</span></div>`;
+              }
+              layer.bindPopup(popup, { maxWidth: 220 });
+              if (code) layer.on('click', () => { setFilter('region', code); showView('accounts'); });
+            }
+          }).addTo(leafletMap);
+          geoLayers.push(nzLayer);
+        } catch(e) { console.warn('NZ GeoJSON failed', e); }
+      }
+
+      // Add account pin dots
+      const pinGroup = L.featureGroup().addTo(leafletMap);
+      filteredAccounts.forEach(a => {
+        const city = a.hq_city ? a.hq_city.trim() : '';
+        let coord = CITY_COORDS[city];
+        if (!coord) {
+          // Fall back to region centroid with jitter
+          const regs = (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean);
+          const reg = regs[0];
+          coord = reg && MAP_CENTROIDS[reg] ? [MAP_CENTROIDS[reg][0] + (Math.random()-0.5)*1.5, MAP_CENTROIDS[reg][1] + (Math.random()-0.5)*1.5] : null;
         }
-        circle.bindPopup(html, { maxWidth: 220 });
-        circle.on('click', () => { setFilter('region', r); showView('accounts'); });
+        if (!coord) return;
+        const sColor = stageColors[a.current_stage] || '#94A3B8';
+        const pin = L.circleMarker(coord, {
+          radius: 5, fillColor: sColor, color: '#fff', weight: 1.5, fillOpacity: 0.9
+        }).addTo(pinGroup);
+        const comp = getStageCompletion(a.id, a.current_stage);
+        pin.bindPopup(`<div class="map-popup-title">${a.company_name}</div>
+          <div class="map-popup-stat"><span>Stage</span><span><span class="map-popup-dot" style="background:${sColor}"></span>${STAGES[a.current_stage].name}</span></div>
+          <div class="map-popup-stat"><span>Progress</span><span>${comp.done}/${comp.total}</span></div>
+          ${a.hq_city ? `<div class="map-popup-stat"><span>City</span><span>${a.hq_city}</span></div>` : ''}`, { maxWidth: 220 });
+        pin.bindTooltip(a.company_name, { direction: 'top', offset: [0, -6], className: 'map-tip' });
+        pin.on('click', () => showAccountDetail(a.id));
+      });
+
+      // Fit map to pins when filtering, otherwise to full geo boundaries
+      const hasPins = pinGroup.getLayers().length > 0;
+      const boundsGroup = L.featureGroup();
+      if (hasPins && (state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0)) {
+        boundsGroup.addLayer(pinGroup);
+      } else {
+        geoLayers.forEach(l => boundsGroup.addLayer(l));
+        if (hasPins) boundsGroup.addLayer(pinGroup);
       }
-    });
+      if (boundsGroup.getLayers().length > 0) {
+        const doBounds = () => {
+          if (!leafletMap) return;
+          try {
+            leafletMap.invalidateSize();
+            leafletMap.fitBounds(boundsGroup.getBounds(), { padding: [20, 20], animate: false });
+          } catch(e) {}
+        };
+        setTimeout(doBounds, 100);
+        setTimeout(doBounds, 500);
+      }
+    }
+
+    loadGeoJSON();
     setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
   }
 
@@ -2389,7 +3282,14 @@ function renderDashboardHeatmap(targetId) {
             <td><strong>${esc(name)}</strong></td>
             <td>${data.count}</td>
             <td style="font-size:12px">${[...data.regions].join(', ') || '—'}</td>
-            <td><span style="font-weight:600;color:var(--vic-orange)">${avgStage.toFixed(1)}</span></td>
+            <td style="min-width:120px">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="flex:1;height:6px;background:var(--g100);border-radius:3px;overflow:hidden">
+                  <div style="height:100%;width:${(avgStage/5*100)}%;border-radius:3px;background:${avgStage>=4?'#F58220':avgStage>=3?'#FBBF24':avgStage>=2?'#38BDF8':'#94A3B8'}"></div>
+                </div>
+                <span style="font-size:11px;font-weight:600;color:var(--g600);min-width:22px">${avgStage.toFixed(1)}</span>
+              </div>
+            </td>
           </tr>`;
         }).join('')}</tbody>
       </table></div>
@@ -2412,25 +3312,25 @@ function renderDashboardHeatmap(targetId) {
     </div>`;
   }
 
+  // Determine which countries to show based on filters and actual account data
+  const filterCountry = state.dashFilterCountry;
+  const hasFilteredAU = accounts.some(a => a.country === 'AU');
+  const hasFilteredNZ = accounts.some(a => a.country === 'NZ');
+  const hasActiveFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0;
+  const mapShowAU = filterCountry === 'AU' ? true : filterCountry === 'NZ' ? false : hasActiveFilter ? hasFilteredAU : showAU;
+  const mapShowNZ = filterCountry === 'NZ' ? true : filterCountry === 'AU' ? false : hasActiveFilter ? hasFilteredNZ : showNZ;
+
   el.innerHTML = `
-    <div class="heatmap-legend">
-      <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g500)">
-        <span style="width:14px;height:14px;background:var(--g100);border-radius:3px;display:inline-block"></span> None
-        <span style="width:14px;height:14px;background:#FEF3C7;border-radius:3px;display:inline-block"></span> Low
-        <span style="width:14px;height:14px;background:#FDBA74;border-radius:3px;display:inline-block"></span> Medium
-        <span style="width:14px;height:14px;background:#F58220;border-radius:3px;display:inline-block"></span> High
-      </span>
-      <span style="font-size:11px;color:var(--g400)">Stage dots:
-        <span style="color:#F58220">Identify</span> ·
-        <span style="color:#F59E0B">Engage</span> ·
-        <span style="color:#3B82F6">Demonstrate</span> ·
-        <span style="color:#10B981">Convert</span> ·
-        <span style="color:#059669">Grow &amp; Retain</span>
-      </span>
-    </div>
     <div class="dash-section">
       <h3>Account Locations</h3>
-      <div id="leaflet-heatmap" class="leaflet-map-container"></div>
+      <div id="leaflet-heatmap" class="leaflet-map-container" style="height:70vh"></div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 0 4px">
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#94A3B8"></span>Identify</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#38BDF8"></span>Engage</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#34D399"></span>Demonstrate</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#FBBF24"></span>Convert</span>
+        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#F58220"></span>Grow</span>
+      </div>
     </div>
     ${repHtml}
     ${unassignedHtml}
@@ -2439,9 +3339,9 @@ function renderDashboardHeatmap(targetId) {
   // Initialize Leaflet map after DOM is ready
   const mapRegions = [];
   const allCounts = {};
-  if (showAU) { auStates.forEach(r => { mapRegions.push(r); allCounts[r] = auCounts[r]; }); }
-  if (showNZ) { nzRegions.forEach(r => { mapRegions.push(r); allCounts[r] = nzCounts[r]; }); }
-  requestAnimationFrame(() => initLeafletMap('leaflet-heatmap', mapRegions, allCounts));
+  if (mapShowAU) { auStates.forEach(r => { mapRegions.push(r); allCounts[r] = auCounts[r]; }); }
+  if (mapShowNZ) { nzRegions.forEach(r => { mapRegions.push(r); allCounts[r] = nzCounts[r]; }); }
+  requestAnimationFrame(() => initLeafletMap('leaflet-heatmap', mapRegions, allCounts, accounts));
 }
 
 // ======================== RENDER: PROFILE ========================
@@ -2512,21 +3412,16 @@ function renderTeamView() {
   const profiles = state.profiles || [];
 
   // Build hierarchy from reports_to field
-  const managers = profiles.filter(p => p.role === 'manager' || p.role === 'admin');
+  const managers = profiles.filter(p => p.role === 'manager' || p.role === 'admin' || p.role === 'director');
   const reps = profiles.filter(p => p.role === 'rep');
 
   // Find the top-level manager (divisional - no reports_to, or reports_to is null among managers)
   const topManager = managers.find(m => !m.reports_to || !managers.some(mm => mm.id === m.reports_to)) || managers[0];
   const midManagers = managers.filter(m => m.id !== topManager?.id);
 
-  // Sort reps alphabetically by last name
-  const sortByLastName = (a, b) => {
-    const lastA = (a.full_name || '').split(' ').pop().toLowerCase();
-    const lastB = (b.full_name || '').split(' ').pop().toLowerCase();
-    return lastA.localeCompare(lastB);
-  };
-  reps.sort(sortByLastName);
-  midManagers.sort(sortByLastName);
+  const sortByFirstName = (a, b) => (a.full_name || '').localeCompare(b.full_name || '');
+  reps.sort(sortByFirstName);
+  midManagers.sort(sortByFirstName);
 
   let html = '<div class="view-header"><h1>Teams</h1></div>';
   html += '<div style="padding:0 16px">';
@@ -2553,11 +3448,18 @@ function renderTeamView() {
   }
 
   // Mid-level managers with their reps
-  const managersToShow = midManagers.length > 0 ? midManagers : (topManager ? [] : managers);
+  // Managers who report to another mid-manager show as team members, not as their own card
+  const hasOwnCard = new Set();
+  const topId = topManager?.id;
+  midManagers.forEach(m => {
+    if (!m.reports_to || m.reports_to === topId) hasOwnCard.add(m.id);
+  });
+  const managersToShow = midManagers.filter(m => hasOwnCard.has(m.id));
+  managersToShow.sort(sortByFirstName);
 
   managersToShow.forEach(mgr => {
-    const mgrReps = reps.filter(r => r.reports_to === mgr.id);
-    mgrReps.sort(sortByLastName);
+    const mgrReps = [...reps.filter(r => r.reports_to === mgr.id), ...midManagers.filter(m => m.reports_to === mgr.id && !hasOwnCard.has(m.id))];
+    mgrReps.sort(sortByFirstName);
 
     html += `<div class="profile-card" style="border-left:4px solid var(--vic-orange);margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:${mgrReps.length ? '12' : '0'}px">
@@ -2615,7 +3517,7 @@ function renderTeamView() {
 // ======================== RENDER: REPORTING ========================
 function renderReporting() {
   const el = document.getElementById('view-reporting');
-  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin';
+  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   el.innerHTML = `
     <div class="view-header"><h1>Reports</h1></div>
     <div style="padding:0 16px;display:flex;flex-direction:column;gap:12px">
@@ -2692,7 +3594,7 @@ function renderAdminPanel() {
         va = (allProfiles.find(m=>m.id===a.reports_to)?.full_name)||'';
         vb = (allProfiles.find(m=>m.id===b.reports_to)?.full_name)||'';
         break;
-      case 'admin': va = a.role==='admin'?'0':'1'; vb = b.role==='admin'?'0':'1'; break;
+      case 'admin': va = a.role==='director'?'0':a.role==='admin'?'1':'2'; vb = b.role==='director'?'0':b.role==='admin'?'1':'2'; break;
       case 'status': va = a.locked?'1':'0'; vb = b.locked?'1':'0'; break;
       default: va = a.full_name||''; vb = b.full_name||'';
     }
@@ -2703,6 +3605,7 @@ function renderAdminPanel() {
   const arrow = (col) => adminSort.col===col ? (adminSort.dir==='asc'?' ▲':' ▼') : '';
   const reps = profiles.filter(p => p.role === 'rep');
   const managers = profiles.filter(p => p.role === 'manager' || p.role === 'admin');
+  const assignable = profiles.filter(p => p.role !== 'director');
 
   el.innerHTML = `
     <div class="view-header"><h1>Admin</h1></div>
@@ -2711,13 +3614,19 @@ function renderAdminPanel() {
       <div class="dash-section" style="margin:0">
         <h3 style="font-size:13px;margin-bottom:10px">Reassign Account</h3>
         <div style="display:flex;flex-direction:column;gap:8px">
-          <select id="reassign-account" style="padding:8px 10px;border:1px solid var(--g200);border-radius:4px;font-size:13px;width:100%">
-            <option value="">Select account…</option>
-            ${[...state.accounts].sort((a,b)=>a.company_name.localeCompare(b.company_name)).map(a => `<option value="${a.id}">${esc(a.company_name)} — ${getRepName(a.assigned_to)||'—'}</option>`).join('')}
-          </select>
+          <div style="position:relative">
+            <input id="reassign-account-search" type="text" placeholder="Search accounts…" autocomplete="off"
+              style="padding:8px 10px;border:1px solid var(--g200);border-radius:4px;font-size:13px;width:100%;box-sizing:border-box"
+              onfocus="document.getElementById('reassign-account-list').style.display='block'"
+              oninput="filterReassignAccounts(this.value)">
+            <input type="hidden" id="reassign-account" value="">
+            <div id="reassign-account-list" style="display:none;position:absolute;top:100%;left:0;right:0;max-height:60vh;overflow-y:auto;background:var(--white);border:1px solid var(--g200);border-radius:4px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.1)">
+              ${[...state.accounts].sort((a,b)=>a.company_name.localeCompare(b.company_name)).map(a => `<div class="reassign-opt" data-id="${a.id}" data-name="${esc(a.company_name)}" onclick="pickReassignAccount('${a.id}',this.dataset.name)" style="padding:8px 10px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--g50)" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">${esc(a.company_name)} <span style="color:var(--g400)">— ${getRepName(a.assigned_to)||'—'}</span></div>`).join('')}
+            </div>
+          </div>
           <select id="reassign-to" style="padding:8px 10px;border:1px solid var(--g200);border-radius:4px;font-size:13px;width:100%">
             <option value="">Select new rep…</option>
-            ${profiles.map(p => `<option value="${p.id}">${esc(p.full_name)}</option>`).join('')}
+            ${assignable.map(p => `<option value="${p.id}">${esc(p.full_name)}</option>`).join('')}
           </select>
           <button onclick="adminReassignAccount()" class="btn-primary" style="padding:8px 16px;font-size:13px;width:100%">Reassign</button>
         </div>
@@ -2727,11 +3636,11 @@ function renderAdminPanel() {
         <div style="display:flex;flex-direction:column;gap:8px">
           <select id="transfer-from" style="padding:8px 10px;border:1px solid var(--g200);border-radius:4px;font-size:13px;width:100%">
             <option value="">Transfer from…</option>
-            ${profiles.map(p => `<option value="${p.id}">${esc(p.full_name)} (${state.accounts.filter(a=>a.assigned_to===p.id).length})</option>`).join('')}
+            ${assignable.map(p => `<option value="${p.id}">${esc(p.full_name)} (${state.accounts.filter(a=>a.assigned_to===p.id).length})</option>`).join('')}
           </select>
           <select id="transfer-to" style="padding:8px 10px;border:1px solid var(--g200);border-radius:4px;font-size:13px;width:100%">
             <option value="">Transfer to…</option>
-            ${profiles.map(p => `<option value="${p.id}">${esc(p.full_name)}</option>`).join('')}
+            ${assignable.map(p => `<option value="${p.id}">${esc(p.full_name)}</option>`).join('')}
           </select>
           <button onclick="adminTransferAccounts()" class="btn-primary" style="padding:8px 16px;font-size:13px;width:100%">Transfer All</button>
         </div>
@@ -2771,8 +3680,9 @@ function renderAdminPanel() {
               ${profiles.filter(m=>m.id!==p.id).map(m=>`<option value="${m.id}" ${p.reports_to===m.id?'selected':''}>${esc(m.full_name)}</option>`).join('')}
             </select></td>
             <td style="text-align:center"><select onchange="adminToggleAdmin('${p.id}',this.value)" style="padding:4px 6px;border:1px solid var(--g200);border-radius:4px;font-size:12px">
-              <option value="no" ${p.role!=='admin'?'selected':''}>—</option>
-              <option value="yes" ${p.role==='admin'?'selected':''}>Yes</option>
+              <option value="no" ${p.role!=='admin'&&p.role!=='director'?'selected':''}>—</option>
+              <option value="admin" ${p.role==='admin'?'selected':''}>Admin</option>
+              <option value="director" ${p.role==='director'?'selected':''}>Director</option>
             </select></td>
             <td>${isLocked ? '<span style="color:var(--danger);font-weight:600">Locked</span>' : '<span style="color:var(--success);font-weight:600">Active</span>'}</td>
             <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
@@ -2785,12 +3695,66 @@ function renderAdminPanel() {
       </table></div>
     </div>
 
+    <!-- Acceptance Matrix Config -->
+    <div class="dash-section">
+      <h3>Acceptance Matrix Config</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div>
+          <h4 style="font-size:12px;color:var(--g500);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Product Rows</h4>
+          <div id="matrix-admin-rows" style="display:flex;flex-direction:column;gap:4px">
+            ${state.matrixConfig.rows.map((r, i) => `<div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--g50);border-radius:4px">
+              <span style="flex:1;font-size:13px">${esc(r.label)}</span>
+              <button onclick="moveMatrixItem('${r.id}','row',${i},-1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
+              <button onclick="moveMatrixItem('${r.id}','row',${i},1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===state.matrixConfig.rows.length-1?'disabled':''}>▼</button>
+              <button onclick="deleteMatrixItem('${r.id}','row')" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:14px">×</button>
+            </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <input id="matrix-new-row" placeholder="New product…" style="flex:1;padding:6px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px">
+            <button onclick="addMatrixItem('row','matrix-new-row')" class="btn-primary" style="padding:6px 12px;font-size:12px">+</button>
+          </div>
+        </div>
+        <div>
+          <h4 style="font-size:12px;color:var(--g500);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Milestone Columns</h4>
+          <div id="matrix-admin-cols" style="display:flex;flex-direction:column;gap:4px">
+            ${state.matrixConfig.cols.map((c, i) => `<div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--g50);border-radius:4px">
+              <span style="flex:1;font-size:13px">${esc(c.label)}</span>
+              <button onclick="moveMatrixItem('${c.id}','col',${i},-1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
+              <button onclick="moveMatrixItem('${c.id}','col',${i},1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===state.matrixConfig.cols.length-1?'disabled':''}>▼</button>
+              <button onclick="deleteMatrixItem('${c.id}','col')" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:14px">×</button>
+            </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <input id="matrix-new-col" placeholder="New milestone…" style="flex:1;padding:6px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px">
+            <button onclick="addMatrixItem('col','matrix-new-col')" class="btn-primary" style="padding:6px 12px;font-size:12px">+</button>
+          </div>
+        </div>
+        <div>
+          <h4 style="font-size:12px;color:var(--g500);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Statuses</h4>
+          <div id="matrix-admin-statuses" style="display:flex;flex-direction:column;gap:4px">
+            ${state.matrixConfig.statuses.map((s, i) => `<div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--g50);border-radius:4px">
+              <input type="color" value="${s.color||'#94A3B8'}" onchange="updateMatrixColor('${s.id}',this.value)" style="width:22px;height:22px;border:none;background:none;cursor:pointer;padding:0">
+              <span style="flex:1;font-size:13px">${esc(s.label)}</span>
+              <button onclick="moveMatrixItem('${s.id}','status',${i},-1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
+              <button onclick="moveMatrixItem('${s.id}','status',${i},1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===state.matrixConfig.statuses.length-1?'disabled':''}>▼</button>
+              <button onclick="deleteMatrixItem('${s.id}','status')" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:14px">×</button>
+            </div>`).join('')}
+          </div>
+          <div style="display:flex;gap:4px;margin-top:6px">
+            <input id="matrix-new-status" placeholder="New status…" style="flex:1;padding:6px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px">
+            <input id="matrix-new-status-color" type="color" value="#94A3B8" style="width:32px;height:30px;border:1px solid var(--g200);border-radius:4px;cursor:pointer;padding:0">
+            <button onclick="addMatrixStatus()" class="btn-primary" style="padding:6px 12px;font-size:12px">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   `;
 }
 
 // Org role is rep or manager; admin is layered on top via role='admin' + _orgRole
 function getOrgRole(p) {
-  if (p.role === 'admin') return p._orgRole || 'rep';
+  if (p.role === 'admin' || p.role === 'director') return p._orgRole || p.role;
   return p.role;
 }
 
@@ -2815,12 +3779,12 @@ async function adminUpdateRole(userId, newRole) {
 async function adminToggleAdmin(userId, val) {
   const p = state.profiles.find(pr => pr.id === userId);
   if (!p) return;
-  if (val === 'yes') {
-    p._orgRole = p.role;  // remember current org role
+  if (val === 'admin' || val === 'director') {
+    if (p.role !== 'admin' && p.role !== 'director') p._orgRole = p.role;
     try {
-      await supa.from('profiles').update({ role: 'admin' }).eq('id', userId);
-      p.role = 'admin';
-      toast('Admin granted');
+      await supa.from('profiles').update({ role: val }).eq('id', userId);
+      p.role = val;
+      toast(val === 'director' ? 'Director role set' : 'Admin granted');
       renderAdminPanel();
     } catch (e) { toast('Error: ' + e.message); }
   } else {
@@ -2829,7 +3793,7 @@ async function adminToggleAdmin(userId, val) {
       await supa.from('profiles').update({ role: restoreRole }).eq('id', userId);
       p.role = restoreRole;
       delete p._orgRole;
-      toast('Admin removed');
+      toast('Role restored to ' + restoreRole);
       renderAdminPanel();
     } catch (e) { toast('Error: ' + e.message); }
   }
@@ -2862,6 +3826,27 @@ async function adminUpdateReportsTo(userId, reportsTo) {
     toast('Reports to updated');
   } catch (e) { toast('Error: ' + e.message); }
 }
+
+function filterReassignAccounts(query) {
+  const list = document.getElementById('reassign-account-list');
+  if (!list) return;
+  list.style.display = 'block';
+  document.getElementById('reassign-account').value = '';
+  const q = query.toLowerCase();
+  list.querySelectorAll('.reassign-opt').forEach(el => {
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+function pickReassignAccount(id, name) {
+  document.getElementById('reassign-account').value = id;
+  document.getElementById('reassign-account-search').value = name;
+  document.getElementById('reassign-account-list').style.display = 'none';
+}
+document.addEventListener('click', e => {
+  const list = document.getElementById('reassign-account-list');
+  const input = document.getElementById('reassign-account-search');
+  if (list && input && !list.contains(e.target) && e.target !== input) list.style.display = 'none';
+});
 
 async function adminReassignAccount() {
   const acctId = document.getElementById('reassign-account').value;
@@ -2944,6 +3929,80 @@ async function adminDeleteUser(userId) {
   } catch (e) { toast('Error: ' + e.message); }
 }
 
+// ======================== MATRIX ADMIN FUNCTIONS ========================
+async function addMatrixItem(type, inputId) {
+  const input = document.getElementById(inputId);
+  const label = input?.value?.trim();
+  if (!label) return;
+  const configType = type === 'status' ? 'status' : type;
+  const arr = type === 'row' ? state.matrixConfig.rows : type === 'col' ? state.matrixConfig.cols : state.matrixConfig.statuses;
+  const sortOrder = arr.length;
+  try {
+    const { data, error } = await supa.from('kac_matrix_config').insert({ config_type: configType, label, sort_order: sortOrder }).select().single();
+    if (error) throw error;
+    arr.push(data);
+    input.value = '';
+    renderAdminPanel();
+    toast(`Added "${label}"`);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function addMatrixStatus() {
+  const input = document.getElementById('matrix-new-status');
+  const colorInput = document.getElementById('matrix-new-status-color');
+  const label = input?.value?.trim();
+  if (!label) return;
+  const color = colorInput?.value || '#94A3B8';
+  const sortOrder = state.matrixConfig.statuses.length;
+  try {
+    const { data, error } = await supa.from('kac_matrix_config').insert({ config_type: 'status', label, color, sort_order: sortOrder }).select().single();
+    if (error) throw error;
+    state.matrixConfig.statuses.push(data);
+    input.value = '';
+    renderAdminPanel();
+    toast(`Added status "${label}"`);
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function deleteMatrixItem(id, type) {
+  const arr = type === 'row' ? state.matrixConfig.rows : type === 'col' ? state.matrixConfig.cols : state.matrixConfig.statuses;
+  const item = arr.find(r => r.id === id);
+  if (!confirm(`Delete "${item?.label}"? Any matrix data using this will be affected.`)) return;
+  try {
+    const { error } = await supa.from('kac_matrix_config').delete().eq('id', id);
+    if (error) throw error;
+    const idx = arr.findIndex(r => r.id === id);
+    if (idx >= 0) arr.splice(idx, 1);
+    renderAdminPanel();
+    toast('Deleted');
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function moveMatrixItem(id, type, currentIdx, direction) {
+  const arr = type === 'row' ? state.matrixConfig.rows : type === 'col' ? state.matrixConfig.cols : state.matrixConfig.statuses;
+  const newIdx = currentIdx + direction;
+  if (newIdx < 0 || newIdx >= arr.length) return;
+  [arr[currentIdx], arr[newIdx]] = [arr[newIdx], arr[currentIdx]];
+  // Update sort_order for both
+  try {
+    await Promise.all([
+      supa.from('kac_matrix_config').update({ sort_order: currentIdx }).eq('id', arr[currentIdx].id),
+      supa.from('kac_matrix_config').update({ sort_order: newIdx }).eq('id', arr[newIdx].id)
+    ]);
+    arr[currentIdx].sort_order = currentIdx;
+    arr[newIdx].sort_order = newIdx;
+    renderAdminPanel();
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function updateMatrixColor(id, color) {
+  try {
+    await supa.from('kac_matrix_config').update({ color }).eq('id', id);
+    const s = state.matrixConfig.statuses.find(st => st.id === id);
+    if (s) s.color = color;
+  } catch (e) { toast('Error: ' + e.message); }
+}
+
 // ======================== RENDER: PROFILE ========================
 function renderProfile() {
   const el = document.getElementById('view-profile');
@@ -2962,11 +4021,18 @@ function renderProfile() {
           <option value="NZ" ${p.country === 'NZ' ? 'selected' : ''}>New Zealand</option>
         </select>
       </span></div>
-      <div class="profile-row"><span class="label">Region</span><span class="value">
-        <select id="profile-region" onchange="handleChangeRegion(this.value)" style="padding:6px 10px;border:1px solid var(--g200);border-radius:var(--radius-xs);font-size:14px;background:var(--white)">
-          <option value="" ${!p.region?'selected':''}>Not set</option>
-          ${getUserRegions().map(r => `<option value="${r}" ${p.region===r?'selected':''}>${r}</option>`).join('')}
-        </select>
+      <div class="profile-row" style="align-items:flex-start"><span class="label" style="padding-top:6px">Regions</span><span class="value">
+        <div id="profile-regions-picker" style="display:flex;flex-wrap:wrap;gap:6px">
+          ${(() => {
+            const selected = (p.region || '').split(',').map(s=>s.trim()).filter(Boolean);
+            const available = getUserRegions();
+            return available.map(r => {
+              const active = selected.includes(r);
+              return `<button onclick="toggleProfileRegion('${r}')" style="padding:4px 12px;border-radius:99px;font-size:12px;font-weight:600;border:1.5px solid ${active ? 'var(--vic-orange)' : 'var(--g200)'};background:${active ? '#FFF7ED' : 'var(--white)'};color:${active ? 'var(--vic-orange)' : 'var(--g400)'};cursor:pointer;transition:all .15s">${r}${active ? ' ✓' : ''}</button>`;
+            }).join('');
+          })()}
+        </div>
+        <div style="font-size:11px;color:var(--g400);margin-top:6px">Click to toggle your regions of responsibility</div>
       </span></div>
     </div>
     <div class="profile-card">
@@ -3014,12 +4080,18 @@ async function handleChangeCountry(val) {
   } catch (e) { toast('Error: ' + e.message); }
 }
 
-async function handleChangeRegion(region) {
+async function toggleProfileRegion(region) {
+  const current = (state.profile.region || '').split(',').map(s=>s.trim()).filter(Boolean);
+  const idx = current.indexOf(region);
+  if (idx >= 0) current.splice(idx, 1);
+  else current.push(region);
+  const newVal = current.join(', ');
   try {
-    const { error } = await supa.from('profiles').update({ region }).eq('id', state.user.id);
+    const { error } = await supa.from('profiles').update({ region: newVal }).eq('id', state.user.id);
     if (error) throw error;
-    state.profile.region = region;
-    toast('Region updated');
+    state.profile.region = newVal;
+    renderProfile();
+    toast(idx >= 0 ? `Removed ${region}` : `Added ${region}`);
   } catch (err) {
     toast('Error: ' + err.message);
   }
@@ -3063,7 +4135,7 @@ function exportData() {
 function generatePDFReport() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin';
+  const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 14;
