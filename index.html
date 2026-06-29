@@ -113,6 +113,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .account-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
 .account-card-header h3 { font-size: 16px; font-weight: 700; flex: 1; margin-right: 8px; }
 .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.badge-tier-1 { background: #F3E8FF; color: #6B21A8; }
+.badge-tier0 { background: #DBEAFE; color: #1E40AF; }
 .badge-tier1 { background: #FEF3C7; color: #92400E; }
 .badge-tier2 { background: #E0E7FF; color: #3730A3; }
 .badge-tier3 { background: var(--g100); color: var(--g700); }
@@ -164,9 +166,9 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .stage-status { text-align: center; margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--vic-orange); }
 
 /* Detail tabs */
-.detail-tabs { display: flex; margin: 16px; background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-.detail-tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 700; color: var(--g500); border-bottom: 3px solid transparent; transition: all .15s; text-transform: uppercase; letter-spacing: .5px; }
-.detail-tab.active { color: var(--vic-orange); border-bottom-color: var(--vic-orange); }
+.detail-tabs { display: flex; background: var(--g100); border-radius: var(--radius-sm); padding: 3px; margin: 0 16px 14px; border: 1px solid var(--g200); }
+.detail-tab { flex: 1; padding: 9px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); transition: all .15s; letter-spacing: .2px; }
+.detail-tab.active { background: var(--white); color: var(--vic-orange); border: 1px solid var(--g200); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 
 .detail-content { padding: 0 16px 16px; }
 
@@ -228,7 +230,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .funnel-chart { margin-top: 4px; }
 .funnel-row { display: flex; align-items: center; margin-bottom: 2px; gap: 10px; border-radius: var(--radius-xs); padding: 2px 6px; margin-left: -6px; margin-right: -6px; transition: background .15s; }
 .funnel-row:hover { background: var(--g50); }
-.funnel-row-label { width: 90px; font-size: 11px; font-weight: 600; text-align: right; color: var(--g600); text-transform: uppercase; letter-spacing: .3px; flex-shrink: 0; }
+.funnel-row-label { width: 110px; font-size: 11px; font-weight: 600; text-align: right; color: var(--g600); text-transform: uppercase; letter-spacing: .3px; flex-shrink: 0; white-space: nowrap; }
 .funnel-row-bar-wrap { flex: 1; height: 22px; background: var(--g100); border-radius: 4px; overflow: hidden; position: relative; }
 .funnel-row-bar { height: 100%; background: var(--vic-orange); border-radius: 4px; transition: width .5s ease; display: flex; align-items: center; padding-left: 10px; min-width: 24px; }
 .funnel-row-bar span { font-size: 11px; font-weight: 700; color: var(--white); }
@@ -245,8 +247,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 /* Heatmap */
 .heatmap-legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
-.leaflet-map-container { height: 420px; width: 100%; border-radius: var(--radius); border: 1px solid var(--g200); z-index: 1; }
-@media (max-width: 768px) { .leaflet-map-container { height: 320px; } }
+.leaflet-map-container { height: 470px; width: 100%; border-radius: var(--radius); border: 1px solid var(--g200); z-index: 1; }
+@media (max-width: 768px) { .leaflet-map-container { height: 345px; } }
 .leaflet-popup-content-wrapper { border-radius: 8px !important; }
 .leaflet-popup-content { margin: 10px 14px !important; font-family: inherit !important; font-size: 13px !important; }
 .map-tip { font-size: 12px; font-weight: 600; padding: 4px 8px; }
@@ -283,9 +285,9 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .playbook-tip { background: #FEF3C7; border-left: 3px solid var(--vic-orange); padding: 10px 12px; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; margin-top: 8px; font-size: 13px; color: #92400E; line-height: 1.4; }
 
 /* Dashboard toggle */
-.dash-toggle { display: flex; background: var(--g50); border-radius: var(--radius-sm); padding: 2px; margin: 0 16px 14px; border: 0.5px solid var(--g200); }
-.dash-toggle button { flex: 1; padding: 7px; border-radius: var(--radius-xs); font-size: 12px; font-weight: 500; color: var(--g400); transition: all .15s; letter-spacing: .2px; }
-.dash-toggle button.active { background: #FFF7ED; color: var(--vic-orange); border: 1px solid var(--vic-orange); font-weight: 600; }
+.dash-toggle { display: flex; background: var(--g100); border-radius: var(--radius-sm); padding: 3px; margin: 0 16px 14px; border: 1px solid var(--g200); }
+.dash-toggle button { flex: 1; padding: 9px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); transition: all .15s; letter-spacing: .2px; }
+.dash-toggle button.active { background: var(--white); color: var(--vic-orange); border: 1px solid var(--g200); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 
 /* Filter dropdowns */
 .fd-row { display: flex; gap: 6px; padding: 0 16px 8px; flex-wrap: wrap; }
@@ -363,7 +365,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   @keyframes slideUp { from { transform: scale(.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 }
 @media (min-width: 1024px) {
-  :root { --nav-height: 0px; --sidebar-width: 130px; }
+  :root { --nav-height: 0px; --sidebar-width: 216px; }
   #main-app { flex-direction: row; }
   #bottom-nav { display: none !important; }
   .hamburger-btn { display: block; }
@@ -416,8 +418,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .nav-drawer {
   position: fixed;
   top: 0;
-  left: -280px;
-  width: 260px;
+  left: -345px;
+  width: 325px;
   height: 100%;
   background: var(--g50, #f8f8f8);
   z-index: 999;
@@ -448,8 +450,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   background: rgba(245,130,32,0.08);
 }
 .nav-drawer-item svg {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   stroke: currentColor;
   fill: none;
   stroke-width: 2;
@@ -559,6 +561,10 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
       Account Conversion
       <span id="sync-indicator" class="sync-dot synced" title="Synced"></span>
     </div>
+    <div id="header-search" style="position:relative;margin-right:12px;flex:0 1 220px">
+      <input type="text" id="global-search-input" placeholder="Search accounts..." oninput="renderGlobalSearch()" onfocus="renderGlobalSearch()" style="width:100%;padding:6px 10px 6px 30px;border:1px solid rgba(255,255,255,.2);border-radius:var(--radius-xs);font-size:12px;background:rgba(255,255,255,.1);color:#fff;box-sizing:border-box;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:8px center">
+      <div id="global-search-results" style="display:none;position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--white);border:1px solid var(--g200);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:280px;overflow-y:auto;z-index:200"></div>
+    </div>
     <div class="header-user">
       <a id="header-user-name" href="#" onclick="showView('profile');return false" style="cursor:pointer;text-decoration:none;color:inherit" title="View profile"></a>
       <button class="btn-logout" onclick="handleLogout()">Log Out</button>
@@ -615,6 +621,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
         <h1>Accounts</h1>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="acct-clear-btn"></span>
+          <button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
           <button class="btn-add" onclick="showAddAccount()">+ Add</button>
         </div>
       </div>
@@ -628,7 +635,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
           </div>
           <div class="fd-menu" style="min-width:140px;right:0;left:auto">
             <div class="fd-item" onclick="event.stopPropagation();setAcctSort('name')">Name</div>
-            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('tier')">Tier</div>
+            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('tier')">Stakeholder</div>
             <div class="fd-item" onclick="event.stopPropagation();setAcctSort('stage')">Stage</div>
             <div class="fd-item" onclick="event.stopPropagation();setAcctSort('city')">City</div>
             <div class="fd-item" onclick="event.stopPropagation();setAcctSort('rep')">Rep</div>
@@ -811,16 +818,19 @@ let state = {
   dashFilterRegion: [],
   dashFilterCountry: 'all',
   dashFilterStage: 'all',
-  dashFilterTier: 'all',
+  dashFilterTier: [],
   dashSortCol: 'progress',
   dashSortDir: 'desc',
   sbSortCol: 'name',
   sbSortDir: 'asc',
   dashFiltersOpen: true,
   dashCurrency: 'AUD',
+  dashSearch: '',
   stalledDays: 60,
   stalledSortCol: 'activity',
   stalledSortDir: 'asc',
+  repSortCol: 'name',
+  repSortDir: 'asc',
   acctSortCol: 'name',
   acctSortDir: 'asc',
   fxRates: null,
@@ -851,10 +861,10 @@ db.version(1).stores({
 function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function getRoleTitle(profile) {
   if (profile.role === 'director') return 'Divisional Manager';
+  if (profile.role === 'admin') return 'Admin';
   if (profile.role === 'rep') return 'Territory Manager';
-  const mgrs = (state.profiles || []).filter(p => p.role === 'manager' || p.role === 'admin' || p.role === 'director');
-  if (!profile.reports_to || !mgrs.some(m => m.id === profile.reports_to)) return 'Divisional Manager';
-  return 'Regional Manager';
+  if (profile.role === 'manager') return 'Regional Manager';
+  return 'Rep';
 }
 function formatNumber(n) { if (!n) return '0'; return parseInt(String(n).replace(/[^0-9]/g, '') || '0').toLocaleString(); }
 
@@ -890,6 +900,56 @@ function toast(msg, duration = 3000) {
   document.getElementById('toast-container').appendChild(t);
   setTimeout(() => t.remove(), duration);
 }
+// Custom popup dialog (positioned near click, app-themed)
+function showPopup(options, event) {
+  // options: { title, message, input, inputValue, confirmLabel, cancelLabel, onConfirm, onCancel }
+  const existing = document.getElementById('app-popup-overlay');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'app-popup-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.25);z-index:9999;display:flex;align-items:center;justify-content:center';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--white);border-radius:12px;padding:20px 24px;box-shadow:0 8px 32px rgba(0,0,0,.18);max-width:340px;width:90%;font-family:inherit';
+
+  // Position near cursor if event provided
+  if (event) {
+    const x = event.clientX, y = event.clientY;
+    overlay.style.alignItems = 'flex-start';
+    overlay.style.justifyContent = 'flex-start';
+    box.style.position = 'absolute';
+    const top = Math.min(y - 20, window.innerHeight - 200);
+    const left = Math.min(Math.max(x - 170, 10), window.innerWidth - 360);
+    box.style.top = Math.max(top, 10) + 'px';
+    box.style.left = left + 'px';
+  }
+
+  let html = '';
+  if (options.title) html += `<div style="font-size:15px;font-weight:700;color:var(--g800);margin-bottom:8px">${options.title}</div>`;
+  if (options.message) html += `<div style="font-size:13px;color:var(--g500);margin-bottom:14px;line-height:1.4">${options.message}</div>`;
+  if (options.input) html += `<input id="popup-input" type="text" value="${options.inputValue||''}" style="width:100%;padding:8px 12px;border:1px solid var(--g200);border-radius:6px;font-size:13px;margin-bottom:14px;box-sizing:border-box" autofocus>`;
+  html += `<div style="display:flex;gap:8px;justify-content:flex-end">
+    <button id="popup-cancel" style="padding:8px 16px;border:1px solid var(--g200);border-radius:6px;background:var(--white);color:var(--g600);font-size:13px;font-weight:600;cursor:pointer">${options.cancelLabel||'Cancel'}</button>
+    <button id="popup-confirm" style="padding:8px 16px;border:none;border-radius:6px;background:${options.danger?'var(--danger)':'var(--vic-orange)'};color:#fff;font-size:13px;font-weight:600;cursor:pointer">${options.confirmLabel||'OK'}</button>
+  </div>`;
+  box.innerHTML = html;
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  const inputEl = document.getElementById('popup-input');
+  if (inputEl) { inputEl.focus(); inputEl.select(); }
+
+  document.getElementById('popup-cancel').onclick = () => { overlay.remove(); if (options.onCancel) options.onCancel(); };
+  document.getElementById('popup-confirm').onclick = () => {
+    const val = inputEl ? inputEl.value : true;
+    overlay.remove();
+    if (options.onConfirm) options.onConfirm(val);
+  };
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.remove(); if (options.onCancel) options.onCancel(); } });
+  if (inputEl) inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('popup-confirm')?.click(); });
+}
+
 function formatDate(d) {
   if (!d) return '';
   const dt = new Date(d);
@@ -922,7 +982,7 @@ function toggleFilterDrop(id, evt) {
 document.addEventListener('click', () => document.querySelectorAll('.fd-wrap.open').forEach(w => w.classList.remove('open')));
 
 function removeTag(key, val) {
-  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion') {
+  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') {
     const idx = state[key].indexOf(val);
     if (idx >= 0) state[key].splice(idx, 1);
     if (key === 'dashFilterManager') {
@@ -938,7 +998,9 @@ function removeTag(key, val) {
   } else {
     state[key] = 'all';
   }
-  renderDashboard();
+  if (state.currentView === 'matrix') renderMatrixView();
+  else if (state.currentView === 'accounts') { renderFilters(); renderAccountsList(); }
+  else renderDashboard();
 }
 
 function sbSort(col) {
@@ -953,11 +1015,40 @@ function stalledSort(col) {
 }
 function clearDashFilters() {
   state.dashFilterRep = []; state.dashFilterManager = []; state.dashFilterRegion = [];
-  state.dashFilterCountry = 'all'; state.dashFilterStage = 'all'; state.dashFilterTier = 'all';
-  renderDashboard();
+  state.dashFilterCountry = 'all'; state.dashFilterStage = 'all'; state.dashFilterTier = [];
+  state.dashSearch = '';
+  _rerenderCurrentFilterView();
+}
+function _rerenderCurrentFilterView() {
+  if (state.currentView === 'matrix') renderMatrixView();
+  else if (state.currentView === 'heatmap') renderHeatmapView();
+  else if (state.currentView === 'accounts') { renderFilters(); renderAccountsList(); }
+  else renderDashboard();
+}
+// Shared search box shown in Dashboard / Matrix / Heatmap headers (filters via getDashFilteredAccounts)
+function pageSearchBox() {
+  const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E";
+  return `<div style="position:relative;flex:0 1 200px;min-width:130px">
+    <input type="text" id="page-search-input" value="${esc(state.dashSearch||'')}" placeholder="Search accounts..." oninput="onPageSearch(this.value)" autocomplete="off"
+      style="width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:13px;background:var(--white);box-sizing:border-box;background-image:url(&quot;${icon}&quot;);background-repeat:no-repeat;background-position:9px center">
+  </div>`;
+}
+let _pageSearchTimer = null;
+function onPageSearch(val) {
+  state.dashSearch = val;
+  clearTimeout(_pageSearchTimer);
+  _pageSearchTimer = setTimeout(() => {
+    _rerenderCurrentFilterView();
+    const inp = document.getElementById('page-search-input');
+    if (inp) { inp.focus(); const v = inp.value; inp.value = ''; inp.value = v; }
+  }, 220);
+}
+// PDF button for page headers — generates a report tailored to the current page
+function pagePdfButton() {
+  return `<button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>`;
 }
 function setDashFilter(key, val) {
-  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion') {
+  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') {
     const arr = state[key];
     const idx = arr.indexOf(val);
     if (idx >= 0) arr.splice(idx, 1);
@@ -981,7 +1072,7 @@ function setDashFilter(key, val) {
     state.dashFilterManager = [];
     state.dashFilterRegion = [];
   }
-  renderDashboard();
+  _rerenderCurrentFilterView();
 }
 function getDashFilteredAccounts() {
   let accts = getVisibleAccounts();
@@ -995,7 +1086,14 @@ function getDashFilteredAccounts() {
   }
   if (state.dashFilterCountry !== 'all') accts = accts.filter(a => a.country === state.dashFilterCountry);
   if (state.dashFilterStage !== 'all') accts = accts.filter(a => a.current_stage === parseInt(state.dashFilterStage));
-  if (state.dashFilterTier !== 'all') accts = accts.filter(a => a.tier === parseInt(state.dashFilterTier));
+  if (state.dashFilterTier.length > 0) accts = accts.filter(a => state.dashFilterTier.includes(String(a.tier)));
+  const q = (state.dashSearch || '').trim().toLowerCase();
+  if (q) accts = accts.filter(a =>
+    (a.company_name || '').toLowerCase().includes(q) ||
+    (a.hq_city || '').toLowerCase().includes(q) ||
+    (a.regions || '').toLowerCase().includes(q) ||
+    (a.key_sectors || '').toLowerCase().includes(q)
+  );
   return accts;
 }
 
@@ -1596,11 +1694,32 @@ function showView(name, fromBack) {
   else if (name === 'profile') renderProfile();
 }
 
+function renderGlobalSearch() {
+  const input = document.getElementById('global-search-input');
+  const results = document.getElementById('global-search-results');
+  const q = (input?.value || '').toLowerCase().trim();
+  if (!q) { results.style.display = 'none'; return; }
+  const matches = (state.accounts || []).filter(a => a.company_name.toLowerCase().includes(q) || (a.hq_city||'').toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) { results.style.display = 'block'; results.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--g400)">No accounts found</div>'; return; }
+  results.style.display = 'block';
+  results.innerHTML = matches.map(a => {
+    const stage = STAGES[a.current_stage] || STAGES[1];
+    return `<div onclick="document.getElementById('global-search-input').value='';document.getElementById('global-search-results').style.display='none';showAccountDetail('${a.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--g100);display:flex;align-items:center;gap:10px;transition:background .1s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--g800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.company_name)}</div>
+        <div style="font-size:11px;color:var(--g400)">${esc(a.hq_city||'')}${a.hq_city?' · ':''}${stage.name}</div>
+      </div>
+      <span class="badge badge-tier${a.tier}" style="font-size:10px">${a.tier===-1?'Owner':a.tier===0?'Eng':'T'+a.tier}</span>
+    </div>`;
+  }).join('');
+}
+document.addEventListener('click', e => { if (!e.target.closest('#global-search')) { const r = document.getElementById('global-search-results'); if (r) r.style.display = 'none'; }});
+
 function showAccountDetail(id) {
   if (state.currentView) pushHistory({ type: 'view', view: state.currentView });
   state.currentAccountId = id;
   state.currentView = 'detail';
-  state.detailTab = 'checklist';
+  state.detailTab = 'acceptance';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-detail').classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1611,13 +1730,13 @@ function showAccountDetail(id) {
 // ======================== RENDER: FILTERS ========================
 const AU_STATES = AU_REGIONS; // alias for filter display
 
-function renderFilters() {
-  const el = document.getElementById('account-filters');
+function renderFilters(targetId) {
+  const el = document.getElementById(targetId || 'account-filters');
   // Remove any old region row
   if (el._regionRow) { el._regionRow.remove(); el._regionRow = null; }
 
   const allAccounts = getVisibleAccounts();
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier !== 'all';
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0;
 
   const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
   const scopedReps = state.dashFilterCountry !== 'all' ? reps.filter(p => p.country === state.dashFilterCountry) : reps;
@@ -1637,16 +1756,17 @@ function renderFilters() {
   const filteredMgrs = [...managers];
   filteredMgrs.sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
 
-  const isMulti = k => k === 'dashFilterRep' || k === 'dashFilterManager' || k === 'dashFilterRegion';
+  const isMulti = k => k === 'dashFilterRep' || k === 'dashFilterManager' || k === 'dashFilterRegion' || k === 'dashFilterTier';
   const fdItem = (label, key, val, dropId) => {
     const active = isMulti(key) ? state[key].includes(val) : state[key] === val;
     const reopen = isMulti(key) && dropId ? `setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.classList.add('open')},0);` : '';
     return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');renderFilters();renderAccountsList();${reopen}">${label}</div>`;
   };
+  const _tierName = v => v === '-1' ? 'Owner' : v === '0' ? 'Engineer' : 'T' + v;
 
   const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
   const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
-  const tierLabel = state.dashFilterTier !== 'all' ? 'T' + state.dashFilterTier : 'Tier';
+  const tierLabel = state.dashFilterTier.length > 0 ? (state.dashFilterTier.length === 1 ? _tierName(state.dashFilterTier[0]) : state.dashFilterTier.length + ' selected') : 'Stakeholder';
   const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
   const mgrLabel = state.dashFilterManager.length ? state.dashFilterManager.length + ' selected' : 'Manager';
   const repLabel = state.dashFilterRep.length ? state.dashFilterRep.length + ' selected' : 'Rep';
@@ -1655,7 +1775,7 @@ function renderFilters() {
   const tags = [];
   if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
   state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
-  if (state.dashFilterTier !== 'all') tags.push({ label: 'T' + state.dashFilterTier, key: 'dashFilterTier', val: state.dashFilterTier, css: 't-tier' });
+  state.dashFilterTier.forEach(v => tags.push({ label: _tierName(v), key: 'dashFilterTier', val: v, css: 't-tier' }));
   if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
   state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: p?.full_name||'—', key: 'dashFilterManager', val: id, css: 't-manager' }); });
   state.dashFilterRep.filter(id => !state.dashFilterManager.includes(id)).map(id => { const p = (state.profiles||[]).find(x=>x.id===id); return { label: p?.full_name||'—', key: 'dashFilterRep', val: id, css: 't-rep' }; }).sort((a,b) => a.label.localeCompare(b.label)).forEach(t => tags.push(t));
@@ -1673,8 +1793,8 @@ function renderFilters() {
         <div class="fd-menu">${visibleRegions.map(r => fdItem(r,'dashFilterRegion',r,'af-region')).join('')}</div>
       </div>
       <div class="fd-wrap" id="af-tier" onclick="toggleFilterDrop('af-tier',event)">
-        <div class="fd-btn${state.dashFilterTier!=='all'?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
-        <div class="fd-menu">${fdItem('Tier 1','dashFilterTier','1','af-tier')}${fdItem('Tier 2','dashFilterTier','2','af-tier')}${fdItem('Tier 3','dashFilterTier','3','af-tier')}</div>
+        <div class="fd-btn${state.dashFilterTier.length?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${fdItem('Owner','dashFilterTier','-1','af-tier')}${fdItem('Engineer','dashFilterTier','0','af-tier')}${fdItem('Tier 1','dashFilterTier','1','af-tier')}${fdItem('Tier 2','dashFilterTier','2','af-tier')}${fdItem('Tier 3','dashFilterTier','3','af-tier')}</div>
       </div>
       <div class="fd-wrap" id="af-stage" onclick="toggleFilterDrop('af-stage',event)">
         <div class="fd-btn${state.dashFilterStage!=='all'?' has-val':''}">${stageLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
@@ -1693,7 +1813,7 @@ function renderFilters() {
 
   // Update header clear button
   const clearEl = document.getElementById('acct-clear-btn');
-  if (clearEl) clearEl.innerHTML = hasFilter ? `<button onclick="clearDashFilters();renderFilters();renderAccountsList()" style="padding:8px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;border:none">✕ Clear</button>` : '';
+  if (clearEl) clearEl.innerHTML = hasFilter ? `<button onclick="clearDashFilters();renderFilters();renderAccountsList()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer">✕ Clear</button>` : '';
 }
 function setFilter(type, val) {
   if (type === 'country') { setDashFilter('dashFilterCountry', val); }
@@ -1722,7 +1842,7 @@ function filterByCountry(country) {
 }
 function filterByTier(tier) {
   clearDashFilters();
-  state.dashFilterTier = String(tier);
+  state.dashFilterTier = [String(tier)];
   showView('accounts');
   renderFilters();
 }
@@ -1756,7 +1876,7 @@ function setAcctSort(col) {
   else { state.acctSortCol = col; state.acctSortDir = col === 'revenue' || col === 'stage' ? 'desc' : 'asc'; }
   document.querySelectorAll('#af-sort .fd-item').forEach(el => el.classList.remove('active'));
   document.getElementById('af-sort')?.classList.remove('open');
-  const labels = { name:'Name', tier:'Tier', stage:'Stage', city:'City', rep:'Rep', revenue:'Revenue' };
+  const labels = { name:'Name', tier:'Stakeholder', stage:'Stage', city:'City', rep:'Rep', revenue:'Revenue' };
   const arrow = state.acctSortDir === 'asc' ? '↑' : '↓';
   const lbl = document.getElementById('af-sort-label');
   if (lbl) lbl.textContent = labels[col] + ' ' + arrow;
@@ -1830,7 +1950,7 @@ function renderAccountsList() {
         <h3>${esc(a.company_name)}</h3>
         <div class="badges">
           ${repName ? `<span class="badge" style="background:#E1F5EE;color:#085041">${esc(repName)}</span>` : ''}
-          <span class="badge ${tierClass}">T${a.tier}</span>
+          <span class="badge ${tierClass}">${a.tier===-1?'Owner':a.tier===0?'Eng':'T'+a.tier}</span>
           <span class="badge ${countryClass}">${a.country}</span>
           ${a.hq_city ? `<span class="badge badge-region">${esc(a.hq_city)}</span>` : ''}
         </div>
@@ -1886,10 +2006,12 @@ function renderAccountDetail() {
       </button>
       <div class="detail-company">
         <div style="flex:1">
-          <h2>${esc(a.company_name)}${a.hq_city ? ' — '+esc(a.hq_city) : ''}</h2>
+          <h2>${esc(a.company_name)}</h2>
           <div class="detail-meta">
-            <span class="badge ${tierClass}">Tier ${a.tier}</span>
+            <span class="badge ${tierClass}">${a.tier===-1?'Owner':a.tier===0?'Engineer':'Tier '+a.tier}</span>
             <span class="badge ${countryClass}">${a.country === 'AU' ? 'Australia' : 'New Zealand'}</span>
+            ${a.regions ? `<span class="badge" style="background:#EFF6FF;color:#1E40AF">${esc(a.regions)}</span>` : ''}
+            ${getRepName(a.assigned_to) ? `<span class="badge" style="background:#E1F5EE;color:#085041">${esc(getRepName(a.assigned_to))}</span>` : ''}
             ${a.psa_tier ? `<span class="badge" style="background:#FEF3C7;color:#92400E">PSA ${a.psa_tier}</span>` : ''}
           </div>
           <div class="detail-meta" style="margin-top:6px">
@@ -1913,8 +2035,8 @@ function renderAccountDetail() {
     </div>
 
     <div class="detail-tabs">
-      <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
       <button class="detail-tab ${state.detailTab==='acceptance'?'active':''}" onclick="switchDetailTab('acceptance')">Acceptance</button>
+      <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
       <button class="detail-tab ${state.detailTab==='contacts'?'active':''}" onclick="switchDetailTab('contacts')">Contacts</button>
       <button class="detail-tab ${state.detailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')">Notes</button>
     </div>
@@ -1956,38 +2078,9 @@ function renderAcceptanceTab(container) {
   const getCell = (rowId, colId) => data.find(d => d.row_id === rowId && d.col_id === colId);
   const getStatus = (statusId) => statuses.find(s => s.id === statusId);
   const defaultStatus = statuses.find(s => s.label === 'Not Started') || statuses[0];
+  const editable = canEditMatrix(accountId);
 
-  let html = `<div style="overflow-x:auto;padding:4px 0">
-    <table style="width:100%;border-collapse:collapse;font-size:13px">
-      <thead><tr>
-        <th style="text-align:left;padding:10px 12px;border-bottom:2px solid var(--g200);font-weight:600;color:var(--g600);min-width:140px">Product</th>
-        ${cols.map(c => `<th style="text-align:center;padding:10px 8px;border-bottom:2px solid var(--g200);font-weight:600;color:var(--g600);min-width:100px">${esc(c.label)}</th>`).join('')}
-      </tr></thead>
-      <tbody>`;
-
-  rows.forEach(row => {
-    html += `<tr>
-      <td style="padding:10px 12px;border-bottom:1px solid var(--g100);font-weight:500">${esc(row.label)}</td>`;
-    cols.forEach(col => {
-      const cell = getCell(row.id, col.id);
-      const status = cell ? getStatus(cell.status_id) : defaultStatus;
-      const color = status?.color || '#94A3B8';
-      const label = status?.label || 'Not Started';
-      html += `<td style="padding:6px 8px;border-bottom:1px solid var(--g100);text-align:center">
-        <div class="matrix-cell" onclick="showMatrixPicker('${accountId}','${row.id}','${col.id}',this)"
-          style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;background:${color}18;color:${color};border:1.5px solid ${color}40"
-          title="Click to change">
-          <span style="width:7px;height:7px;border-radius:50%;background:${color};flex-shrink:0"></span>
-          ${esc(label)}
-        </div>
-      </td>`;
-    });
-    html += `</tr>`;
-  });
-
-  html += `</tbody></table></div>`;
-
-  // ---- ACCEPTANCE SCORECARD ----
+  // ---- COMPUTE SCORECARD DATA FIRST ----
   const totalCells = rows.length * cols.length;
   const statusCounts = {};
   statuses.forEach(s => statusCounts[s.id] = 0);
@@ -2002,46 +2095,45 @@ function renderAcceptanceTab(container) {
   const eligibleCells = totalCells - naCount;
   const acceptanceRate = eligibleCells > 0 ? Math.round(approvedCount / eligibleCells * 100) : 0;
   const activeCells = data.filter(d => { const st = getStatus(d.status_id); return st && st.label !== 'Not Started' && st.label !== 'N/A'; }).length;
-
-  // Acceptance score color
   const scoreColor = acceptanceRate >= 75 ? '#34D399' : acceptanceRate >= 40 ? '#FBBF24' : acceptanceRate > 0 ? '#F58220' : '#94A3B8';
 
-  html += `<div style="margin-top:16px;padding:16px;background:var(--g50);border-radius:8px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <h4 style="margin:0;font-size:14px;color:var(--g700)">Acceptance Score</h4>
-      <div style="font-size:28px;font-weight:700;color:${scoreColor}">${acceptanceRate}%</div>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:14px">`;
+  // ---- SCORECARD (above grid) ----
+  let html = `<div style="padding:14px 16px;background:var(--g50);border-radius:8px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--g500)">Acceptance</span>
+        <span style="font-size:28px;font-weight:700;color:${scoreColor}">${acceptanceRate}%</span>
+      </div>
+      <div style="display:flex;gap:6px;flex:1">`;
 
-  // Status breakdown chips
   statuses.forEach(s => {
     const count = statusCounts[s.id] || 0;
     if (count > 0 || s.label === 'Approved') {
-      html += `<div style="display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;background:${s.color}18;color:${s.color};border:1px solid ${s.color}30">
-        <span style="width:6px;height:6px;border-radius:50%;background:${s.color}"></span>
-        ${esc(s.label)}: ${count}
-      </div>`;
+      html += `<span style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${s.color}18;color:${s.color}">
+        <span style="width:5px;height:5px;border-radius:50%;background:${s.color}"></span>${count} ${esc(s.label)}
+      </span>`;
     }
   });
 
-  html += `</div>`;
+  html += `</div></div>`;
 
-  // Progress bar showing acceptance across all products
   if (eligibleCells > 0) {
-    html += `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--g500);margin-bottom:4px">
-        <span>${approvedCount} of ${eligibleCells} eligible products accepted</span>
-        <span>${activeCells} in progress</span>
+    html += `<div style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--g400);margin-bottom:3px">
+        <span>${approvedCount}/${eligibleCells} accepted</span>
+        <span>${activeCells} active</span>
       </div>
-      <div style="height:8px;background:var(--g200);border-radius:4px;overflow:hidden;display:flex">
+      <div style="height:6px;background:var(--g200);border-radius:3px;overflow:hidden;display:flex">
         ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#34D399"></div>` : ''}
         ${activeCells - approvedCount > 0 ? `<div style="width:${(activeCells-approvedCount)/eligibleCells*100}%;background:#38BDF8"></div>` : ''}
       </div>
     </div>`;
   }
 
-  // Per-product acceptance summary
-  html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px">`;
+  html += `</div>`;
+
+  // ---- PER-PRODUCT SUMMARY (between scorecard and grid) ----
+  html += `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px">`;
   rows.forEach(row => {
     const rowData = data.filter(d => d.row_id === row.id);
     const rowApproved = rowData.filter(d => approvedStatus && d.status_id === approvedStatus.id).length;
@@ -2049,7 +2141,6 @@ function renderAcceptanceTab(container) {
     const rowEligible = cols.length - rowNA;
     const rowPct = rowEligible > 0 ? Math.round(rowApproved / rowEligible * 100) : 0;
     const furthestCol = (() => {
-      // Find the rightmost column with a non-Not Started / non-N/A status
       for (let i = cols.length - 1; i >= 0; i--) {
         const cell = rowData.find(d => d.col_id === cols[i].id);
         if (cell) {
@@ -2070,12 +2161,56 @@ function renderAcceptanceTab(container) {
   });
   html += `</div>`;
 
-  html += `</div>`;
+  // ---- MATRIX GRID ----
+  html += `<div style="overflow-x:auto;border:1px solid var(--g200);border-radius:8px">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>
+        <th style="text-align:left;padding:10px 12px;background:var(--g50);font-weight:600;color:var(--g600);border-bottom:2px solid var(--g200);position:sticky;left:0;z-index:2"></th>
+        ${cols.map(c => `<th style="text-align:center;padding:8px 6px;background:var(--g50);font-weight:600;color:var(--g600);font-size:11px;border-bottom:2px solid var(--g200);border-left:1px solid var(--g200)">${esc(c.label)}</th>`).join('')}
+      </tr></thead>
+      <tbody>`;
+
+  rows.forEach((row, ri) => {
+    const isLast = ri === rows.length - 1;
+    html += `<tr>
+      <td style="padding:8px 12px;font-weight:600;font-size:12px;color:var(--g700);background:var(--g50);border-bottom:${isLast?'none':'1px solid var(--g200)'};position:sticky;left:0;z-index:1;white-space:nowrap">${esc(row.label)}</td>`;
+    cols.forEach(col => {
+      const cell = getCell(row.id, col.id);
+      const status = cell ? getStatus(cell.status_id) : defaultStatus;
+      const color = status?.color || '#94A3B8';
+      const statusId = cell?.status_id || defaultStatus?.id || '';
+      html += `<td style="padding:0;border-left:1px solid var(--g200);border-bottom:${isLast?'none':'1px solid var(--g200)'};background:${color}12;text-align:center;min-width:80px">
+        <select onchange="setMatrixCell('${accountId}','${row.id}','${col.id}',this.value)" ${!editable?'disabled':''}
+          style="width:100%;padding:8px 4px;border:none;background:transparent;font-size:11px;font-weight:600;color:${color};text-align:center;cursor:${editable?'pointer':'default'};appearance:none;-webkit-appearance:none;outline:none${!editable?';opacity:0.7':''}">
+          ${statuses.map(s => `<option value="${s.id}" ${s.id===statusId?'selected':''} style="color:${s.color}">${s.label}</option>`).join('')}
+        </select>
+      </td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
 
   container.innerHTML = html;
 }
 
+function canEditMatrix(accountId) {
+  const role = state.profile?.role;
+  if (role === 'admin' || role === 'director') return true;
+  const account = state.accounts.find(a => a.id === accountId);
+  if (!account) return false;
+  if (role === 'rep') return account.assigned_to === state.user?.id;
+  // Manager: can edit if account is assigned to them or one of their reports
+  if (role === 'manager') {
+    if (account.assigned_to === state.user?.id) return true;
+    const myReports = (state.profiles || []).filter(p => p.reports_to === state.user?.id).map(p => p.id);
+    return myReports.includes(account.assigned_to);
+  }
+  return false;
+}
+
 function showMatrixPicker(accountId, rowId, colId, el) {
+  if (!canEditMatrix(accountId)) { toast('You can only update your own accounts'); return; }
   // Remove any existing picker
   document.querySelectorAll('.matrix-picker').forEach(p => p.remove());
 
@@ -2254,21 +2389,26 @@ function renderContacts(container) {
   } else {
     contacts.forEach(c => {
       const initials = (c.contact_name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-      html += `<div class="contact-card">
-        <div class="contact-avatar">${initials}</div>
-        <div class="contact-info">
-          <h4>${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</h4>
-          <p>${esc(c.role || 'No role specified')}</p>
-          ${c.email ? `<p>${esc(c.email)}</p>` : ''}
-          ${c.phone ? `<p>${esc(c.phone)}</p>` : ''}
+      html += `<div class="contact-card" style="display:block;cursor:pointer" onclick="toggleContactCard('${c.id}')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="contact-avatar">${initials}</div>
+          <div class="contact-info" style="flex:1;min-width:0">
+            <h4>${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</h4>
+            <p>${esc(c.role || 'No role specified')}</p>
+          </div>
+          <svg id="chev-${c.id}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="contact-actions">
-          <button onclick="showEditContact('${c.id}','${accountId}')" title="Edit">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button onclick="confirmDeleteContact('${c.id}','${accountId}')" title="Delete">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-          </button>
+        <div id="cdet-${c.id}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--g150)">
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--g700)">
+            ${c.is_key_influencer ? `<div><span style="color:var(--vic-orange)">&#9733;</span> Key influencer</div>` : ''}
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Role</span><br>${esc(c.role || '—')}</div>
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Email</span><br>${c.email ? `<a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a>` : '—'}</div>
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Phone</span><br>${c.phone ? `<a href="tel:${esc(c.phone)}" onclick="event.stopPropagation()">${esc(c.phone)}</a>` : '—'}</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px">
+            <button onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="flex:1;padding:9px;border:1px solid var(--g200);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+            <button onclick="event.stopPropagation();confirmDeleteContact('${c.id}','${accountId}')" style="flex:1;padding:9px;border:1px solid var(--danger);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Delete</button>
+          </div>
         </div>
       </div>`;
     });
@@ -2276,6 +2416,14 @@ function renderContacts(container) {
   container.innerHTML = html;
 }
 
+function toggleContactCard(id) {
+  const el = document.getElementById('cdet-' + id);
+  const chev = document.getElementById('chev-' + id);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+}
 async function confirmDeleteContact(contactId, accountId) {
   if (confirm('Remove this contact?')) {
     await deleteContact(contactId, accountId);
@@ -2328,7 +2476,7 @@ function renderDashboard() {
   const el = document.getElementById('view-dashboard');
   const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const allAccounts = getVisibleAccounts();
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier !== 'all';
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
 
   // Dropdown filter system
   let filterHtml = '';
@@ -2353,13 +2501,14 @@ function renderDashboard() {
     filteredMgrs.sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
 
     const fdItem = (label, key, val) => {
-      const active = (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion') ? state[key].includes(val) : state[key] === val;
+      const active = (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') ? state[key].includes(val) : state[key] === val;
       return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}')">${label}</div>`;
     };
+    const _tierName = v => v === '-1' ? 'Owner' : v === '0' ? 'Engineer' : 'T' + v;
 
     const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
     const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
-    const tierLabel = state.dashFilterTier !== 'all' ? 'T' + state.dashFilterTier : 'Tier';
+    const tierLabel = state.dashFilterTier.length > 0 ? (state.dashFilterTier.length === 1 ? _tierName(state.dashFilterTier[0]) : state.dashFilterTier.length + ' selected') : 'Stakeholder';
     const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
     const mgrLabel = state.dashFilterManager.length ? state.dashFilterManager.length + ' selected' : 'Manager';
     const repLabel = state.dashFilterRep.length ? state.dashFilterRep.length + ' selected' : 'Rep';
@@ -2368,7 +2517,7 @@ function renderDashboard() {
     const tags = [];
     if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
     state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
-    if (state.dashFilterTier !== 'all') tags.push({ label: 'T' + state.dashFilterTier, key: 'dashFilterTier', val: state.dashFilterTier, css: 't-tier' });
+    state.dashFilterTier.forEach(v => tags.push({ label: _tierName(v), key: 'dashFilterTier', val: v, css: 't-tier' }));
     if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
     state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: p?.full_name||'—', key: 'dashFilterManager', val: id, css: 't-manager' }); });
     state.dashFilterRep.filter(id => !state.dashFilterManager.includes(id)).map(id => { const p = (state.profiles||[]).find(x=>x.id===id); return { label: p?.full_name||'—', key: 'dashFilterRep', val: id, css: 't-rep' }; }).sort((a,b) => a.label.localeCompare(b.label)).forEach(t => tags.push(t));
@@ -2384,8 +2533,8 @@ function renderDashboard() {
         <div class="fd-menu">${visibleRegions.map(r => fdItem(r,'dashFilterRegion',r)).join('')}</div>
       </div>
       <div class="fd-wrap" id="fd-tier" onclick="toggleFilterDrop('fd-tier',event)">
-        <div class="fd-btn${state.dashFilterTier!=='all'?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
-        <div class="fd-menu">${fdItem('Tier 1','dashFilterTier','1')}${fdItem('Tier 2','dashFilterTier','2')}${fdItem('Tier 3','dashFilterTier','3')}</div>
+        <div class="fd-btn${state.dashFilterTier.length?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${fdItem('Owner','dashFilterTier','-1')}${fdItem('Engineer','dashFilterTier','0')}${fdItem('Tier 1','dashFilterTier','1')}${fdItem('Tier 2','dashFilterTier','2')}${fdItem('Tier 3','dashFilterTier','3')}</div>
       </div>
       <div class="fd-wrap" id="fd-stage" onclick="toggleFilterDrop('fd-stage',event)">
         <div class="fd-btn${state.dashFilterStage!=='all'?' has-val':''}">${stageLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
@@ -2409,7 +2558,8 @@ function renderDashboard() {
     <div class="view-header">
       <h1>Dashboard ${hasFilter?'<span style="font-size:14px;font-weight:400;color:var(--g400)">— '+filtered.length+' of '+allAccounts.length+' accounts</span>':''}</h1>
       <div style="display:flex;gap:8px;align-items:center">
-        ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;border:none">✕ Clear</button>` : ''}
+        ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer">✕ Clear</button>` : ''}
+        ${pageSearchBox()}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
           <div class="fd-btn" style="padding:8px 12px;font-size:13px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
           <div class="fd-menu" style="min-width:90px">
@@ -2418,12 +2568,12 @@ function renderDashboard() {
             <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';localStorage.setItem('kac_currency_'+state.user?.id,'NZD');renderDashboard()">NZD$</div>
           </div>
         </div>
-        <button onclick="generatePDFReport()" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button onclick="generatePageReport()" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
       </div>
     </div>
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Summary</button>
-      <button class="${state.dashMode==='table'?'active':''}" onclick="state.dashMode='table';state.dashSortCol='progress';state.dashSortDir='asc';renderDashboard()">Table</button>
+      <button class="${state.dashMode==='table'?'active':''}" onclick="state.dashMode='table';state.dashSortCol='progress';state.dashSortDir='asc';renderDashboard()">Account List</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
     </div>
     ${filterHtml}
@@ -2516,7 +2666,7 @@ function renderDashboardSummary() {
   let html = `
     <div class="dash-section">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h3 style="margin:0">Conversion Funnel</h3>
+        <h3 style="margin:0">Conversion Pipeline</h3>
         <div style="display:flex;gap:12px;font-size:11px;color:var(--g500)">
           ${['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'].map((c,i) => `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:${c}"></span>${STAGES[i+1].name}</span>`).join('')}
         </div>
@@ -2585,13 +2735,13 @@ function renderDashboardSummary() {
         </div>
       `).join('');
       html += `<div class="dash-section" style="padding:12px">
-        <h3 style="margin-bottom:4px">Team Scoreboard</h3>
+        <h3 style="margin-bottom:4px">Team Performance</h3>
         <div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid var(--g200)">
-          <div onclick="sbSort('name')" style="width:140px;flex-shrink:0;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Name${sbIcon('name')}</div>
+          <div onclick="sbSort('name')" style="width:140px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Name${sbIcon('name')}</div>
           <div style="flex:1"></div>
-          <div onclick="sbSort('accts')" style="width:44px;flex-shrink:0;text-align:center;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Accts${sbIcon('accts')}</div>
-          <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Prog${sbIcon('prog')}</div>
-          <div onclick="sbSort('opp')" style="width:100px;flex-shrink:0;text-align:right;font-size:10px;font-weight:600;color:var(--g500);cursor:pointer">Opportunity${sbIcon('opp')}</div>
+          <div onclick="sbSort('accts')" style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Accts${sbIcon('accts')}</div>
+          <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Prog${sbIcon('prog')}</div>
+          <div onclick="sbSort('opp')" style="width:100px;flex-shrink:0;text-align:right;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Opportunity${sbIcon('opp')}</div>
         </div>
         <div>
           ${rows}
@@ -2722,10 +2872,10 @@ function renderDashboardTable() {
     <table class="data-table">
       <thead><tr>
         <th style="${thStyle}" onclick="dashSort('company')">Company${sortIcon('company')}</th>
-        <th style="${thStyle};min-width:180px" onclick="dashSort('progress')">Progress${sortIcon('progress')}</th>
-        <th style="${thStyle}" onclick="dashSort('revenue')">Revenue${sortIcon('revenue')}</th>
-        <th style="${thStyle}" onclick="dashSort('rep')">Rep${sortIcon('rep')}</th>
-        <th style="${thStyle};text-align:center" onclick="dashSort('activity')">Last Activity${sortIcon('activity')}</th>
+        <th style="${thStyle};min-width:180px;width:40%" onclick="dashSort('progress')">Progress${sortIcon('progress')}</th>
+        <th style="${thStyle};white-space:nowrap" onclick="dashSort('revenue')">Revenue${sortIcon('revenue')}</th>
+        <th style="${thStyle};white-space:nowrap" onclick="dashSort('rep')">Rep${sortIcon('rep')}</th>
+        <th style="${thStyle};text-align:center;white-space:nowrap" onclick="dashSort('activity')">Last Activity${sortIcon('activity')}</th>
       </tr></thead>
       <tbody>
         ${accounts.map(a => {
@@ -2743,10 +2893,10 @@ function renderDashboardTable() {
           }
           statusBar += `<span style="font-size:11px;font-weight:600;color:var(--g500);white-space:nowrap;margin-left:6px">${STAGES[a.current_stage].name.split(' ')[0]} ${comp.done}/${comp.total}</span></div>`;
           return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
-            <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
+            <td style="white-space:nowrap"><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
             <td>${statusBar}</td>
             <td style="font-size:13px;color:var(--g500)">${fxSymbol()}${formatNumber(Math.round(rev))}</td>
-            <td style="font-size:13px;color:var(--g500)">${repName(a.assigned_to)}</td>
+            <td style="font-size:13px;color:var(--g500);white-space:nowrap">${repName(a.assigned_to)}</td>
             <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${actCache[a.id] ? new Date(actCache[a.id]).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '<span style="color:#ef4444">Never</span>'}</td>
           </tr>`;
         }).join('')}
@@ -2756,13 +2906,20 @@ function renderDashboardTable() {
 }
 
 // ======================== RENDER: MASTER MATRIX VIEW ========================
+function setMatrixCellFromTable(accountId, rowId, statusId) {
+  const cols = state.matrixConfig.cols;
+  if (!cols || !cols.length) return;
+  const lastColId = cols[cols.length - 1].id;
+  setMatrixCell(accountId, rowId, lastColId, statusId);
+  renderMatrixView();
+}
 function renderMatrixView() {
   const el = document.getElementById('view-matrix');
   const allAccounts = getVisibleAccounts();
   const rows = state.matrixConfig.rows;
   const cols = state.matrixConfig.cols;
   const statuses = state.matrixConfig.statuses;
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier !== 'all';
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
 
   if (!rows.length || !cols.length) {
     el.innerHTML = '<div class="view-header"><h1>Acceptance Matrix</h1></div><div style="padding:24px;text-align:center;color:var(--g400)">No matrix configured yet. Set up product rows and milestone columns in Admin.</div>';
@@ -2786,13 +2943,14 @@ function renderMatrixView() {
   const filteredMgrs = [...managers].sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
 
   const mxFd = (label, key, val) => {
-    const active = (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion') ? state[key].includes(val) : state[key] === val;
+    const active = (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') ? state[key].includes(val) : state[key] === val;
     return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');renderMatrixView()">${label}</div>`;
   };
+  const _tierName = v => v === '-1' ? 'Owner' : v === '0' ? 'Engineer' : 'T' + v;
 
   const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
   const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
-  const tierLabel = state.dashFilterTier !== 'all' ? 'T' + state.dashFilterTier : 'Tier';
+  const tierLabel = state.dashFilterTier.length > 0 ? (state.dashFilterTier.length === 1 ? _tierName(state.dashFilterTier[0]) : state.dashFilterTier.length + ' selected') : 'Stakeholder';
   const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
   const mgrLabel = state.dashFilterManager.length ? state.dashFilterManager.length + ' selected' : 'Manager';
   const repLabel = state.dashFilterRep.length ? state.dashFilterRep.length + ' selected' : 'Rep';
@@ -2800,7 +2958,7 @@ function renderMatrixView() {
   const tags = [];
   if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
   state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
-  if (state.dashFilterTier !== 'all') tags.push({ label: 'T' + state.dashFilterTier, key: 'dashFilterTier', val: state.dashFilterTier, css: 't-tier' });
+  state.dashFilterTier.forEach(v => tags.push({ label: _tierName(v), key: 'dashFilterTier', val: v, css: 't-tier' }));
   if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
   state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: p?.full_name||'—', key: 'dashFilterManager', val: id, css: 't-manager' }); });
   state.dashFilterRep.filter(id => !state.dashFilterManager.includes(id)).map(id => { const p = (state.profiles||[]).find(x=>x.id===id); return { label: p?.full_name||'—', key: 'dashFilterRep', val: id, css: 't-rep' }; }).sort((a,b) => a.label.localeCompare(b.label)).forEach(t => tags.push(t));
@@ -2816,8 +2974,8 @@ function renderMatrixView() {
         <div class="fd-menu">${visibleRegions.map(r => mxFd(r,'dashFilterRegion',r)).join('')}</div>
       </div>
       <div class="fd-wrap" id="mx-fd-tier" onclick="toggleFilterDrop('mx-fd-tier',event)">
-        <div class="fd-btn${state.dashFilterTier!=='all'?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
-        <div class="fd-menu">${mxFd('Tier 1','dashFilterTier','1')}${mxFd('Tier 2','dashFilterTier','2')}${mxFd('Tier 3','dashFilterTier','3')}</div>
+        <div class="fd-btn${state.dashFilterTier.length?' has-val':''}">${tierLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${mxFd('Owner','dashFilterTier','-1')}${mxFd('Engineer','dashFilterTier','0')}${mxFd('Tier 1','dashFilterTier','1')}${mxFd('Tier 2','dashFilterTier','2')}${mxFd('Tier 3','dashFilterTier','3')}</div>
       </div>
       <div class="fd-wrap" id="mx-fd-stage" onclick="toggleFilterDrop('mx-fd-stage',event)">
         <div class="fd-btn${state.dashFilterStage!=='all'?' has-val':''}">${stageLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
@@ -2975,11 +3133,10 @@ function renderMatrixView() {
 
   // Build the account × product best-status grid
   // For each account+product, show the furthest milestone status
-  let gridHtml = `<div class="table-wrap" style="max-height:60vh"><table style="width:100%;border-collapse:collapse;font-size:12px">
-    <thead style="position:sticky;top:0;background:var(--white);z-index:5"><tr>
-      <th style="text-align:left;padding:8px 10px;border-bottom:2px solid var(--g200);font-weight:600;min-width:160px;position:sticky;left:0;background:var(--white);z-index:6">Account</th>
-      <th style="text-align:center;padding:8px 6px;border-bottom:2px solid var(--g200);font-weight:600;min-width:50px;color:var(--g500)">Score</th>
-      ${rows.map(r => `<th style="text-align:center;padding:8px 6px;border-bottom:2px solid var(--g200);font-weight:600;min-width:90px">${esc(r.label)}</th>`).join('')}
+  let gridHtml = `<div class="table-wrap" style="max-height:64vh;overflow:auto;border:1px solid var(--g200);border-radius:8px"><table style="width:100%;border-collapse:collapse;font-size:11px">
+    <thead style="position:sticky;top:0;z-index:5"><tr>
+      <th style="text-align:left;padding:7px 10px;background:var(--g50);border-bottom:1px solid var(--g300);border-right:1px solid var(--g200);font-weight:700;min-width:160px;position:sticky;left:0;z-index:6">Account</th>
+      ${rows.map(r => `<th style="padding:6px 4px;background:var(--g50);border-bottom:1px solid var(--g300);border-right:1px solid var(--g200);font-weight:600;font-size:10px;color:var(--g600);width:84px;min-width:84px;vertical-align:bottom;text-align:center;line-height:1.15">${esc(r.label)}</th>`).join('')}
     </tr></thead>
     <tbody>`;
 
@@ -2989,38 +3146,42 @@ function renderMatrixView() {
     const repProfile = (state.profiles||[]).find(p => p.id === a.assigned_to);
     const repName = repProfile?.full_name || '';
 
-    gridHtml += `<tr style="cursor:pointer" onclick="showAccountDetail('${a.id}')">
-      <td style="padding:8px 10px;border-bottom:1px solid var(--g100);position:sticky;left:0;background:var(--white);z-index:1">
-        <div style="font-weight:600;color:var(--g800)">${esc(a.company_name)}</div>
-        ${repName ? `<div style="font-size:10px;color:var(--g400)">${esc(repName)}</div>` : ''}
-      </td>
-      <td style="text-align:center;padding:8px 6px;border-bottom:1px solid var(--g100)">
-        <span style="font-weight:700;color:${rateColor}">${a.mxRate}%</span>
+    const canEdit = canEditMatrix(a.id);
+    gridHtml += `<tr>
+      <td onclick="showAccountDetail('${a.id}')" style="padding:4px 10px;border-bottom:1px solid var(--g150);border-right:1px solid var(--g200);position:sticky;left:0;background:var(--white);z-index:1;cursor:pointer">
+        <div style="font-weight:600;color:var(--g800);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">${esc(a.company_name)}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:1px">
+          <span style="font-size:12px;font-weight:700;color:${rateColor}">${a.mxRate}%</span>
+          ${repName ? `<span style="font-size:9px;color:var(--g400);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px">${esc(repName)}</span>` : ''}
+        </div>
       </td>`;
 
     rows.forEach(row => {
-      // For each product, find the best (rightmost) milestone with a meaningful status
+      // For each product, find the furthest milestone with a meaningful status
       let bestStatus = defaultStatus;
-      let bestColIdx = -1;
-      cols.forEach((col, ci) => {
+      cols.forEach(col => {
         const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
         if (cell) {
           const st = getStatus(cell.status_id);
-          if (st && st.label !== 'Not Started') {
-            bestStatus = st;
-            bestColIdx = ci;
-          }
+          if (st && st.label !== 'Not Started') bestStatus = st;
         }
       });
       const color = bestStatus?.color || '#94A3B8';
       const label = bestStatus?.label || 'Not Started';
-      const shortLabel = label === 'Not Started' ? '—' : label === 'In Progress' ? 'In Prog' : label === 'Approved' ? '✓' : label === 'Rejected' ? '✗' : label === 'N/A' ? 'N/A' : label;
+      const selId = bestStatus?.id || (defaultStatus && defaultStatus.id) || '';
+      const shortLabel = label === 'Not Started' ? '—' : label === 'In Progress' ? '●' : label === 'Approved' ? '✓' : label === 'Rejected' ? '✗' : label === 'N/A' ? 'N/A' : label.charAt(0);
 
-      gridHtml += `<td style="text-align:center;padding:4px 4px;border-bottom:1px solid var(--g100)">
-        <div style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${color}18;color:${color};border:1px solid ${color}30">
-          <span style="width:5px;height:5px;border-radius:50%;background:${color};flex-shrink:0"></span>${shortLabel}
-        </div>
-      </td>`;
+      if (canEdit) {
+        gridHtml += `<td style="padding:0;border-bottom:1px solid var(--g150);border-right:1px solid var(--g150)">
+          <select onchange="setMatrixCellFromTable('${a.id}','${row.id}',this.value)" title="${esc(row.label)}: ${esc(label)}" style="width:100%;height:30px;border:none;outline:none;background:${color}1f;color:${color};font-weight:700;font-size:10px;cursor:pointer;text-align:center;text-align-last:center;padding:0 1px">
+            ${statuses.map(s => `<option value="${s.id}" ${s.id===selId?'selected':''}>${esc(s.label)}</option>`).join('')}
+          </select>
+        </td>`;
+      } else {
+        gridHtml += `<td style="padding:0;border-bottom:1px solid var(--g150);border-right:1px solid var(--g150)">
+          <div style="height:30px;display:flex;align-items:center;justify-content:center;background:${color}1f;color:${color};font-weight:700;font-size:12px" title="${esc(row.label)}: ${esc(label)}">${shortLabel}</div>
+        </td>`;
+      }
     });
     gridHtml += `</tr>`;
   });
@@ -3031,7 +3192,9 @@ function renderMatrixView() {
     <div class="view-header">
       <h1>Acceptance Matrix ${hasFilter?'<span style="font-size:14px;font-weight:400;color:var(--g400)">— '+accts.length+' of '+allAccounts.length+' accounts</span>':''}</h1>
       <div style="display:flex;gap:8px;align-items:center">
-        ${hasFilter ? `<button onclick="clearDashFilters();renderMatrixView()" style="padding:8px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;border:none">✕ Clear</button>` : ''}
+        ${hasFilter ? `<button onclick="clearDashFilters();renderMatrixView()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer">✕ Clear</button>` : ''}
+        ${pageSearchBox()}
+        ${pagePdfButton()}
       </div>
     </div>
     ${filterHtml}
@@ -3043,13 +3206,14 @@ function renderMatrixView() {
 // ======================== RENDER: DASHBOARD HEATMAP ========================
 function renderHeatmapView() {
   const wrapper = document.getElementById('view-heatmap');
-  wrapper.innerHTML = `<div class="view-header"><h1>Heatmap</h1></div><div id="heatmap-content"></div>`;
+  wrapper.innerHTML = `<div class="view-header"><h1>Heatmap</h1><div style="display:flex;gap:8px;align-items:center">${pageSearchBox()}${pagePdfButton()}</div></div><div id="heatmap-filters"></div><div id="heatmap-content"></div>`;
+  renderFilters('heatmap-filters');
   renderDashboardHeatmap('heatmap-content');
 }
 
 function renderDashboardHeatmap(targetId) {
   const el = document.getElementById(targetId || 'dash-content');
-  const accounts = targetId ? state.accounts : getDashFilteredAccounts();
+  const accounts = getDashFilteredAccounts();
 
   // AU states + NZ regions — show based on user's country (managers see both)
   const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
@@ -3118,8 +3282,8 @@ function renderDashboardHeatmap(targetId) {
     const hasAU = regions.some(r => AU_REGIONS.includes(r));
     const hasNZ = regions.some(r => NZ_REGIONS.includes(r));
     let center, zoom;
-    if (hasAU && hasNZ) { center = [-32, 155]; zoom = 4; }
-    else if (hasAU) { center = [-28, 134]; zoom = 4; }
+    if (hasAU && hasNZ) { center = [-34, 152]; zoom = 4; }
+    else if (hasAU) { center = [-30, 135]; zoom = 5; }
     else { center = [-41, 174]; zoom = 6; }
 
     leafletMap = L.map(containerId, { scrollWheelZoom: false, zoomControl: true, attributionControl: false, background: '#dce9f5' }).setView(center, zoom);
@@ -3222,7 +3386,7 @@ function renderDashboardHeatmap(targetId) {
         if (!coord) return;
         const sColor = stageColors[a.current_stage] || '#94A3B8';
         const pin = L.circleMarker(coord, {
-          radius: 5, fillColor: sColor, color: '#fff', weight: 1.5, fillOpacity: 0.9
+          radius: 6, fillColor: sColor, color: '#fff', weight: 1.6, fillOpacity: 0.9
         }).addTo(pinGroup);
         const comp = getStageCompletion(a.id, a.current_stage);
         pin.bindPopup(`<div class="map-popup-title">${a.company_name}</div>
@@ -3233,30 +3397,30 @@ function renderDashboardHeatmap(targetId) {
         pin.on('click', () => showAccountDetail(a.id));
       });
 
-      // Fit map to pins when filtering, otherwise to full geo boundaries
+      // Fit map tightly to pins (dots), fall back to geo boundaries only if no pins
       const hasPins = pinGroup.getLayers().length > 0;
       const boundsGroup = L.featureGroup();
-      if (hasPins && (state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0)) {
+      if (hasPins) {
         boundsGroup.addLayer(pinGroup);
       } else {
         geoLayers.forEach(l => boundsGroup.addLayer(l));
-        if (hasPins) boundsGroup.addLayer(pinGroup);
       }
-      if (boundsGroup.getLayers().length > 0) {
-        const doBounds = () => {
-          if (!leafletMap) return;
-          try {
-            leafletMap.invalidateSize();
-            leafletMap.fitBounds(boundsGroup.getBounds(), { padding: [20, 20], animate: false });
-          } catch(e) {}
-        };
-        setTimeout(doBounds, 100);
-        setTimeout(doBounds, 500);
-      }
+      const doFit = () => {
+        if (!leafletMap || !boundsGroup.getLayers().length) return;
+        try {
+          leafletMap.invalidateSize();
+          leafletMap.fitBounds(boundsGroup.getBounds(), { padding: [25, 25], maxZoom: 10, animate: false });
+        } catch(e) {}
+      };
+      doFit();
+      setTimeout(doFit, 200);
+      setTimeout(doFit, 600);
     }
 
     loadGeoJSON();
     setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 150);
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 500);
+    setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 1000);
   }
 
   // Rep coverage map
@@ -3272,22 +3436,40 @@ function renderDashboardHeatmap(targetId) {
 
   let repHtml = '';
   if (Object.keys(repMap).length) {
+    if (!state.repSortCol) state.repSortCol = 'name';
+    if (!state.repSortDir) state.repSortDir = 'asc';
+    const rsc = state.repSortCol, rsd = state.repSortDir === 'asc' ? 1 : -1;
+    const repEntries = Object.entries(repMap).map(([name, data]) => {
+      const avgStage = Object.entries(data.stages).reduce((sum, [s, c]) => sum + parseInt(s) * c, 0) / data.count;
+      return { name, ...data, avgStage };
+    });
+    repEntries.sort((a, b) => {
+      if (rsc === 'name') return rsd * a.name.localeCompare(b.name);
+      if (rsc === 'accts') return rsd * (a.count - b.count);
+      if (rsc === 'stage') return rsd * (a.avgStage - b.avgStage);
+      return 0;
+    });
+    const rsIcon = (col) => { if (rsc !== col) return ' ↕'; return rsd > 0 ? ' ↑' : ' ↓'; };
     repHtml = `<div class="dash-section">
       <h3>Rep Coverage</h3>
       <div class="table-wrap"><table class="data-table">
-        <thead><tr><th>Rep</th><th>Accounts</th><th>Regions</th><th>Avg Stage</th></tr></thead>
-        <tbody>${Object.entries(repMap).sort((a,b) => b[1].count - a[1].count).map(([name, data]) => {
-          const avgStage = Object.entries(data.stages).reduce((sum, [s, c]) => sum + parseInt(s) * c, 0) / data.count;
+        <thead><tr>
+          <th style="cursor:pointer" onclick="state.repSortCol=state.repSortCol==='name'?'name':'name';state.repSortDir=state.repSortCol==='name'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='name';renderDashboardHeatmap('${el.id}')">Rep${rsIcon('name')}</th>
+          <th style="cursor:pointer" onclick="state.repSortDir=state.repSortCol==='accts'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='accts';renderDashboardHeatmap('${el.id}')">Accounts${rsIcon('accts')}</th>
+          <th>Regions</th>
+          <th style="cursor:pointer" onclick="state.repSortDir=state.repSortCol==='stage'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='stage';renderDashboardHeatmap('${el.id}')">Avg Stage${rsIcon('stage')}</th>
+        </tr></thead>
+        <tbody>${repEntries.map(r => {
           return `<tr>
-            <td><strong>${esc(name)}</strong></td>
-            <td>${data.count}</td>
-            <td style="font-size:12px">${[...data.regions].join(', ') || '—'}</td>
+            <td><strong>${esc(r.name)}</strong></td>
+            <td>${r.count}</td>
+            <td style="font-size:12px">${[...r.regions].join(', ') || '—'}</td>
             <td style="min-width:120px">
               <div style="display:flex;align-items:center;gap:6px">
                 <div style="flex:1;height:6px;background:var(--g100);border-radius:3px;overflow:hidden">
-                  <div style="height:100%;width:${(avgStage/5*100)}%;border-radius:3px;background:${avgStage>=4?'#F58220':avgStage>=3?'#FBBF24':avgStage>=2?'#38BDF8':'#94A3B8'}"></div>
+                  <div style="height:100%;width:${(r.avgStage/5*100)}%;border-radius:3px;background:${r.avgStage>=4?'#F58220':r.avgStage>=3?'#FBBF24':r.avgStage>=2?'#38BDF8':'#94A3B8'}"></div>
                 </div>
-                <span style="font-size:11px;font-weight:600;color:var(--g600);min-width:22px">${avgStage.toFixed(1)}</span>
+                <span style="font-size:11px;font-weight:600;color:var(--g600);min-width:22px">${r.avgStage.toFixed(1)}</span>
               </div>
             </td>
           </tr>`;
@@ -3323,13 +3505,13 @@ function renderDashboardHeatmap(targetId) {
   el.innerHTML = `
     <div class="dash-section">
       <h3>Account Locations</h3>
-      <div id="leaflet-heatmap" class="leaflet-map-container" style="height:70vh"></div>
+      <div id="leaflet-heatmap" class="leaflet-map-container"></div>
       <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 0 4px">
-        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#94A3B8"></span>Identify</span>
-        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#38BDF8"></span>Engage</span>
-        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#34D399"></span>Demonstrate</span>
-        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#FBBF24"></span>Convert</span>
-        <span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--g500)"><span style="width:8px;height:8px;border-radius:50%;background:#F58220"></span>Grow</span>
+        <span style="display:flex;align-items:center;gap:4.8px;font-size:13.2px;color:var(--g500)"><span style="width:9.6px;height:9.6px;border-radius:50%;background:#94A3B8"></span>Identify</span>
+        <span style="display:flex;align-items:center;gap:4.8px;font-size:13.2px;color:var(--g500)"><span style="width:9.6px;height:9.6px;border-radius:50%;background:#38BDF8"></span>Engage</span>
+        <span style="display:flex;align-items:center;gap:4.8px;font-size:13.2px;color:var(--g500)"><span style="width:9.6px;height:9.6px;border-radius:50%;background:#34D399"></span>Demonstrate</span>
+        <span style="display:flex;align-items:center;gap:4.8px;font-size:13.2px;color:var(--g500)"><span style="width:9.6px;height:9.6px;border-radius:50%;background:#FBBF24"></span>Convert</span>
+        <span style="display:flex;align-items:center;gap:4.8px;font-size:13.2px;color:var(--g500)"><span style="width:9.6px;height:9.6px;border-radius:50%;background:#F58220"></span>Grow</span>
       </div>
     </div>
     ${repHtml}
@@ -3341,7 +3523,7 @@ function renderDashboardHeatmap(targetId) {
   const allCounts = {};
   if (mapShowAU) { auStates.forEach(r => { mapRegions.push(r); allCounts[r] = auCounts[r]; }); }
   if (mapShowNZ) { nzRegions.forEach(r => { mapRegions.push(r); allCounts[r] = nzCounts[r]; }); }
-  requestAnimationFrame(() => initLeafletMap('leaflet-heatmap', mapRegions, allCounts, accounts));
+  setTimeout(() => initLeafletMap('leaflet-heatmap', mapRegions, allCounts, accounts), 50);
 }
 
 // ======================== RENDER: PROFILE ========================
@@ -3405,6 +3587,104 @@ const PLAYBOOK = {
     tip: 'A converted account is an annuity — protect it. The cost of losing a converted account is 5-10× the cost of acquiring a new one.'
   }
 };
+
+const PLAYBOOK_REF = [
+  {
+    id: 'vp',
+    title: 'Value Proposition by Buyer Persona',
+    colour: '#6366F1',
+    intro: 'Each stakeholder within an HVAC contractor has different priorities. Tailor the message to each persona.',
+    items: [
+      { heading: 'Estimating Manager', text: 'Primary concern: Winning tenders at competitive margin. Fear: Over-specifying and losing on price. Message: Grooved systems reduce installed cost by 20–35% vs. weld through labour savings — Victaulic wins you margin, not just tenders.' },
+      { heading: 'Project Engineer', text: 'Primary concern: Schedule certainty, no site problems. Fear: System leaks, installation errors, RFIs. Message: Grooved joints are self-restraining and self-sealing; no radiographic testing; on-site Victaulic field rep for first project.' },
+      { heading: 'Procurement Manager', text: 'Primary concern: Price, availability, supplier reliability. Fear: Stock-outs on a live site. Message: PSA guarantees priority stock; Australian warehousing at Reece & Actrol branches nationally.' },
+      { heading: 'BIM / Design Lead', text: 'Primary concern: Coordination accuracy, clash avoidance. Fear: Late-stage clashes causing rework. Message: Full Revit/BIM-ready product library with accurate geometry; Victaulic application engineers provide design-assist services.' },
+      { heading: 'Site Foreman / Supervisor', text: 'Primary concern: Ease of installation, crew safety. Fear: Learning a new system mid-project. Message: Certified Installer Program with hands-on training; simpler installation than welding — no hot work permits required on site.' },
+      { heading: 'MD / Director / Owner', text: 'Primary concern: Margin, reputation, client retention. Fear: Project failures, warranty claims. Message: Victaulic\'s 120-year global track record; FM/UL certifications accepted by all major clients; co-branded case studies to build contractor brand.' }
+    ]
+  },
+  {
+    id: 'cd',
+    title: 'Competitive Displacement Tactics',
+    colour: '#DC2626',
+    intro: 'Strategies for displacing incumbent piping systems across the three main competitor categories.',
+    items: [
+      { heading: 'Displacing Welded Systems (Most Common)', text: 'Run a Weld vs. Groove TCO comparison on every active tender as a free service. Hot work elimination: under AS 1940 and insurance requirements, hot work on hospitals/data centres requires permits and fire watches — position no-hot-work advantage. WHS/OHS: welding in congested plant rooms presents manual handling and fume risks. NCC/BCA compliance: offer free Victaulic-specified engineer\'s documentation for fire and plumbing compliance.' },
+      { heading: 'Displacing Competitor Grooved (Gruvlok/Anvil)', text: 'Share third-party test results and case studies demonstrating AGS™ coupling performance. Total system sourcing: Victaulic supplies couplings, fittings, valves, and fire protection — Gruvlok cannot match this breadth. Certification advantage: Defence and Health clients require FM/UL-listed products by name. Factory Solutions differentiation: no grooved competitor offers comparable prefabrication.' },
+      { heading: 'Displacing Press-Fit / Push-Fit (Copper & Stainless)', text: 'Scalability: press-fit suits smaller bore; for 2"+ pipe, grooved is faster and lower total cost. Flexibility: Victaulic flexible couplings accommodate thermal movement and vibration in large chiller plant rooms — press-fit joints do not. Fire integration: once using Victaulic for HVAC, natural cross-sell to VicFlex™ fire sprinkler drops and grooved fire headers.' }
+    ]
+  },
+  {
+    id: 'ct',
+    title: 'Conversion Tools & Support Programs',
+    colour: '#0891B2',
+    intro: 'The Victaulic Australia Contractor Toolkit — resources available to support conversion at every stage.',
+    items: [
+      { heading: 'TCO Calculator (Digital)', text: 'Web-based tool: enter pipe diameter, length, fitting count — outputs Victaulic vs. weld labour cost & schedule comparison. Target: Estimating Manager, Project Engineer.' },
+      { heading: 'CPD Lunch & Learn Program', text: '45-min AIRAH-registered CPD session delivered at contractor offices covering grooved systems, seismic, and Factory Solutions. Target: Project Engineers, BIM Leads, Technical Directors.' },
+      { heading: 'Certified Installer Program (CIP)', text: 'Half-day hands-on training; Victaulic-certified status; targets site supervisors & foremen; nationally recognised. Target: Site Foreman, Supervisors, HSE Managers.' },
+      { heading: 'Factory Solutions Discovery Tour', text: 'Facilitated site visit to completed Factory Solutions project or Victaulic manufacturing facility. Target: MD/Director, Estimating Manager, Procurement.' },
+      { heading: 'BIM/Revit Product Library', text: 'Full Victaulic product range as downloadable Revit families with COBie data; free to all specifiers. Target: BIM Leads, Revit Coordinators, Design Engineers.' },
+      { heading: 'Project Bid Support Service', text: 'Victaulic application engineer attends tender prep; provides material take-off, spec clause, and TCO analysis at no charge for key accounts. Target: Estimating Manager, Project Engineer.' },
+      { heading: 'PSA Agreement', text: 'Volume-tiered pricing; dedicated account manager; priority stock; QBRs; co-branded case study on completion. Target: Procurement Manager, MD/Director.' },
+      { heading: 'Reference Project Network', text: 'Curated list of converted AU contractors willing to provide peer-to-peer references; facilitated introduction by Victaulic account manager. Target: All personas — especially skeptical technical leads.' },
+      { heading: 'First Project Support Package', text: 'On-site Victaulic field rep for installation kick-off; dedicated hotline; same-day technical response commitment for first 30 days. Target: Site Foreman, Project Engineer.' }
+    ]
+  },
+  {
+    id: 'psa',
+    title: 'Preferred Supplier Agreement (PSA) Structure',
+    colour: '#7C3AED',
+    intro: 'The PSA is the commercial mechanism that formalises conversion and creates structural loyalty. Position as a partnership framework, not a rebate scheme.',
+    items: [
+      { heading: 'Silver Tier (AUD $150K–500K pa)', text: 'Pricing: 5% off standard list. Account Manager: Shared (state-level). Stock: Standard allocation. QBR: Bi-annual. Support: Phone/email. CIP Training: 2 staff free/year. Factory Solutions: Standard quoting. Co-Marketing: Logo on case studies.' },
+      { heading: 'Gold Tier (AUD $500K–1.5M pa)', text: 'Pricing: 8–10% off standard list. Account Manager: Dedicated AM. Stock: Priority allocation. QBR: Quarterly. Support: On-site application engineer access. CIP Training: 5 staff free/year. Factory Solutions: Priority quoting + design-assist. Co-Marketing: Co-branded case study (1/year). Executive Access: Annual meeting with ANZ Country Manager.' },
+      { heading: 'Platinum Tier (AUD $1.5M+ pa)', text: 'Pricing: 12–15% + project-specific pricing. Account Manager: Senior AM + Technical Specialist. Stock: Guaranteed strategic reservation. QBR: Monthly + bi-annual exec review. Support: Embedded support for major projects. CIP Training: Unlimited; on-site option. Factory Solutions: Co-development program + pilot. Co-Marketing: Joint press releases; joint tender submissions. Executive Access: Annual meeting with Victaulic Global VP APAC.' },
+      { heading: 'Implementation Note', text: 'Position as a partnership framework — shared pipeline visibility, joint bid pursuit, and technical collaboration. Target a 2-year rolling agreement with annual performance reviews, not a transactional discount structure.' }
+    ]
+  },
+  {
+    id: 'kap',
+    title: 'Key Account Plan Template',
+    colour: '#059669',
+    intro: 'Each Tier 1 and Tier 2 account should have a living Account Plan maintained by the account manager and reviewed quarterly.',
+    items: [
+      { heading: 'Account Overview', text: 'Company background, revenue size, key sectors served, offices by state, number of HVAC projects per annum.' },
+      { heading: 'Stakeholder Map', text: 'Key contacts by role (Estimating, Engineering, Procurement, Site, Executive); relationship owner at Victaulic; relationship health rating.' },
+      { heading: 'Current Spend Analysis', text: 'Victaulic revenue by product line (last 12 months); estimated total HVAC piping wallet; Victaulic share of wallet; key competitor products in use.' },
+      { heading: 'Active Project Pipeline', text: 'Known active tenders and projects (project name, location, value, sector, piping spec status, Victaulic opportunity); updated monthly.' },
+      { heading: 'Conversion Goals', text: '12-month revenue target; product expansion goals (e.g. introduce valves or VicFlex by Q3); PSA tier target; CIP enrolment target.' },
+      { heading: 'Action Plan', text: 'Specific next actions with owner, due date, and status (e.g. \'Deliver TCO analysis for ABC Hospital project by 15 June — John Smith, Victaulic\').' },
+      { heading: 'Risks & Barriers', text: 'Key obstacles to conversion (e.g. incumbent supplier relationship, price sensitivity, lack of certified installers); mitigation actions.' },
+      { heading: 'Executive Summary', text: 'One-page narrative summary for senior leadership; health rating (Green/Amber/Red); year-on-year trend.' }
+    ]
+  },
+  {
+    id: 'rr',
+    title: 'Risk Register',
+    colour: '#B91C1C',
+    intro: 'Key risks to the conversion program with likelihood, impact, and mitigation strategies.',
+    items: [
+      { heading: 'Incumbent supplier counter-offer (price war)', text: 'Likelihood: High | Impact: High. Mitigation: Lead with TCO, not unit price. Arm account managers with fully-costed comparison tools before any pricing conversation.' },
+      { heading: 'Contractor staff turnover erasing relationships', text: 'Likelihood: High | Impact: Medium. Mitigation: Multi-level relationship strategy — never rely on single contact. Map MD, estimating, engineering, and site simultaneously.' },
+      { heading: 'Construction market downturn', text: 'Likelihood: Medium | Impact: High. Mitigation: Diversify across project types (health, defence, data centres are more recession-resistant than commercial office). Target upgrade and retrofit projects.' },
+      { heading: 'Slow stock availability undermining credibility', text: 'Likelihood: Medium | Impact: High. Mitigation: Pre-position strategic stock in AU warehouse for PSA accounts; review SKU coverage with Reece and Actrol quarterly.' },
+      { heading: 'Competitor product improvements close the gap', text: 'Likelihood: Low | Impact: Medium. Mitigation: Monitor Gruvlok and press-fit launches. Maintain innovation pipeline — Factory Solutions and Vortex™ are current differentiators.' },
+      { heading: 'Insufficient Victaulic technical headcount in AU', text: 'Likelihood: Medium | Impact: High. Mitigation: Prioritise application engineer hires in SYD and MEL as KAC program scales. Under-resourcing Stage 3 is the most common reason conversion stalls.' }
+    ]
+  },
+  {
+    id: 'iap',
+    title: 'Immediate Action Plan',
+    colour: '#EA580C',
+    intro: 'First 6 months of program execution — foundation, activation, and first conversions.',
+    items: [
+      { heading: 'Month 1–2: Foundation', text: 'Complete Tier 1 account intelligence packs for all 8 national majors. Assign dedicated account manager ownership for each Tier 1 account. Book AMCA chapter event sponsorships for Q1/Q2. Launch CIP marketing to existing contractor contacts. Develop TCO Calculator digital tool for estimating teams.' },
+      { heading: 'Month 3–4: Activation', text: 'Deliver first 8 Lunch & Learn sessions at Tier 1 contractor offices. Run Victaulic Contractor Summit — Sydney (target 40+ attendees from priority accounts). Initiate PSA conversations with 4 Tier 1 accounts already partially converted. Conduct Factory Solutions discovery tours for 3 Tier 1 estimating/BD leads.' },
+      { heading: 'Month 5–6: First Conversions', text: 'Target first PSA signatures — Silver tier minimum for 2–3 accounts. Deploy Bid Support Service on 3–5 active tenders at Tier 1/2 targets. Enrol first cohort of 20 individuals in CIP nationally. Establish Account Plans for all Tier 1 and top 10 Tier 2 accounts.' }
+    ]
+  }
+];
 
 // ======================== RENDER: TEAM ========================
 function renderTeamView() {
@@ -3542,10 +3822,21 @@ function renderReporting() {
   `;
 }
 
+function toggleAllPlaybook() {
+  const stages = document.querySelectorAll('#view-playbook .playbook-stage');
+  const allOpen = [...stages].every(s => s.classList.contains('open'));
+  stages.forEach(s => { if (allOpen) s.classList.remove('open'); else s.classList.add('open'); });
+  const btn = document.getElementById('pb-expand-btn');
+  if (btn) btn.textContent = allOpen ? 'Expand All' : 'Collapse All';
+}
 function renderPlaybook() {
   const el = document.getElementById('view-playbook');
-  let html = `<div class="view-header"><h1>Playbook</h1></div>
-    <div style="padding:0 12px 8px;font-size:13px;color:var(--g500)">Account Conversion Strategy — 5 stages from identification to retention.</div>`;
+  let html = `<div class="view-header" style="display:flex;align-items:center;justify-content:space-between"><h1>Playbook</h1>
+    <button onclick="toggleAllPlaybook()" id="pb-expand-btn" style="padding:6px 14px;font-size:12px;font-weight:600;border-radius:var(--radius-xs);border:1px solid var(--g200);background:var(--white);color:var(--g600);cursor:pointer">Expand All</button></div>
+    <div style="margin:0 12px 14px;padding:14px 16px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:var(--radius)">
+      <div style="font-size:15px;font-weight:700;color:var(--vic-orange);margin-bottom:6px">Strategic Objective</div>
+      <div style="font-size:14px;color:#78350F;line-height:1.6">Convert Australia's top HVAC mechanical contractors into active, recurring Victaulic customers through a structured Key Account Conversion program. Move each target account through a five-stage funnel, from initial identification through to long-term growth, building preferred supplier relationships, expanding product adoption, and maximising wallet share across grooved couplings, valves, and Factory Solutions.</div>
+    </div>`;
 
   for (let s = 1; s <= 5; s++) {
     const stage = STAGES[s];
@@ -3564,6 +3855,24 @@ function renderPlaybook() {
       </div>
     </div>`;
   }
+
+  // Reference sections from strategy brief
+  html += `<div style="padding:12px 12px 8px;font-size:13px;color:var(--g500);margin-top:8px;border-top:2px solid var(--g200)">Strategy Reference — supporting materials from the Key Account Conversion brief.</div>`;
+
+  PLAYBOOK_REF.forEach(ref => {
+    html += `
+    <div class="playbook-stage" id="pb-ref-${ref.id}">
+      <div class="playbook-stage-header" onclick="document.getElementById('pb-ref-${ref.id}').classList.toggle('open')">
+        <div class="stage-num" style="background:${ref.colour};font-size:11px;width:28px;height:28px">▸</div>
+        <h3>${ref.title}</h3>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="playbook-stage-body">
+        <div style="font-size:13px;color:var(--g600);margin-bottom:10px;line-height:1.5">${ref.intro}</div>
+        ${ref.items.map(item => `<div class="playbook-item"><strong>${item.heading}</strong>${item.text}</div>`).join('')}
+      </div>
+    </div>`;
+  });
 
   el.innerHTML = html;
 }
@@ -3704,9 +4013,10 @@ function renderAdminPanel() {
           <div id="matrix-admin-rows" style="display:flex;flex-direction:column;gap:4px">
             ${state.matrixConfig.rows.map((r, i) => `<div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--g50);border-radius:4px">
               <span style="flex:1;font-size:13px">${esc(r.label)}</span>
-              <button onclick="moveMatrixItem('${r.id}','row',${i},-1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
-              <button onclick="moveMatrixItem('${r.id}','row',${i},1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===state.matrixConfig.rows.length-1?'disabled':''}>▼</button>
-              <button onclick="deleteMatrixItem('${r.id}','row')" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:14px">×</button>
+              <button onclick="editMatrixItem('${r.id}','row','${esc(r.label)}',event)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" title="Rename">✎</button>
+              <button onclick="moveMatrixItem('${r.id}','row',${i},-1)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
+              <button onclick="moveMatrixItem('${r.id}','row',${i},1)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" ${i===state.matrixConfig.rows.length-1?'disabled':''}>▼</button>
+              <button onclick="deleteMatrixItem('${r.id}','row',event)" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:18px">×</button>
             </div>`).join('')}
           </div>
           <div style="display:flex;gap:4px;margin-top:6px">
@@ -3719,9 +4029,10 @@ function renderAdminPanel() {
           <div id="matrix-admin-cols" style="display:flex;flex-direction:column;gap:4px">
             ${state.matrixConfig.cols.map((c, i) => `<div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--g50);border-radius:4px">
               <span style="flex:1;font-size:13px">${esc(c.label)}</span>
-              <button onclick="moveMatrixItem('${c.id}','col',${i},-1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
-              <button onclick="moveMatrixItem('${c.id}','col',${i},1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===state.matrixConfig.cols.length-1?'disabled':''}>▼</button>
-              <button onclick="deleteMatrixItem('${c.id}','col')" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:14px">×</button>
+              <button onclick="editMatrixItem('${c.id}','col','${esc(c.label)}',event)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" title="Rename">✎</button>
+              <button onclick="moveMatrixItem('${c.id}','col',${i},-1)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
+              <button onclick="moveMatrixItem('${c.id}','col',${i},1)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" ${i===state.matrixConfig.cols.length-1?'disabled':''}>▼</button>
+              <button onclick="deleteMatrixItem('${c.id}','col',event)" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:18px">×</button>
             </div>`).join('')}
           </div>
           <div style="display:flex;gap:4px;margin-top:6px">
@@ -3735,9 +4046,10 @@ function renderAdminPanel() {
             ${state.matrixConfig.statuses.map((s, i) => `<div style="display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--g50);border-radius:4px">
               <input type="color" value="${s.color||'#94A3B8'}" onchange="updateMatrixColor('${s.id}',this.value)" style="width:22px;height:22px;border:none;background:none;cursor:pointer;padding:0">
               <span style="flex:1;font-size:13px">${esc(s.label)}</span>
-              <button onclick="moveMatrixItem('${s.id}','status',${i},-1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
-              <button onclick="moveMatrixItem('${s.id}','status',${i},1)" style="padding:2px 4px;border:none;background:none;cursor:pointer;font-size:11px;color:var(--g400)" ${i===state.matrixConfig.statuses.length-1?'disabled':''}>▼</button>
-              <button onclick="deleteMatrixItem('${s.id}','status')" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:14px">×</button>
+              <button onclick="editMatrixItem('${s.id}','status','${esc(s.label)}',event)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" title="Rename">✎</button>
+              <button onclick="moveMatrixItem('${s.id}','status',${i},-1)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" ${i===0?'disabled':''}>▲</button>
+              <button onclick="moveMatrixItem('${s.id}','status',${i},1)" style="padding:2px 5px;border:none;background:none;cursor:pointer;font-size:15px;color:var(--g400)" ${i===state.matrixConfig.statuses.length-1?'disabled':''}>▼</button>
+              <button onclick="deleteMatrixItem('${s.id}','status',event)" style="padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--danger);font-size:18px">×</button>
             </div>`).join('')}
           </div>
           <div style="display:flex;gap:4px;margin-top:6px">
@@ -3964,18 +4276,25 @@ async function addMatrixStatus() {
   } catch (e) { toast('Error: ' + e.message); }
 }
 
-async function deleteMatrixItem(id, type) {
+function deleteMatrixItem(id, type, event) {
   const arr = type === 'row' ? state.matrixConfig.rows : type === 'col' ? state.matrixConfig.cols : state.matrixConfig.statuses;
   const item = arr.find(r => r.id === id);
-  if (!confirm(`Delete "${item?.label}"? Any matrix data using this will be affected.`)) return;
-  try {
-    const { error } = await supa.from('kac_matrix_config').delete().eq('id', id);
-    if (error) throw error;
-    const idx = arr.findIndex(r => r.id === id);
-    if (idx >= 0) arr.splice(idx, 1);
-    renderAdminPanel();
-    toast('Deleted');
-  } catch (e) { toast('Error: ' + e.message); }
+  showPopup({
+    title: 'Delete Item',
+    message: `Delete "<strong>${item?.label || ''}</strong>"? Any matrix data using this will be affected.`,
+    confirmLabel: 'Delete',
+    danger: true,
+    onConfirm: async () => {
+      try {
+        const { error } = await supa.from('kac_matrix_config').delete().eq('id', id);
+        if (error) throw error;
+        const idx = arr.findIndex(r => r.id === id);
+        if (idx >= 0) arr.splice(idx, 1);
+        renderAdminPanel();
+        toast('Deleted');
+      } catch (e) { toast('Error: ' + e.message); }
+    }
+  }, event);
 }
 
 async function moveMatrixItem(id, type, currentIdx, direction) {
@@ -3993,6 +4312,27 @@ async function moveMatrixItem(id, type, currentIdx, direction) {
     arr[newIdx].sort_order = newIdx;
     renderAdminPanel();
   } catch (e) { toast('Error: ' + e.message); }
+}
+
+function editMatrixItem(id, type, currentLabel, event) {
+  showPopup({
+    title: 'Rename',
+    message: `Enter a new name for "<strong>${currentLabel}</strong>"`,
+    input: true,
+    inputValue: currentLabel,
+    confirmLabel: 'Save',
+    onConfirm: async (newLabel) => {
+      if (!newLabel || newLabel.trim() === '' || newLabel === currentLabel) return;
+      try {
+        await supa.from('kac_matrix_config').update({ label: newLabel.trim() }).eq('id', id);
+        const list = type === 'row' ? state.matrixConfig.rows : type === 'col' ? state.matrixConfig.cols : state.matrixConfig.statuses;
+        const item = list.find(x => x.id === id);
+        if (item) item.label = newLabel.trim();
+        renderAdminPanel();
+        toast('Renamed to "' + newLabel.trim() + '"');
+      } catch (e) { toast('Error: ' + e.message); }
+    }
+  }, event);
 }
 
 async function updateMatrixColor(id, color) {
@@ -4036,23 +4376,25 @@ function renderProfile() {
       </span></div>
     </div>
     <div class="profile-card">
-      <h3>Data</h3>
-      <div class="profile-row"><span class="label">Total Accounts</span><span class="value">${state.accounts.length}</span></div>
-      <div class="profile-row"><span class="label">Sync Status</span><span class="value">${state.syncStatus === 'synced' ? 'All data backed up' : state.syncStatus === 'offline' ? 'Offline — saved locally' : 'Syncing...'}</span></div>
-    </div>
-    <div class="profile-card">
-      <h3>Security</h3>
+      <h3>Change Password</h3>
       <div id="pw-change-form">
         <div class="form-group" style="margin-bottom:10px">
           <label style="font-size:13px;font-weight:600;color:var(--g500)">New Password</label>
-          <input type="password" id="pw-new" placeholder="Min 8 characters" style="width:100%;padding:10px 12px;border:1px solid var(--g200);border-radius:var(--radius-xs);font-size:14px">
+          <input type="password" id="pw-new" placeholder="Min 8 chars, 1 special character" style="width:100%;padding:10px 12px;border:1px solid var(--g200);border-radius:var(--radius-xs);font-size:14px">
         </div>
         <div class="form-group" style="margin-bottom:12px">
           <label style="font-size:13px;font-weight:600;color:var(--g500)">Confirm Password</label>
           <input type="password" id="pw-confirm" placeholder="Repeat new password" style="width:100%;padding:10px 12px;border:1px solid var(--g200);border-radius:var(--radius-xs);font-size:14px">
         </div>
-        <button class="btn-export" onclick="handleChangePassword()" style="background:var(--vic-orange);color:#fff;width:100%">Change Password</button>
+        <button class="btn-export" onclick="handleChangePassword()" style="background:var(--vic-orange);color:#fff;width:100%">Save Changes</button>
       </div>
+    </div>
+    <div class="profile-card">
+      <h3>Data</h3>
+      <div class="profile-row"><span class="label">Total Accounts</span><span class="value">${state.accounts.length}</span></div>
+      <div class="profile-row"><span class="label">Last Login</span><span class="value">${formatDateTime(state.user?.last_sign_in_at)}</span></div>
+      <div class="profile-row"><span class="label">Profile Updated</span><span class="value">${formatDateTime(p.updated_at)}</span></div>
+      <div class="profile-row"><span class="label">Sync Status</span><span class="value">${state.syncStatus === 'synced' ? 'All data backed up' : state.syncStatus === 'offline' ? 'Offline — saved locally' : 'Syncing...'}</span></div>
     </div>
     <div class="profile-card">
       <h3>App</h3>
@@ -4101,6 +4443,7 @@ async function handleChangePassword() {
   const pw = document.getElementById('pw-new').value;
   const confirm = document.getElementById('pw-confirm').value;
   if (!pw || pw.length < 8) { toast('Password must be at least 8 characters'); return; }
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw)) { toast('Password must contain at least one special character'); return; }
   if (pw !== confirm) { toast('Passwords do not match'); return; }
   try {
     const { error } = await supabase.auth.updateUser({ password: pw });
@@ -4223,7 +4566,7 @@ function generatePDFReport() {
   // Funnel summary
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text('Conversion Funnel', margin, y);
+  doc.text('Conversion Pipeline', margin, y);
   y += 7;
   const stageNames = ['IDENTIFY', 'ENGAGE', 'DEMONSTRATE', 'CONVERT', 'GROW & RETAIN'];
   const barMax = Math.max(...stageCounts, 1);
@@ -4469,6 +4812,185 @@ function generatePDFReport() {
   toast('PDF report downloaded');
 }
 
+// ======================== PER-PAGE PDF REPORTS ========================
+// Routes the header PDF button to a report tailored to the current page.
+function generatePageReport() {
+  const view = state.currentView;
+  if (view === 'matrix') return generateMatrixReport();
+  if (view === 'heatmap') return generateHeatmapReport();
+  if (view === 'accounts') return generateAccountsReport();
+  // dashboard, reporting, and anything else → full conversion report
+  return generatePDFReport();
+}
+
+function _pdfScaffold(orientation) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: orientation || 'landscape', unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 14;
+  const VIC_ORANGE = [245, 130, 32];
+  const VIC_BLACK = [26, 26, 26];
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  function addHeader(title) {
+    doc.setFillColor(...VIC_ORANGE); doc.rect(0, 0, pageW, 18, 'F');
+    doc.setFillColor(...VIC_BLACK); doc.rect(0, 18, pageW, 10, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16); doc.text('VICTAULIC', margin, 12);
+    doc.setFontSize(10); doc.text('KEY ACCOUNT CONVERSION', margin + 52, 12);
+    doc.setFontSize(9); doc.text(title.toUpperCase(), margin, 25);
+    doc.text(dateStr, pageW - margin, 25, { align: 'right' });
+    doc.setTextColor(0, 0, 0); return 34;
+  }
+  function addFooter(pageNum) {
+    doc.setFontSize(7); doc.setTextColor(150, 150, 150);
+    doc.text('CONFIDENTIAL — Victaulic Account Conversion Report', margin, pageH - 6);
+    doc.text(`Page ${pageNum}`, pageW - margin, pageH - 6, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+  }
+  return { doc, pageW, pageH, margin, VIC_ORANGE, VIC_BLACK, now, dateStr, addHeader, addFooter };
+}
+function _ovPct(accountId) {
+  const totalItems = Object.values(STAGES).reduce((s, st) => s + st.items.length, 0);
+  const totalDone = Object.keys(STAGES).reduce((s, k) => s + getStageCompletion(accountId, parseInt(k)).done, 0);
+  return totalItems ? Math.round(totalDone / totalItems * 100) : 0;
+}
+function _repNm(id) { return (state.profiles || []).find(p => p.id === id)?.full_name || ''; }
+function _tierLabel(t) { return t === -1 ? 'Owner' : t === 0 ? 'Engineer' : 'T' + t; }
+function _hexToRgb(hex) {
+  if (!hex) return null;
+  let h = String(hex).replace('#', '');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return null;
+  return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+}
+
+function generateAccountsReport() {
+  const s = _pdfScaffold('landscape');
+  const { doc, margin, VIC_BLACK } = s;
+  const search = (document.getElementById('search-accounts')?.value || '').toLowerCase();
+  let accounts = getDashFilteredAccounts();
+  if (search) accounts = accounts.filter(a => a.company_name.toLowerCase().includes(search) || (a.hq_city || '').toLowerCase().includes(search) || (a.regions || '').toLowerCase().includes(search));
+  accounts = [...accounts].sort((a, b) => a.company_name.localeCompare(b.company_name));
+  let y = s.addHeader('Accounts List');
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text(`${accounts.length} account${accounts.length === 1 ? '' : 's'}${search ? ` matching "${search}"` : ''}`, margin, y);
+  y += 6;
+  doc.autoTable({
+    startY: y, margin: { left: margin, right: margin },
+    head: [['Company', 'Country', 'Stakeholder', 'City', 'Regions', 'Stage', 'Progress', 'Rep']],
+    body: accounts.map(a => [a.company_name, a.country, _tierLabel(a.tier), a.hq_city || '—', a.regions || '—', STAGES[a.current_stage].name, _ovPct(a.id) + '%', _repNm(a.assigned_to) || '—']),
+    styles: { fontSize: 8, cellPadding: 2, font: 'helvetica', overflow: 'linebreak' },
+    headStyles: { fillColor: VIC_BLACK, textColor: [255, 255, 255], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: { 6: { halign: 'center' } }
+  });
+  s.addFooter(1);
+  doc.save(`KAC_Accounts_${s.now.toISOString().slice(0, 10)}.pdf`);
+  toast('PDF report downloaded');
+}
+
+function generateHeatmapReport() {
+  const s = _pdfScaffold('portrait');
+  const { doc, margin, VIC_BLACK } = s;
+  const accounts = getDashFilteredAccounts();
+  let y = s.addHeader('Heatmap — Regional Breakdown');
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text(`${accounts.length} account${accounts.length === 1 ? '' : 's'} by region and conversion stage`, margin, y);
+  y += 6;
+  const regCounts = {};
+  accounts.forEach(a => {
+    const regs = (a.regions || '').split(',').map(x => x.trim()).filter(Boolean);
+    (regs.length ? regs : ['(no region)']).forEach(r => {
+      if (!regCounts[r]) regCounts[r] = { total: 0, st: [0, 0, 0, 0, 0] };
+      regCounts[r].total++;
+      const st = a.current_stage; if (st >= 1 && st <= 5) regCounts[r].st[st - 1]++;
+    });
+  });
+  const regRows = Object.keys(regCounts).sort((a, b) => regCounts[b].total - regCounts[a].total)
+    .map(r => [r, regCounts[r].total, ...regCounts[r].st]);
+  doc.autoTable({
+    startY: y, margin: { left: margin, right: margin },
+    head: [['Region', 'Total', 'Identify', 'Engage', 'Demonstrate', 'Convert', 'Grow']],
+    body: regRows,
+    styles: { fontSize: 8, cellPadding: 2, font: 'helvetica' },
+    headStyles: { fillColor: VIC_BLACK, textColor: [255, 255, 255], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'center' }, 6: { halign: 'center' } }
+  });
+  s.addFooter(1);
+  doc.save(`KAC_Heatmap_${s.now.toISOString().slice(0, 10)}.pdf`);
+  toast('PDF report downloaded');
+}
+
+function generateMatrixReport() {
+  const cfg = state.matrixConfig || {};
+  const products = cfg.rows || [];
+  const cols = cfg.cols || [];
+  const statuses = cfg.statuses || [];
+  if (!products.length || !cols.length) { toast('No matrix configured yet'); return; }
+  const approvedStatus = statuses.find(x => x.label === 'Approved');
+  const naStatus = statuses.find(x => x.label === 'N/A');
+  const statusById = id => statuses.find(x => x.id === id);
+  const accts = getDashFilteredAccounts().map(a => {
+    const data = state.matrixData[a.id] || [];
+    let approved = 0, eligible = 0;
+    products.forEach(row => cols.forEach(col => {
+      const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
+      if (cell && naStatus && cell.status_id === naStatus.id) return;
+      eligible++;
+      if (cell && approvedStatus && cell.status_id === approvedStatus.id) approved++;
+    }));
+    return { ...a, mxRate: eligible > 0 ? Math.round(approved / eligible * 100) : 0 };
+  }).sort((a, b) => b.mxRate - a.mxRate || a.company_name.localeCompare(b.company_name));
+
+  const s = _pdfScaffold('landscape');
+  const { doc, margin, VIC_BLACK } = s;
+  let y = s.addHeader('Acceptance Matrix');
+  doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text(`${accts.length} account${accts.length === 1 ? '' : 's'}   Legend:  A = Approved   P = In Progress   X = Rejected   - = N/A   blank = Not Started`, margin, y);
+  y += 6;
+
+  const shortFor = lbl => lbl === 'Approved' ? 'A' : lbl === 'In Progress' ? 'P' : lbl === 'Rejected' ? 'X' : lbl === 'N/A' ? '-' : '';
+  const head = [['Company', '%', ...products.map(p => p.label || p.name || '')]];
+  const cellColors = [];
+  const body = accts.map(a => {
+    const data = state.matrixData[a.id] || [];
+    const rowColors = [];
+    const cells = products.map(row => {
+      let best = null;
+      cols.forEach(col => {
+        const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
+        if (cell) { const st = statusById(cell.status_id); if (st && st.label !== 'Not Started') best = st; }
+      });
+      rowColors.push(best && best.color ? best.color : null);
+      return best ? shortFor(best.label) : '';
+    });
+    cellColors.push(rowColors);
+    return [a.company_name, a.mxRate + '%', ...cells];
+  });
+
+  doc.autoTable({
+    startY: y, margin: { left: margin, right: margin },
+    head, body,
+    styles: { fontSize: 7, cellPadding: 1.5, font: 'helvetica', halign: 'center', overflow: 'linebreak' },
+    headStyles: { fillColor: VIC_BLACK, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 6 },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    columnStyles: { 0: { halign: 'left', cellWidth: 40 }, 1: { halign: 'center', cellWidth: 12, fontStyle: 'bold' } },
+    didParseCell: function (d) {
+      if (d.section === 'body' && d.column.index >= 2) {
+        const color = cellColors[d.row.index] && cellColors[d.row.index][d.column.index - 2];
+        const rgb = _hexToRgb(color);
+        if (rgb) { d.cell.styles.fillColor = [rgb.r, rgb.g, rgb.b]; d.cell.styles.textColor = [255, 255, 255]; d.cell.styles.fontStyle = 'bold'; }
+      }
+    }
+  });
+  s.addFooter(1);
+  doc.save(`KAC_Matrix_${s.now.toISOString().slice(0, 10)}.pdf`);
+  toast('PDF report downloaded');
+}
+
 function generateTeamSummaryPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -4614,8 +5136,8 @@ function showAddAccount() {
           <select id="acc-country"><option value="AU">Australia</option><option value="NZ">New Zealand</option></select>
         </div>
         <div class="form-group">
-          <label>Tier</label>
-          <select id="acc-tier"><option value="1">Tier 1 — National Major</option><option value="2" selected>Tier 2 — State Leader</option><option value="3">Tier 3 — Regional Specialist</option></select>
+          <label>Stakeholder</label>
+          <select id="acc-tier"><option value="-1">Owner</option><option value="0">Engineer</option><option value="1">Tier 1 — National Major</option><option value="2" selected>Tier 2 — State Leader</option><option value="3">Tier 3 — Regional Specialist</option></select>
         </div>
       </div>
       <div class="form-group">
@@ -4668,8 +5190,8 @@ function showEditAccount(id) {
           <select id="acc-country"><option value="AU" ${a.country==='AU'?'selected':''}>Australia</option><option value="NZ" ${a.country==='NZ'?'selected':''}>New Zealand</option></select>
         </div>
         <div class="form-group">
-          <label>Tier</label>
-          <select id="acc-tier"><option value="1" ${a.tier===1?'selected':''}>Tier 1</option><option value="2" ${a.tier===2?'selected':''}>Tier 2</option><option value="3" ${a.tier===3?'selected':''}>Tier 3</option></select>
+          <label>Stakeholder</label>
+          <select id="acc-tier"><option value="-1" ${a.tier===-1?'selected':''}>Owner</option><option value="0" ${a.tier===0?'selected':''}>Engineer</option><option value="1" ${a.tier===1?'selected':''}>Tier 1</option><option value="2" ${a.tier===2?'selected':''}>Tier 2</option><option value="3" ${a.tier===3?'selected':''}>Tier 3</option></select>
         </div>
       </div>
       <div class="form-group">
