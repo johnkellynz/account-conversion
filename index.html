@@ -2757,12 +2757,16 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
   accounts.forEach(a => { stageCounts[a.current_stage - 1]++; stageOpp[a.current_stage - 1] += toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency); });
   const maxCount = Math.max(...stageCounts, 1);
 
-  // Opportunity by sector (each account counts toward every sector it lists)
+  // Opportunity by sector (each account counts toward every sector it lists).
+  // Only show sectors that still exist in the admin list, so deleted ones (e.g. a
+  // removed "Military" tag still lingering in account data) drop off the graph.
+  const validSectors = getSectorsList();
   const sectorOpp = {};
   accounts.forEach(a => {
     const opp = toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency);
     const isNZ = a.country === 'NZ';
     (a.key_sectors||'').split(',').map(x=>x.trim()).filter(Boolean).forEach(sec => {
+      if (!validSectors.includes(sec)) return;
       if (!sectorOpp[sec]) sectorOpp[sec] = { au: 0, nz: 0, total: 0 };
       sectorOpp[sec].total += opp;
       if (isNZ) sectorOpp[sec].nz += opp; else sectorOpp[sec].au += opp;
@@ -3804,14 +3808,15 @@ function renderDashboardHeatmap(targetId) {
       return 0;
     });
     const rsIcon = (col) => { if (rsc !== col) return ' ↕'; return rsd > 0 ? ' ↑' : ' ↓'; };
+    const rsActive = (col) => rsc === col ? ';color:var(--vic-orange)' : '';
     repHtml = `<div class="dash-section">
       <h3 style="margin:0 0 8px;font-size:12px">Rep Coverage</h3>
       <div class="table-wrap"><table class="data-table">
         <thead><tr>
-          <th style="cursor:pointer" onclick="state.repSortCol=state.repSortCol==='name'?'name':'name';state.repSortDir=state.repSortCol==='name'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='name';renderDashboardHeatmap('${el.id}')">Rep${rsIcon('name')}</th>
-          <th style="cursor:pointer" onclick="state.repSortDir=state.repSortCol==='accts'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='accts';renderDashboardHeatmap('${el.id}')">Accounts${rsIcon('accts')}</th>
+          <th style="cursor:pointer${rsActive('name')}" onclick="state.repSortCol=state.repSortCol==='name'?'name':'name';state.repSortDir=state.repSortCol==='name'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='name';renderDashboardHeatmap('${el.id}')">Rep${rsIcon('name')}</th>
+          <th style="cursor:pointer${rsActive('accts')}" onclick="state.repSortDir=state.repSortCol==='accts'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='accts';renderDashboardHeatmap('${el.id}')">Accounts${rsIcon('accts')}</th>
           <th>Regions</th>
-          <th style="cursor:pointer" onclick="state.repSortDir=state.repSortCol==='stage'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='stage';renderDashboardHeatmap('${el.id}')">Avg Stage${rsIcon('stage')}</th>
+          <th style="cursor:pointer${rsActive('stage')}" onclick="state.repSortDir=state.repSortCol==='stage'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='stage';renderDashboardHeatmap('${el.id}')">Avg Stage${rsIcon('stage')}</th>
         </tr></thead>
         <tbody>${repEntries.map(r => {
           return `<tr>
