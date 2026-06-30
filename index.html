@@ -578,7 +578,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     </button>
     <button class="nav-drawer-item" data-view="accounts" onclick="showView('accounts')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Accounts</span>
+      <span>Key Accounts</span>
     </button>
     <button class="nav-drawer-item" data-view="matrix" onclick="showView('matrix')">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -615,7 +615,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     <!-- ACCOUNTS LIST -->
     <div id="view-accounts" class="view active">
       <div class="view-header">
-        <h1>Accounts</h1>
+        <h1>Key Accounts</h1>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="acct-clear-btn"></span>
           <div style="position:relative;flex:0 1 200px;min-width:130px">
@@ -665,7 +665,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
   <nav id="bottom-nav">
     <button class="nav-btn active" data-view="accounts" onclick="showView('accounts')">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Accounts</span>
+      <span>Key Accounts</span>
     </button>
     <button class="nav-btn" data-view="dashboard" onclick="showView('dashboard')">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
@@ -973,13 +973,16 @@ function getVisibleAccounts() {
   return state.accounts;
 }
 
+let _openFilterDrop = null;
 function toggleFilterDrop(id, evt) {
   evt.stopPropagation();
   document.querySelectorAll('.fd-wrap').forEach(w => { if (w.id !== id) w.classList.remove('open'); });
   const el = document.getElementById(id);
   if (el) el.classList.toggle('open');
+  _openFilterDrop = (el && el.classList.contains('open')) ? id : null;
 }
-document.addEventListener('click', () => document.querySelectorAll('.fd-wrap.open').forEach(w => w.classList.remove('open')));
+function restoreOpenFilterDrop() { if (_openFilterDrop) { const d = document.getElementById(_openFilterDrop); if (d) d.classList.add('open'); } }
+document.addEventListener('click', () => { document.querySelectorAll('.fd-wrap.open').forEach(w => w.classList.remove('open')); _openFilterDrop = null; });
 
 function removeTag(key, val) {
   if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry') {
@@ -1853,7 +1856,8 @@ function renderFilters(targetId) {
 
   // Update header clear button
   const clearEl = document.getElementById('acct-clear-btn');
-  if (clearEl) clearEl.innerHTML = hasFilter ? `<button onclick="clearDashFilters();renderFilters();renderAccountsList()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer">✕ Clear</button>` : '';
+  if (clearEl) clearEl.innerHTML = hasFilter ? `<button onclick="clearDashFilters();renderFilters();renderAccountsList()" style="padding:8px 14px;background:var(--danger);color:#fff;border:none;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">✕ Clear</button>` : '';
+  restoreOpenFilterDrop();
 }
 function setFilter(type, val) {
   if (type === 'country') { setDashFilter('dashFilterCountry', val); }
@@ -2005,6 +2009,7 @@ function accountCardHtml(a) {
 
 // ======================== RENDER: FUNNEL BAR (LARGE) ========================
 function renderFunnelBar(accountId) {
+  const stageColors = ['', '#94A3B8', '#38BDF8', '#34D399', '#FBBF24', '#F58220'];
   let html = '<div class="funnel-bar large">';
   for (let s = 1; s <= 5; s++) {
     const comp = getStageCompletion(accountId, s);
@@ -2015,7 +2020,8 @@ function renderFunnelBar(accountId) {
     else cls += ' future';
     const fillW = complete ? 100 : (canAccessStage(accountId, s) ? comp.pct : 0);
     const shortNames = { 1: 'ID', 2: 'ENG', 3: 'DEMO', 4: 'CONV', 5: 'GROW' };
-    html += `<div class="${cls}"><div class="fill" style="width:${fillW}%"></div><span class="seg-label">${shortNames[s]}</span></div>`;
+    const segBg = complete ? stageColors[s] : 'var(--g200)';
+    html += `<div class="${cls}" style="background:${segBg}"><div class="fill" style="width:${fillW}%;background:${stageColors[s]}"></div><span class="seg-label">${shortNames[s]}</span></div>`;
   }
   html += '</div>';
   html += '<div class="funnel-labels">';
@@ -2619,16 +2625,14 @@ function renderDashboard() {
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Summary</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
-      <button class="${state.dashMode==='table'?'active':''}" onclick="state.dashMode='table';state.dashSortCol='company';state.dashSortDir='asc';renderDashboard()">Account List</button>
     </div>
     ${filterHtml}
     <div id="dash-metrics"></div>
     <div id="dash-content"></div>
   `;
   renderDashMetrics();
-  if (state.dashMode === 'summary') renderDashboardSummary();
-  else if (state.dashMode === 'table') renderDashboardTable();
-  else renderDashboardHeatmap();
+  if (state.dashMode === 'heatmap') renderDashboardHeatmap();
+  else renderDashboardSummary();
 }
 
 function renderDashMetrics() {
@@ -2675,18 +2679,17 @@ function renderDashMetrics() {
     </div>
   </div>`;
 
-  mel.innerHTML = `<div class="dash-section" style="padding:10px 0">
-    <div style="display:flex;text-align:center">
+  mel.innerHTML = `<div class="dash-section" style="padding:8px 0 10px">
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;padding:0 16px 4px">
+      <span onclick="stepStageMonth(-1)" style="cursor:pointer;color:var(--g400);font-size:14px;font-weight:700;line-height:1;padding:2px 4px" title="Previous month">‹</span>
+      <span style="font-size:10px;color:var(--g500);font-weight:600;white-space:nowrap;text-transform:uppercase;letter-spacing:.3px">${stageMonthLabel()}</span>
+      <span onclick="stepStageMonth(1)" style="cursor:pointer;color:var(--g400);font-size:14px;font-weight:700;line-height:1;padding:2px 4px" title="Next month">›</span>
+    </div>
+    <div style="display:flex;text-align:center;align-items:center">
       <div onclick="filterToAccounts()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:var(--vic-black)">${accounts.length}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Accounts</div></div>
       <div onclick="filterToStalled()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:${stalled > 0 ? '#ef4444' : 'var(--success)'}">${stalled}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Stalled</div></div>
       <div onclick="filterToActiveThisMonth()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:#3b82f6">${active}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Active This Month</div></div>
-      <div style="flex:1"><span style="font-size:20px;font-weight:700;color:var(--success)">${stagesAdvanced}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Steps Advanced</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:3px">
-          <span onclick="event.stopPropagation();stepStageMonth(-1)" style="cursor:pointer;color:var(--g400);font-size:14px;font-weight:700;line-height:1;padding:2px 4px" title="Previous month">‹</span>
-          <span style="font-size:10px;color:var(--g500);font-weight:600;white-space:nowrap">${stageMonthLabel()}</span>
-          <span onclick="event.stopPropagation();stepStageMonth(1)" style="cursor:pointer;color:var(--g400);font-size:14px;font-weight:700;line-height:1;padding:2px 4px" title="Next month">›</span>
-        </div>
-      </div>
+      <div style="flex:1"><span style="font-size:20px;font-weight:700;color:var(--success)">${stagesAdvanced}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Steps Advanced</div></div>
     </div>
   </div>
   ${oppHtml}`;
@@ -2971,7 +2974,7 @@ function renderDashboardTable() {
             if (isCur) statusBar += `<div style="width:${sc.pct}%;height:100%;background:${stageColors[s]};border-radius:2px"></div>`;
             statusBar += '</div>';
           }
-          statusBar += `<span style="font-size:11px;font-weight:600;color:var(--g500);white-space:nowrap;margin-left:6px">${STAGES[a.current_stage].name.split(' ')[0]} ${comp.done}/${comp.total}</span></div>`;
+          statusBar += `</div>`;
           return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
             <td style="white-space:nowrap"><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
             <td>${statusBar}</td>
