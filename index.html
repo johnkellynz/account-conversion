@@ -247,8 +247,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 /* Heatmap */
 .heatmap-legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
-.leaflet-map-container { height: 470px; width: 100%; border-radius: var(--radius); border: 1px solid var(--g200); z-index: 1; }
-@media (max-width: 768px) { .leaflet-map-container { height: 345px; } }
+.leaflet-map-container { height: 410px; width: 100%; border-radius: var(--radius); border: 1px solid var(--g200); z-index: 1; }
+@media (max-width: 768px) { .leaflet-map-container { height: 300px; } }
 .leaflet-popup-content-wrapper { border-radius: 8px !important; }
 .leaflet-popup-content { margin: 10px 14px !important; font-family: inherit !important; font-size: 13px !important; }
 .map-tip { font-size: 12px; font-weight: 600; padding: 4px 8px; }
@@ -768,7 +768,7 @@ const STAGES = {
 };
 
 // ======================== SECTOR OPTIONS ========================
-const SECTORS = ['Commercial', 'Health', 'Defence', 'Industrial', 'Mining', 'Data Centres', 'Education', 'Government', 'Retail', 'Property', 'Resources', 'Logistics', 'Pharmaceutical', 'Multi-sector'];
+const SECTORS = ['Commercial', 'Health', 'Education', 'Data Centre', 'Industrial', 'Other'];
 const AU_REGIONS = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 const NZ_REGIONS = ['NTL', 'AKL', 'WKO', 'BOP', 'GIS', 'HKB', 'TKI', 'MWT', 'WGN', 'TSM', 'NSN', 'MBH', 'WTC', 'CAN', 'OTA', 'STL'];
 const ALL_REGIONS = [...AU_REGIONS, ...NZ_REGIONS, 'National'];
@@ -3492,12 +3492,17 @@ function renderDashboardHeatmap(targetId) {
         if (!leafletMap || !boundsGroup.getLayers().length) return;
         try {
           leafletMap.invalidateSize();
-          leafletMap.fitBounds(boundsGroup.getBounds(), { padding: [25, 25], maxZoom: 10, animate: false });
+          const b = boundsGroup.getBounds();
+          if (b && b.isValid()) {
+            leafletMap.fitBounds(b, { padding: [8, 8], maxZoom: 10, animate: false });
+          }
         } catch(e) {}
       };
       doFit();
+      requestAnimationFrame(doFit);
       setTimeout(doFit, 200);
       setTimeout(doFit, 600);
+      setTimeout(doFit, 1200);
     }
 
     loadGeoJSON();

@@ -18,13 +18,11 @@ drop policy if exists "kac_sectors_write" on kac_sectors;
 create policy "kac_sectors_write" on kac_sectors
   for all to authenticated using (true) with check (true);
 
--- Seed the current default sectors, but ONLY if the table is empty
+-- Seed the approved default sectors, but ONLY if the table is empty
 insert into kac_sectors (label, sort_order)
 select v.label, v.sort_order
 from (values
-  ('Commercial', 0), ('Health', 1), ('Defence', 2), ('Industrial', 3),
-  ('Mining', 4), ('Data Centres', 5), ('Education', 6), ('Government', 7),
-  ('Retail', 8), ('Property', 9), ('Resources', 10), ('Logistics', 11),
-  ('Pharmaceutical', 12), ('Multi-sector', 13)
+  ('Commercial', 0), ('Health', 1), ('Education', 2),
+  ('Data Centre', 3), ('Industrial', 4), ('Other', 5)
 ) as v(label, sort_order)
 where not exists (select 1 from kac_sectors);
