@@ -2106,15 +2106,18 @@ function renderAccountDetail() {
             ${a.psa_tier ? `<span class="badge" style="background:#FEF3C7;color:#92400E">PSA ${a.psa_tier}</span>` : ''}
           </div>
         </div>
-        <button onclick="showEditAccount('${a.id}')" style="padding:8px;color:var(--g500)">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
+        <div style="display:flex;align-items:flex-start;gap:8px">
+          <button onclick="generateAccountReport()" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+          <button onclick="showEditAccount('${a.id}')" style="padding:8px;color:var(--g500)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="detail-tabs">
-      <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
       <button class="detail-tab ${state.detailTab==='acceptance'?'active':''}" onclick="switchDetailTab('acceptance')">Acceptance</button>
+      <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
       <button class="detail-tab ${state.detailTab==='contacts'?'active':''}" onclick="switchDetailTab('contacts')">Contacts</button>
       <button class="detail-tab ${state.detailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')">Notes</button>
     </div>
@@ -2184,14 +2187,24 @@ function renderAcceptanceTab(container) {
   const scoreColor = acceptanceRate > 0 ? '#F58220' : '#94A3B8';
 
   // ---- SCORECARD (above grid) ----
-  let html = `<div style="padding:14px 16px;background:var(--g50);border-radius:8px;margin-bottom:12px">
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div style="display:flex;align-items:baseline;gap:8px">
-        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--g500)">Acceptance</span>
-        <span style="font-size:28px;font-weight:700;color:${scoreColor}">${acceptanceRate}%</span>
+  // Overall Acceptance box (mirrors the dashboard), with the orange/blue progress bar
+  let html = `<div style="text-align:center;padding:14px 16px;background:var(--g50);border-radius:8px;margin-bottom:12px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Acceptance</div>
+    <div style="font-size:28px;font-weight:800;color:${scoreColor};line-height:1">${acceptanceRate}%</div>`;
+  if (eligibleCells > 0) {
+    html += `<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--g400);margin:10px auto 3px;max-width:480px">
+        <span>${approvedCount}/${eligibleCells} accepted</span>
+        <span>${activeCells} active</span>
       </div>
-      <div style="display:flex;gap:6px;flex:1">`;
+      <div style="height:8px;background:var(--g200);border-radius:4px;overflow:hidden;display:flex;max-width:480px;margin:0 auto">
+        ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#F58220"></div>` : ''}
+        ${activeCells - approvedCount > 0 ? `<div style="width:${(activeCells-approvedCount)/eligibleCells*100}%;background:#38BDF8"></div>` : ''}
+      </div>`;
+  }
+  html += `</div>`;
 
+  // Status boxes (below the overall box)
+  html += `<div style="display:flex;gap:6px;margin-bottom:12px">`;
   statuses.forEach(s => {
     const count = statusCounts[s.id] || 0;
     if (count > 0 || s.label === 'Approved') {
@@ -2202,22 +2215,6 @@ function renderAcceptanceTab(container) {
       </div>`;
     }
   });
-
-  html += `</div></div>`;
-
-  if (eligibleCells > 0) {
-    html += `<div style="margin-top:10px">
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--g400);margin-bottom:3px">
-        <span>${approvedCount}/${eligibleCells} accepted</span>
-        <span>${activeCells} active</span>
-      </div>
-      <div style="height:6px;background:var(--g200);border-radius:3px;overflow:hidden;display:flex">
-        ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#F58220"></div>` : ''}
-        ${activeCells - approvedCount > 0 ? `<div style="width:${(activeCells-approvedCount)/eligibleCells*100}%;background:#38BDF8"></div>` : ''}
-      </div>
-    </div>`;
-  }
-
   html += `</div>`;
 
   // ---- PER-PRODUCT SUMMARY (between scorecard and grid) ----
@@ -5385,6 +5382,7 @@ function generatePageReport() {
   if (view === 'matrix') return generateMatrixReport();
   if (view === 'heatmap') return generateHeatmapReport();
   if (view === 'accounts') return generateAccountsReport();
+  if (view === 'detail') return generateAccountReport();
   // dashboard, reporting, and anything else → full conversion report
   return generatePDFReport();
 }
@@ -5454,6 +5452,65 @@ function generateAccountsReport() {
   });
   s.addFooter(1);
   doc.save(`KAC_Accounts_${s.now.toISOString().slice(0, 10)}.pdf`);
+  toast('PDF report downloaded');
+}
+
+function generateAccountReport() {
+  const a = state.accounts.find(ac => ac.id === state.currentAccountId);
+  if (!a) { toast('No account selected'); return; }
+  const s = _pdfScaffold('landscape');
+  const { doc, margin, VIC_BLACK, VIC_ORANGE } = s;
+  let y = s.addHeader('Account — ' + a.company_name);
+
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  const info = [
+    a.hq_city ? 'Location: ' + a.hq_city : null,
+    'Country: ' + (a.country === 'AU' ? 'Australia' : 'New Zealand'),
+    a.regions ? 'Regions: ' + a.regions : null,
+    a.key_sectors ? 'Sectors: ' + a.key_sectors : null,
+    a.estimated_revenue ? 'Revenue: ' + (a.currency || 'AUD') + ' $' + formatNumber(a.estimated_revenue) : null,
+    'Rep: ' + (_repNm(a.assigned_to) || '—'),
+    'Stage: ' + STAGES[a.current_stage].name + '  |  Checklist: ' + _ovPct(a.id) + '%'
+  ].filter(Boolean);
+  info.forEach((line, i) => doc.text(line, margin, y + i * 5));
+  y += info.length * 5 + 4;
+
+  const rows = state.matrixConfig.rows, cols = state.matrixConfig.cols, statuses = state.matrixConfig.statuses;
+  const data = state.matrixData[a.id] || [];
+  const approvedStatus = statuses.find(st => st.label === 'Approved');
+  const naStatus = statuses.find(st => st.label === 'N/A');
+  let approved = 0, na = 0;
+  data.forEach(d => { if (approvedStatus && d.status_id === approvedStatus.id) approved++; else if (naStatus && d.status_id === naStatus.id) na++; });
+  const eligible = rows.length * cols.length - na;
+  const accPct = eligible > 0 ? Math.round(approved / eligible * 100) : 0;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...VIC_ORANGE);
+  doc.text('Acceptance: ' + accPct + '%', margin, y);
+  doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  y += 6;
+
+  if (rows.length && cols.length) {
+    const getStatus = (id) => statuses.find(st => st.id === id);
+    doc.autoTable({
+      startY: y, margin: { left: margin, right: margin },
+      head: [['Product', ...cols.map(c => c.label)]],
+      body: rows.map(r => [r.label, ...cols.map(c => {
+        const cell = data.find(d => d.row_id === r.id && d.col_id === c.id);
+        const st = cell ? getStatus(cell.status_id) : null;
+        return st ? st.label : '—';
+      })]),
+      styles: { fontSize: 7, cellPadding: 1.5, font: 'helvetica', overflow: 'linebreak' },
+      headStyles: { fillColor: VIC_BLACK, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 7 },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 28 } },
+      didParseCell: function (d) {
+        if (d.section === 'body' && d.column.index > 0) {
+          const st = statuses.find(x => x.label === d.cell.raw);
+          if (st && st.color) { const rgb = _hexToRgb(st.color); if (rgb) d.cell.styles.textColor = [rgb.r, rgb.g, rgb.b]; }
+        }
+      }
+    });
+  }
+  s.addFooter(1);
+  doc.save(`KAC_Account_${a.company_name.replace(/[^a-z0-9]+/gi, '_')}_${s.now.toISOString().slice(0, 10)}.pdf`);
   toast('PDF report downloaded');
 }
 
