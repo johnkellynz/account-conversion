@@ -1926,7 +1926,10 @@ function renderAccountsList() {
     return;
   }
 
-  el.innerHTML = accounts.map(a => {
+  el.innerHTML = accounts.map(a => accountCardHtml(a)).join('');
+}
+
+function accountCardHtml(a) {
     const tierClass = 'badge-tier' + a.tier;
     const countryClass = 'badge-' + a.country.toLowerCase();
     // Stage status bar
@@ -1966,7 +1969,6 @@ function renderAccountsList() {
       <div class="account-card-info">${a.key_sectors ? esc(a.key_sectors) : ''}</div>
       ${statusHtml}
     </div>`;
-  }).join('');
 }
 
 // ======================== RENDER: FUNNEL BAR (LARGE) ========================
@@ -2781,49 +2783,16 @@ function renderDashboardSummary() {
     return stDir * aD.localeCompare(bD);
   });
   if (stalledAccounts.length) {
-    const repName = (uid) => { const p = state.profiles.find(pr => pr.id === uid); return p ? p.full_name : '—'; };
-    const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
-    const stIcon = (col) => state.stalledSortCol === col ? (state.stalledSortDir === 'asc' ? ' ↑' : ' ↓') : '';
-    const stalledRows = stalledAccounts.slice(0,15).map(a => {
-      const cl = state.checklist[a.id] || [];
-      const latest = cl.reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
-      const lastTxt = latest ? new Date(latest).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '<span style="color:#ef4444">Never</span>';
-      const comp = getStageCompletion(a.id, a.current_stage);
-      let statusBar = '<div style="display:flex;gap:3px;align-items:center">';
-      for (let s = 1; s <= 5; s++) {
-        const sc = getStageCompletion(a.id, s);
-        const done = isStageComplete(a.id, s);
-        const isCur = s === a.current_stage;
-        const bg = done ? stageColors[s] : stageColors[s] + '40';
-        statusBar += `<div style="flex:1;min-width:16px;height:8px;background:${bg};border-radius:4px;overflow:hidden;position:relative">`;
-        if (isCur) statusBar += `<div style="width:${sc.pct}%;height:100%;background:${stageColors[s]};border-radius:2px"></div>`;
-        statusBar += '</div>';
-      }
-      statusBar += `<span style="font-size:11px;font-weight:600;color:var(--g500);white-space:nowrap;margin-left:6px">${STAGES[a.current_stage].name.split(' ')[0]} ${comp.done}/${comp.total}</span></div>`;
-      return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
-        <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
-        <td>${statusBar}</td>
-        <td style="font-size:13px;color:var(--g500)">${esc(repName(a.assigned_to))}</td>
-        <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
-      </tr>`;
-    }).join('');
-    html += `<div id="stalled-section" class="dash-section"><div class="table-wrap">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 8px">
+    const stalledCards = stalledAccounts.slice(0,15).map(a => accountCardHtml(a)).join('');
+    html += `<div id="stalled-section" style="margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px">
         <h3 style="color:#ef4444;margin:0">Stalled Accounts</h3>
         <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
           ${[14,30,60,90,120].map(d => `<option value="${d}"${state.stalledDays===d?' selected':''}>${d} days</option>`).join('')}
         </select>
       </div>
-      <table class="data-table">
-        <thead><tr>
-          <th style="cursor:pointer;user-select:none" onclick="stalledSort('name')">Company${stIcon('name')}</th>
-          <th style="min-width:180px;cursor:pointer;user-select:none" onclick="stalledSort('progress')">Progress${stIcon('progress')}</th>
-          <th style="cursor:pointer;user-select:none" onclick="stalledSort('rep')">Rep${stIcon('rep')}</th>
-          <th style="text-align:center;cursor:pointer;user-select:none" onclick="stalledSort('activity')">Last Activity${stIcon('activity')}</th>
-        </tr></thead>
-        <tbody>${stalledRows}</tbody>
-      </table>
-    </div></div>`;
+      ${stalledCards}
+    </div>`;
   }
 
   el.innerHTML = html;
