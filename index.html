@@ -2195,9 +2195,10 @@ function renderAcceptanceTab(container) {
   statuses.forEach(s => {
     const count = statusCounts[s.id] || 0;
     if (count > 0 || s.label === 'Approved') {
-      html += `<span style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:600;background:${s.color}18;color:${s.color}">
-        <span style="width:5px;height:5px;border-radius:50%;background:${s.color}"></span>${count} ${esc(s.label)}
-      </span>`;
+      html += `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${s.color}14;border:1px solid ${s.color}33">
+        <div style="font-size:11px;font-weight:600;color:${s.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
+        <div style="font-size:20px;font-weight:700;color:${s.color};line-height:1.1;margin-top:2px">${count}</div>
+      </div>`;
     }
   });
 
