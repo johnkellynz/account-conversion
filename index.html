@@ -3721,9 +3721,9 @@ function renderDashboardHeatmap(targetId) {
         } catch(e) { console.warn('NZ GeoJSON failed', e); }
       }
 
-      // Add account pin dots — only once one or more reps are selected.
+      // Add account pin dots
       const pinGroup = L.featureGroup().addTo(leafletMap);
-      if (state.dashFilterRep.length > 0) filteredAccounts.forEach(a => {
+      filteredAccounts.forEach(a => {
         const city = a.hq_city ? a.hq_city.trim() : '';
         let coord = CITY_COORDS[city];
         if (!coord) {
