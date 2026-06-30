@@ -291,7 +291,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* Filter dropdowns */
 .fd-row { display: flex; gap: 6px; padding: 0 16px 8px; flex-wrap: wrap; }
 .fd-wrap { position: relative; flex: 1; min-width: 90px; }
-.fd-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 11px 10px; border-radius: var(--radius-sm); border: 1px solid var(--g200); background: var(--white); font-size: 12px; font-weight: 600; color: var(--g500); cursor: pointer; white-space: nowrap; }
+.fd-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 10px; border-radius: var(--radius-sm); border: 1px solid var(--g200); background: var(--white); font-size: 12px; font-weight: 600; color: var(--g500); cursor: pointer; white-space: nowrap; }
 .fd-btn.has-val { border-color: var(--vic-orange); color: var(--vic-orange); }
 .fd-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; z-index: 50; background: var(--white); border: 1px solid var(--g200); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,.1); margin-top: 2px; max-height: 70vh; overflow-y: auto; white-space: nowrap; }
 .fd-wrap.open .fd-menu { display: block; }
@@ -2063,8 +2063,9 @@ function renderFunnelBar(accountId) {
     else cls += ' future';
     const fillW = complete ? 100 : (canAccessStage(accountId, s) ? comp.pct : 0);
     const shortNames = { 1: 'Identify', 2: 'Engage', 3: 'Demonstrate', 4: 'Convert', 5: 'Grow' };
-    const segBg = complete ? stageColors[s] + 'd9' : stageColors[s] + '1f';
-    html += `<div class="${cls}" style="background:${segBg}"><div class="fill" style="width:${fillW}%;background:${stageColors[s]}d9"></div><span class="seg-label">${shortNames[s]}</span></div>`;
+    const segColor = complete ? stageColors[s] : '#94A3B8';
+    const segBg = complete ? segColor + 'd9' : segColor + '33';
+    html += `<div class="${cls}" style="background:${segBg}"><div class="fill" style="width:${fillW}%;background:${segColor}d9"></div><span class="seg-label">${shortNames[s]}</span></div>`;
   }
   html += '</div>';
   return html;
@@ -2118,7 +2119,7 @@ function renderAccountDetail() {
       <button class="detail-tab ${state.detailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')">Notes</button>
     </div>
 
-    <div class="detail-funnel">
+    <div class="detail-funnel" id="detail-funnel" style="display:${state.detailTab==='checklist'?'':'none'}">
       <h3>Conversion Progress — ${overallPct}%</h3>
       ${renderFunnelBar(a.id)}
       <div class="stage-status">Stage ${a.current_stage}: ${STAGES[a.current_stage].name} — ${STAGES[a.current_stage].subtitle}</div>
@@ -2133,6 +2134,8 @@ function renderAccountDetail() {
 function switchDetailTab(tab) {
   state.detailTab = tab;
   document.querySelectorAll('.detail-tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().trim() === tab));
+  const f = document.getElementById('detail-funnel');
+  if (f) f.style.display = tab === 'checklist' ? '' : 'none';
   renderDetailTab();
 }
 
@@ -4301,17 +4304,17 @@ function renderAdminPanel() {
         </div>
       </div>
       <div class="dash-section" style="margin:0">
-        <h3 style="font-size:13px;margin-bottom:10px">Bulk Transfer</h3>
+        <h3 style="font-size:13px;margin-bottom:10px">Bulk Reassign</h3>
         <div style="display:flex;flex-direction:column;gap:8px">
           <select id="transfer-from" style="padding:8px 10px;border:1px solid var(--g200);border-radius:4px;font-size:13px;width:100%">
-            <option value="">Transfer from…</option>
+            <option value="">Reassign from…</option>
             ${assignable.map(p => `<option value="${p.id}">${esc(p.full_name)} (${state.accounts.filter(a=>a.assigned_to===p.id).length})</option>`).join('')}
           </select>
           <select id="transfer-to" style="padding:8px 10px;border:1px solid var(--g200);border-radius:4px;font-size:13px;width:100%">
-            <option value="">Transfer to…</option>
+            <option value="">Reassign to…</option>
             ${assignable.map(p => `<option value="${p.id}">${esc(p.full_name)}</option>`).join('')}
           </select>
-          <button onclick="adminTransferAccounts()" class="btn-primary" style="padding:8px 16px;font-size:13px;width:100%">Transfer All</button>
+          <button onclick="adminTransferAccounts()" class="btn-primary" style="padding:8px 16px;font-size:13px;width:100%">Reassign All</button>
         </div>
       </div>
     </div>

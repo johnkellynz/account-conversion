@@ -16,15 +16,27 @@ with tgt as (
 ranked as (select id, row_number() over (order by id) rn from kac_accounts)
 delete from kac_accounts where id in (select r.id from ranked r, tgt where r.rn > tgt.k);
 
--- 1b) Create the shortfall by cloning random existing accounts (copies every column)
-create temporary table _clones on commit drop as
-  select * from kac_accounts order by random()
+-- 1b) Create the shortfall by cloning random existing accounts.
+--     Schema-agnostic (clones every column via JSON), single statement, no temp table.
+insert into kac_accounts
+select (jsonb_populate_record(
+          null::kac_accounts,
+          to_jsonb(src)
+          || jsonb_build_object(
+               'id', gen_random_uuid(),
+               'company_name', '[TEST] New ' || left(gen_random_uuid()::text, 6),
+               'assigned_to', null,
+               'created_at', now(),
+               'updated_at', now()
+             )
+        )).*
+from (
+  select * from kac_accounts
+  order by random()
   limit greatest(0,
     (select count(*) from profiles where coalesce(full_name,'') <> 'Steve Traynor') * 5
-    - (select count(*) from kac_accounts));
-update _clones set id = gen_random_uuid(), assigned_to = null, created_at = now(), updated_at = now();
-update _clones set company_name = '[TEST] New ' || left(id::text, 6);
-insert into kac_accounts select * from _clones;
+    - (select count(*) from kac_accounts))
+) src;
 
 -- 1c) Assign exactly 5 accounts to each assignee (Steve gets none)
 with assignees as (
@@ -71,6 +83,34 @@ set currency = 'NZD',
     estimated_revenue = round((25800000.0 / nullif((select count(*) from kac_accounts where country='NZ'),0)) * (0.5 + random())),
     updated_at = now()
 where a.country = 'NZ';
+
+-- ===================== PART 4: ADVANCE-STEPS TEST DATA =====================
+-- Each account completes P = 0..4 stages (so current_stage spans 1..5). Of those, the
+-- most recent M = 0..3 are dated in the CURRENT month, the rest in prior months — so
+-- "steps advanced this month" lands at M (max 3). All items of a completed stage are
+-- marked done (required for the stage to count as crossed).
+delete from kac_checklist;
+insert into kac_checklist (id, account_id, stage, item_key, completed, completed_at, updated_at)
+select gen_random_uuid(), a.id, s.stage, s.item_key, true,
+  case
+    when s.stage > (abs(hashtext(a.id::text)) % 5)
+                   - least(abs(hashtext(a.id::text)) % 5, abs(hashtext(a.id::text||'m')) % 4)
+      then date_trunc('month', now())
+           + ((abs(hashtext(a.id::text||s.item_key)) % greatest(1, extract(day from now())::int)) || ' days')::interval
+           + interval '9 hours'
+    else date_trunc('month', now())
+           - (((abs(hashtext(a.id::text)) % 5) - s.stage + 1) || ' months')::interval
+           + interval '14 days'
+  end,
+  now()
+from kac_accounts a
+cross join (values
+  (1,'s1_intel_pack'),(1,'s1_map_registers'),(1,'s1_distributor_intel'),(1,'s1_buying_influencers'),
+  (2,'s2_industry_events'),(2,'s2_lunch_learn'),(2,'s2_referral'),(2,'s2_linkedin'),(2,'s2_trade_show'),
+  (3,'s3_live_demo'),(3,'s3_factory_visit'),(3,'s3_tco_analysis'),(3,'s3_reference_tour'),(3,'s3_bim_revit'),
+  (4,'s4_bid_support'),(4,'s4_first_order'),(4,'s4_psa'),(4,'s4_cip')
+) as s(stage, item_key)
+where s.stage <= (abs(hashtext(a.id::text)) % 5);
 
 commit;
 
