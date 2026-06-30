@@ -166,9 +166,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .stage-status { text-align: center; margin-top: 12px; font-size: 14px; font-weight: 600; color: var(--vic-orange); }
 
 /* Detail tabs */
-.detail-tabs { display: flex; background: var(--g100); border-radius: var(--radius-sm); padding: 3px; margin: 0 16px 14px; border: 1px solid var(--g200); }
-.detail-tab { flex: 1; padding: 9px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); transition: all .15s; letter-spacing: .2px; }
-.detail-tab.active { background: var(--white); color: var(--vic-orange); border: 1px solid var(--g200); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+/* .detail-tabs / .detail-tab share styling with .dash-toggle (see Dashboard toggle) */
 
 .detail-content { padding: 0 16px 16px; }
 
@@ -285,9 +283,10 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .playbook-tip { background: #FEF3C7; border-left: 3px solid var(--vic-orange); padding: 10px 12px; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; margin-top: 8px; font-size: 13px; color: #92400E; line-height: 1.4; }
 
 /* Dashboard toggle */
-.dash-toggle { display: flex; flex-wrap: wrap; gap: 6px; background: transparent; padding: 0; margin: 0 16px 14px; }
-.dash-toggle button { flex: 1 1 30%; padding: 7px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); background: var(--g100); border: 1px solid var(--g300); transition: all .15s; letter-spacing: .2px; }
-.dash-toggle button.active { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.dash-toggle, .detail-tabs { display: flex; flex-wrap: wrap; gap: 6px; background: transparent; padding: 0; margin: 0 16px 14px; }
+.dash-toggle button, .detail-tab { flex: 1 1 30%; padding: 7px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); background: var(--g100); border: 1px solid var(--g300); transition: all .15s; letter-spacing: .2px; }
+.detail-tab { flex: 1 1 0; }
+.dash-toggle button.active, .detail-tab.active { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
 /* Filter dropdowns */
 .fd-row { display: flex; gap: 6px; padding: 0 16px 8px; flex-wrap: wrap; }
@@ -2046,17 +2045,9 @@ function renderFunnelBar(accountId) {
     else if (canAccessStage(accountId, s) && !complete) cls += ' current';
     else cls += ' future';
     const fillW = complete ? 100 : (canAccessStage(accountId, s) ? comp.pct : 0);
-    const shortNames = { 1: 'ID', 2: 'ENG', 3: 'DEMO', 4: 'CONV', 5: 'GROW' };
-    const segBg = complete ? stageColors[s] : 'var(--g200)';
-    html += `<div class="${cls}" style="background:${segBg}"><div class="fill" style="width:${fillW}%;background:${stageColors[s]}"></div><span class="seg-label">${shortNames[s]}</span></div>`;
-  }
-  html += '</div>';
-  html += '<div class="funnel-labels">';
-  for (let s = 1; s <= 5; s++) {
-    const complete = isStageComplete(accountId, s);
-    const account = state.accounts.find(a => a.id === accountId);
-    const isCurrent = account && account.current_stage === s;
-    html += `<span class="${complete ? 'done' : isCurrent ? 'active' : ''}">${STAGES[s].name}</span>`;
+    const shortNames = { 1: 'Identify', 2: 'Engage', 3: 'Demonstrate', 4: 'Convert', 5: 'Grow' };
+    const segBg = complete ? stageColors[s] + 'd9' : stageColors[s] + '1f';
+    html += `<div class="${cls}" style="background:${segBg}"><div class="fill" style="width:${fillW}%;background:${stageColors[s]}d9"></div><span class="seg-label">${shortNames[s]}</span></div>`;
   }
   html += '</div>';
   return html;
@@ -2103,17 +2094,17 @@ function renderAccountDetail() {
       </div>
     </div>
 
-    <div class="detail-funnel">
-      <h3>Conversion Progress — ${overallPct}%</h3>
-      ${renderFunnelBar(a.id)}
-      <div class="stage-status">Stage ${a.current_stage}: ${STAGES[a.current_stage].name} — ${STAGES[a.current_stage].subtitle}</div>
-    </div>
-
     <div class="detail-tabs">
       <button class="detail-tab ${state.detailTab==='acceptance'?'active':''}" onclick="switchDetailTab('acceptance')">Acceptance</button>
       <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
       <button class="detail-tab ${state.detailTab==='contacts'?'active':''}" onclick="switchDetailTab('contacts')">Contacts</button>
       <button class="detail-tab ${state.detailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')">Notes</button>
+    </div>
+
+    <div class="detail-funnel">
+      <h3>Conversion Progress — ${overallPct}%</h3>
+      ${renderFunnelBar(a.id)}
+      <div class="stage-status">Stage ${a.current_stage}: ${STAGES[a.current_stage].name} — ${STAGES[a.current_stage].subtitle}</div>
     </div>
 
     <div class="detail-content" id="detail-tab-content"></div>
@@ -2658,10 +2649,10 @@ function renderDashboard() {
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Conversion Summary</button>
       <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Sector Summary</button>
-      <button class="${state.dashMode==='matrix'?'active':''}" onclick="state.dashMode='matrix';renderDashboard()">Acceptance Matrix</button>
+      <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
       <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
       <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
-      <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
+      <button class="${state.dashMode==='matrix'?'active':''}" onclick="state.dashMode='matrix';renderDashboard()">Acceptance Matrix</button>
     </div>
     ${filterHtml}
     <div id="dash-metrics"></div>
@@ -2672,7 +2663,7 @@ function renderDashboard() {
   else if (state.dashMode === 'oppsector') renderDashboardOppSector();
   else if (state.dashMode === 'stalled') renderDashboardStalled();
   else if (state.dashMode === 'keyaccounts') renderDashboardKeyAccounts();
-  else if (state.dashMode === 'matrix') renderMatrixView('dash-content', true);
+  else if (state.dashMode === 'matrix') renderDashboardMatrix();
   else renderDashboardSummary();
 }
 
@@ -2913,6 +2904,86 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
   el.innerHTML = html;
 }
 
+function renderDashboardMatrix() {
+  const el = document.getElementById('dash-content');
+  const rows = state.matrixConfig.rows;
+  const cols = state.matrixConfig.cols;
+  const statuses = state.matrixConfig.statuses;
+  if (!rows.length || !cols.length) {
+    el.innerHTML = '<div class="dash-section" style="color:var(--g400);font-size:13px">No acceptance matrix configured yet. Set up product rows and milestone columns in Admin.</div>';
+    return;
+  }
+  const approvedStatus = statuses.find(s => s.label === 'Approved');
+  const rejectedStatus = statuses.find(s => s.label === 'Rejected');
+  const naStatus = statuses.find(s => s.label === 'N/A');
+  const totalCells = rows.length * cols.length;
+  const acceptancePct = (a) => {
+    const data = state.matrixData[a.id] || [];
+    let approved = 0, na = 0;
+    data.forEach(d => {
+      if (approvedStatus && d.status_id === approvedStatus.id) approved++;
+      else if (naStatus && d.status_id === naStatus.id) na++;
+    });
+    const eligible = totalCells - na;
+    return eligible > 0 ? Math.round(approved / eligible * 100) : 0;
+  };
+  const accounts = getDashFilteredAccounts().slice().sort((a,b) => a.company_name.localeCompare(b.company_name));
+
+  // Per-product acceptance (overall, across the filtered accounts)
+  const perProduct = {};
+  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0 });
+  accounts.forEach(a => {
+    const data = state.matrixData[a.id] || [];
+    rows.forEach(row => cols.forEach(col => {
+      perProduct[row.id].total++;
+      const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
+      if (cell) {
+        if (approvedStatus && cell.status_id === approvedStatus.id) perProduct[row.id].approved++;
+        else if (rejectedStatus && cell.status_id === rejectedStatus.id) perProduct[row.id].rejected++;
+        else if (naStatus && cell.status_id === naStatus.id) {}
+        else if (cell.status_id) { const st = statuses.find(s => s.id === cell.status_id); if (st && st.label !== 'Not Started') perProduct[row.id].inProgress++; }
+      }
+    }));
+  });
+  rows.forEach(r => {
+    let naCount = 0;
+    accounts.forEach(a => { const data = state.matrixData[a.id] || []; cols.forEach(col => { const cell = data.find(d => d.row_id === r.id && d.col_id === col.id); if (cell && naStatus && cell.status_id === naStatus.id) naCount++; }); });
+    perProduct[r.id].eligible = perProduct[r.id].total - naCount;
+  });
+  const prodHtml = rows.map(r => {
+    const pp = perProduct[r.id];
+    const pct = pp.eligible > 0 ? Math.round(pp.approved / pp.eligible * 100) : 0;
+    const pColor = pct >= 75 ? '#34D399' : pct >= 40 ? '#FBBF24' : pct > 0 ? '#F58220' : '#94A3B8';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:12px;font-weight:600;min-width:140px;color:var(--g700)">${esc(r.label)}</span>
+      <div style="flex:1;height:16px;background:var(--g100);border-radius:4px;overflow:hidden;display:flex">
+        ${pp.approved ? `<div style="width:${pp.approved/pp.eligible*100}%;background:#34D399"></div>` : ''}
+        ${pp.inProgress ? `<div style="width:${pp.inProgress/pp.eligible*100}%;background:#38BDF8"></div>` : ''}
+        ${pp.rejected ? `<div style="width:${pp.rejected/pp.eligible*100}%;background:#EF4444"></div>` : ''}
+      </div>
+      <span style="font-size:13px;font-weight:700;min-width:40px;text-align:right;color:${pColor}">${pct}%</span>
+    </div>`;
+  }).join('');
+
+  const rowsHtml = accounts.map(a => {
+    const pct = acceptancePct(a);
+    const color = pct >= 75 ? '#34D399' : pct >= 40 ? '#FBBF24' : pct > 0 ? '#F58220' : '#94A3B8';
+    return `<div onclick="showAccountDetail('${a.id}')" style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--g100);cursor:pointer">
+      <div style="width:200px;flex-shrink:0;font-size:13px;font-weight:600;color:var(--g700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.company_name)}</div>
+      <div style="flex:1;height:18px;background:var(--g100);border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width .3s"></div></div>
+      <div style="width:44px;flex-shrink:0;text-align:right;font-size:13px;font-weight:700;color:${color}">${pct}%</div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="dash-section">
+      <h3 style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Product Acceptance</h3>
+      ${prodHtml}
+    </div>
+    <div class="dash-section">
+      <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Acceptance by Customer</h3>
+      ${accounts.length ? rowsHtml : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No accounts match the current filters.</div>'}
+    </div>`;
+}
+
 function renderDashboardKeyAccounts() {
   const el = document.getElementById('dash-content');
   state.accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
@@ -2955,7 +3026,7 @@ function renderDashboardKeyAccounts() {
     </tr>`;
   }).join('');
   el.innerHTML = `<div class="dash-section"><div class="table-wrap">
-    <h3 style="margin:0 0 8px;font-size:12px">Key Accounts</h3>
+    <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Key Accounts</h3>
     ${accounts.length ? `<table class="data-table">
       <thead><tr>
         <th style="cursor:pointer;user-select:none${kActive('name')}" onclick="kaSort('name')">Company${kIcon('name')}</th>
@@ -3023,7 +3094,7 @@ function renderDashboardStalled() {
   }).join('');
   el.innerHTML = `<div id="stalled-section" class="dash-section"><div class="table-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
-      <h3 style="color:#ef4444;margin:0;font-size:12px;white-space:nowrap">Stalled Accounts</h3>
+      <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#ef4444;white-space:nowrap">Stalled Accounts</h3>
       <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="width:110px;flex:none;padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
         ${[14,30,60,90,120].map(d => `<option value="${d}"${state.stalledDays===d?' selected':''}>${d} days</option>`).join('')}
       </select>
