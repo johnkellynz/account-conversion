@@ -285,9 +285,9 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .playbook-tip { background: #FEF3C7; border-left: 3px solid var(--vic-orange); padding: 10px 12px; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; margin-top: 8px; font-size: 13px; color: #92400E; line-height: 1.4; }
 
 /* Dashboard toggle */
-.dash-toggle { display: flex; background: var(--g100); border-radius: var(--radius-sm); padding: 3px; margin: 0 16px 14px; border: 1px solid var(--g200); }
-.dash-toggle button { flex: 1; padding: 9px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); transition: all .15s; letter-spacing: .2px; }
-.dash-toggle button.active { background: var(--white); color: var(--vic-orange); border: 1px solid var(--g200); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.dash-toggle { display: flex; flex-wrap: wrap; gap: 6px; background: transparent; padding: 0; margin: 0 16px 14px; }
+.dash-toggle button { flex: 1 1 30%; padding: 9px 7px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); background: var(--g100); border: 1px solid var(--g300); transition: all .15s; letter-spacing: .2px; }
+.dash-toggle button.active { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
 /* Filter dropdowns */
 .fd-row { display: flex; gap: 6px; padding: 0 16px 8px; flex-wrap: wrap; }
@@ -575,18 +575,6 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     <button class="nav-drawer-item active" data-view="dashboard" onclick="showView('dashboard')">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       <span>Dashboard</span>
-    </button>
-    <button class="nav-drawer-item" data-view="accounts" onclick="showView('accounts')">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Key Accounts</span>
-    </button>
-    <button class="nav-drawer-item" data-view="matrix" onclick="showView('matrix')">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      <span>Matrix</span>
-    </button>
-    <button class="nav-drawer-item" data-view="heatmap" onclick="showView('heatmap')">
-      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-      <span>Heatmap</span>
     </button>
     <button class="nav-drawer-item" data-view="reporting" onclick="showView('reporting')">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -1071,7 +1059,7 @@ function onPageSearch(val) {
 }
 // PDF button for page headers — generates a report tailored to the current page
 function pagePdfButton() {
-  return `<button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:11px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>`;
+  return `<button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:11px 24px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>`;
 }
 function setDashFilter(key, val) {
   if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry') {
@@ -1935,9 +1923,8 @@ function filterToAccounts() {
   renderFilters();
 }
 function filterToStalled() {
-  state.dashMode = 'summary';
+  state.dashMode = 'stalled';
   renderDashboard();
-  setTimeout(() => document.getElementById('stalled-section')?.scrollIntoView({behavior:'smooth'}), 100);
 }
 function filterConverting() {
   clearDashFilters();
@@ -2643,20 +2630,23 @@ function renderDashboard() {
         ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">✕ Clear</button>` : ''}
         ${pageSearchBox()}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
-          <div class="fd-btn">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
+          <div class="fd-btn" style="padding:11px 18px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
           <div class="fd-menu" style="min-width:90px">
             <div class="fd-item${state.dashCurrency==='AUD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='AUD';localStorage.setItem('kac_currency_'+state.user?.id,'AUD');renderDashboard()">AUD$</div>
             <div class="fd-item${state.dashCurrency==='USD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='USD';localStorage.setItem('kac_currency_'+state.user?.id,'USD');renderDashboard()">USD$</div>
             <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';localStorage.setItem('kac_currency_'+state.user?.id,'NZD');renderDashboard()">NZD$</div>
           </div>
         </div>
-        <button onclick="generatePageReport()" style="padding:11px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button onclick="generatePageReport()" style="padding:11px 24px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
       </div>
     </div>
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Conversion Summary</button>
-      <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Sector</button>
+      <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Sector Summary</button>
+      <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
+      <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
+      <button class="${state.dashMode==='matrix'?'active':''}" onclick="state.dashMode='matrix';renderDashboard()">Acceptance Matrix</button>
     </div>
     ${filterHtml}
     <div id="dash-metrics"></div>
@@ -2665,6 +2655,9 @@ function renderDashboard() {
   renderDashMetrics();
   if (state.dashMode === 'heatmap') renderDashboardHeatmap();
   else if (state.dashMode === 'oppsector') renderDashboardOppSector();
+  else if (state.dashMode === 'stalled') renderDashboardStalled();
+  else if (state.dashMode === 'keyaccounts') renderDashboardKeyAccounts();
+  else if (state.dashMode === 'matrix') renderMatrixView('dash-content', true);
   else renderDashboardSummary();
 }
 
@@ -2862,7 +2855,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
       return state.sbSortDir === 'asc' ? '<span style="font-size:10px"> ↑</span>' : '<span style="font-size:10px"> ↓</span>';
     };
 
-    if (repData.length) {
+    if (repData.length && !showSector) {
       let rows = repData.map(d => `
         <div onclick="setDashFilter('dashFilterRep','${d.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g100);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
           <div style="width:140px;flex-shrink:0">
@@ -2898,6 +2891,21 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
     }
   }
 
+  el.innerHTML = html;
+}
+
+function renderDashboardKeyAccounts() {
+  const el = document.getElementById('dash-content');
+  state.accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
+  let accounts = getDashFilteredAccounts();
+  accounts.sort((a, b) => a.company_name.localeCompare(b.company_name));
+  el.innerHTML = `<div style="margin:0 16px">${accounts.length ? accounts.map(a => accountCardHtml(a)).join('') : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No accounts match the current filters.</div>'}</div>`;
+}
+
+function renderDashboardStalled() {
+  const el = document.getElementById('dash-content');
+  const accounts = getDashFilteredAccounts();
+  accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
   const stalledCutoff = new Date(Date.now() - state.stalledDays*24*60*60*1000).toISOString();
   const stalledAccounts = accounts.filter(a => {
     const cl = state.checklist[a.id] || [];
@@ -2905,7 +2913,6 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
     const latest = cl.reduce((max,c) => c.completed_at && c.completed_at > max ? c.completed_at : max, '');
     return !latest || latest < stalledCutoff;
   });
-  // Sort stalled accounts
   const stDir = state.stalledSortDir === 'asc' ? 1 : -1;
   stalledAccounts.sort((a,b) => {
     if (state.stalledSortCol === 'name') return stDir * a.company_name.localeCompare(b.company_name);
@@ -2915,61 +2922,56 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
       const rb = (state.profiles.find(p=>p.id===b.assigned_to)?.full_name)||'';
       return stDir * ra.localeCompare(rb);
     }
-    // activity
     const aD = (state.checklist[a.id]||[]).reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
     const bD = (state.checklist[b.id]||[]).reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
     return stDir * aD.localeCompare(bD);
   });
-  if (stalledAccounts.length) {
-    const repName = (uid) => { const p = state.profiles.find(pr => pr.id === uid); return p ? p.full_name : '—'; };
-    const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
-    const stIcon = (col) => state.stalledSortCol === col ? (state.stalledSortDir === 'asc' ? ' ↑' : ' ↓') : '';
-    const stActive = (col) => state.stalledSortCol === col ? ';color:var(--vic-orange)' : '';
-    const stalledRows = stalledAccounts.slice(0,15).map(a => {
-      const cl = state.checklist[a.id] || [];
-      const latest = cl.reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
-      const lastTxt = latest ? new Date(latest).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '<span style="color:#ef4444">Never</span>';
-      const opp = `${fxSymbol()}${formatNumber(Math.round(toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency)))}`;
-      let statusBar = '<div style="display:flex;gap:3px;align-items:center">';
-      for (let s = 1; s <= 5; s++) {
-        const sc = getStageCompletion(a.id, s);
-        const done = isStageComplete(a.id, s);
-        const isCur = s === a.current_stage;
-        const bg = done ? stageColors[s] : stageColors[s] + '40';
-        statusBar += `<div style="flex:1;min-width:16px;height:8px;background:${bg};border-radius:4px;overflow:hidden;position:relative">`;
-        if (isCur) statusBar += `<div style="width:${sc.pct}%;height:100%;background:${stageColors[s]};border-radius:2px"></div>`;
-        statusBar += '</div>';
-      }
+  const repName = (uid) => { const p = state.profiles.find(pr => pr.id === uid); return p ? p.full_name : '—'; };
+  const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
+  const stIcon = (col) => state.stalledSortCol === col ? (state.stalledSortDir === 'asc' ? ' ↑' : ' ↓') : '';
+  const stActive = (col) => state.stalledSortCol === col ? ';color:var(--vic-orange)' : '';
+  const stalledRows = stalledAccounts.map(a => {
+    const cl = state.checklist[a.id] || [];
+    const latest = cl.reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
+    const lastTxt = latest ? new Date(latest).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '<span style="color:#ef4444">Never</span>';
+    const opp = `${fxSymbol()}${formatNumber(Math.round(toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency)))}`;
+    let statusBar = '<div style="display:flex;gap:3px;align-items:center">';
+    for (let s = 1; s <= 5; s++) {
+      const sc = getStageCompletion(a.id, s);
+      const done = isStageComplete(a.id, s);
+      const isCur = s === a.current_stage;
+      const bg = done ? stageColors[s] : stageColors[s] + '40';
+      statusBar += `<div style="flex:1;min-width:16px;height:8px;background:${bg};border-radius:4px;overflow:hidden;position:relative">`;
+      if (isCur) statusBar += `<div style="width:${sc.pct}%;height:100%;background:${stageColors[s]};border-radius:2px"></div>`;
       statusBar += '</div>';
-      return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
-        <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
-        <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
-        <td>${statusBar}</td>
-        <td style="font-size:13px;color:var(--g500)">${esc(repName(a.assigned_to))}</td>
-        <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
-      </tr>`;
-    }).join('');
-    html += `<div id="stalled-section" class="dash-section"><div class="table-wrap">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 8px">
-        <h3 style="color:#ef4444;margin:0">Stalled Accounts</h3>
-        <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
-          ${[14,30,60,90,120].map(d => `<option value="${d}"${state.stalledDays===d?' selected':''}>${d} days</option>`).join('')}
-        </select>
-      </div>
-      <table class="data-table">
-        <thead><tr>
-          <th style="cursor:pointer;user-select:none${stActive('name')}" onclick="stalledSort('name')">Company${stIcon('name')}</th>
-          <th style="white-space:nowrap">Opportunity</th>
-          <th style="min-width:180px;cursor:pointer;user-select:none${stActive('progress')}" onclick="stalledSort('progress')">Progress${stIcon('progress')}</th>
-          <th style="cursor:pointer;user-select:none${stActive('rep')}" onclick="stalledSort('rep')">Rep${stIcon('rep')}</th>
-          <th style="text-align:center;cursor:pointer;user-select:none${stActive('activity')}" onclick="stalledSort('activity')">Last Activity${stIcon('activity')}</th>
-        </tr></thead>
-        <tbody>${stalledRows}</tbody>
-      </table>
-    </div></div>`;
-  }
-
-  el.innerHTML = html;
+    }
+    statusBar += '</div>';
+    return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
+      <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
+      <td>${statusBar}</td>
+      <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
+      <td style="font-size:13px;color:var(--g500)">${esc(repName(a.assigned_to))}</td>
+      <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<div id="stalled-section" class="dash-section"><div class="table-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 8px">
+      <h3 style="color:#ef4444;margin:0;font-size:12px">Stalled Accounts</h3>
+      <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
+        ${[14,30,60,90,120].map(d => `<option value="${d}"${state.stalledDays===d?' selected':''}>${d} days</option>`).join('')}
+      </select>
+    </div>
+    ${stalledAccounts.length ? `<table class="data-table">
+      <thead><tr>
+        <th style="cursor:pointer;user-select:none${stActive('name')}" onclick="stalledSort('name')">Company${stIcon('name')}</th>
+        <th style="min-width:180px;cursor:pointer;user-select:none${stActive('progress')}" onclick="stalledSort('progress')">Progress${stIcon('progress')}</th>
+        <th style="white-space:nowrap">Opportunity</th>
+        <th style="cursor:pointer;user-select:none${stActive('rep')}" onclick="stalledSort('rep')">Rep${stIcon('rep')}</th>
+        <th style="text-align:center;cursor:pointer;user-select:none${stActive('activity')}" onclick="stalledSort('activity')">Last Activity${stIcon('activity')}</th>
+      </tr></thead>
+      <tbody>${stalledRows}</tbody>
+    </table>` : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No stalled accounts.</div>'}
+  </div></div>`;
 }
 
 function dashSort(col) {
@@ -3063,10 +3065,10 @@ function setMatrixCellFromTable(accountId, rowId, statusId) {
   if (!cols || !cols.length) return;
   const lastColId = cols[cols.length - 1].id;
   setMatrixCell(accountId, rowId, lastColId, statusId);
-  renderMatrixView();
+  if (state.currentView === 'dashboard') renderDashboard(); else renderMatrixView();
 }
-function renderMatrixView() {
-  const el = document.getElementById('view-matrix');
+function renderMatrixView(targetId, embedded) {
+  const el = document.getElementById(targetId || 'view-matrix');
   const allAccounts = getVisibleAccounts();
   const rows = state.matrixConfig.rows;
   const cols = state.matrixConfig.cols;
@@ -3074,7 +3076,7 @@ function renderMatrixView() {
   const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
 
   if (!rows.length || !cols.length) {
-    el.innerHTML = '<div class="view-header"><h1>Acceptance Matrix</h1></div><div style="padding:24px;text-align:center;color:var(--g400)">No matrix configured yet. Set up product rows and milestone columns in Admin.</div>';
+    el.innerHTML = (embedded ? '' : '<div class="view-header"><h1>Acceptance Matrix</h1></div>') + '<div style="padding:24px;text-align:center;color:var(--g400)">No matrix configured yet. Set up product rows and milestone columns in Admin.</div>';
     return;
   }
 
@@ -3343,7 +3345,7 @@ function renderMatrixView() {
 
   gridHtml += `</tbody></table></div>`;
 
-  el.innerHTML = `
+  el.innerHTML = embedded ? `${kpiHtml}${gridHtml}` : `
     <div class="view-header">
       <h1>Acceptance Matrix ${hasFilter?'<span style="font-size:14px;font-weight:400;color:var(--g400)">— '+accts.length+' of '+allAccounts.length+' accounts</span>':''}</h1>
       <div style="display:flex;gap:8px;align-items:center">
