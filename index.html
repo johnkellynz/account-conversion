@@ -1454,14 +1454,24 @@ async function initialSync() {
     await loadMatrixConfig();
     await loadSectorConfig();
 
-    // Bulk-load all matrix data for master matrix view
+    // Bulk-load all matrix data for master matrix view.
+    // Supabase/PostgREST caps select() at 1000 rows, so page through everything.
     try {
-      const { data: allMatrix } = await supa.from('kac_matrix_data').select('*');
       state.matrixData = {};
-      (allMatrix || []).forEach(d => {
-        if (!state.matrixData[d.account_id]) state.matrixData[d.account_id] = [];
-        state.matrixData[d.account_id].push(d);
-      });
+      const PAGE = 1000;
+      let from = 0, loaded = 0;
+      while (true) {
+        const { data, error } = await supa.from('kac_matrix_data').select('*').range(from, from + PAGE - 1);
+        if (error) { console.error('Bulk matrix load error:', error); break; }
+        (data || []).forEach(d => {
+          if (!state.matrixData[d.account_id]) state.matrixData[d.account_id] = [];
+          state.matrixData[d.account_id].push(d);
+        });
+        loaded += (data || []).length;
+        if (!data || data.length < PAGE) break;
+        from += PAGE;
+      }
+      console.log('Matrix cells loaded:', loaded);
     } catch (e) { console.error('Bulk matrix load error:', e); }
 
     setSyncStatus('synced');
@@ -1796,7 +1806,7 @@ function showAccountDetail(id) {
   if (state.currentView) pushHistory({ type: 'view', view: state.currentView });
   state.currentAccountId = id;
   state.currentView = 'detail';
-  state.detailTab = 'acceptance';
+  state.detailTab = 'checklist';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-detail').classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -2168,7 +2178,7 @@ function renderAcceptanceTab(container) {
   const eligibleCells = totalCells - naCount;
   const acceptanceRate = eligibleCells > 0 ? Math.round(approvedCount / eligibleCells * 100) : 0;
   const activeCells = data.filter(d => { const st = getStatus(d.status_id); return st && st.label !== 'Not Started' && st.label !== 'N/A'; }).length;
-  const scoreColor = acceptanceRate >= 75 ? '#34D399' : acceptanceRate >= 40 ? '#FBBF24' : acceptanceRate > 0 ? '#F58220' : '#94A3B8';
+  const scoreColor = acceptanceRate > 0 ? '#F58220' : '#94A3B8';
 
   // ---- SCORECARD (above grid) ----
   let html = `<div style="padding:14px 16px;background:var(--g50);border-radius:8px;margin-bottom:12px">
@@ -2197,7 +2207,7 @@ function renderAcceptanceTab(container) {
         <span>${activeCells} active</span>
       </div>
       <div style="height:6px;background:var(--g200);border-radius:3px;overflow:hidden;display:flex">
-        ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#34D399"></div>` : ''}
+        ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#F58220"></div>` : ''}
         ${activeCells - approvedCount > 0 ? `<div style="width:${(activeCells-approvedCount)/eligibleCells*100}%;background:#38BDF8"></div>` : ''}
       </div>
     </div>`;
@@ -2903,7 +2913,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
 // Shared product-acceptance box — used by the dashboard Acceptance Matrix tab AND the
 // customer page Acceptance tab, so styling changes mirror across both.
 function acceptanceBox(label, pct, divider) {
-  const c = pct >= 75 ? '#34D399' : pct >= 40 ? '#FBBF24' : pct > 0 ? '#F58220' : '#94A3B8';
+  const c = pct > 0 ? '#F58220' : '#94A3B8';
   return `<div style="padding:8px 10px;text-align:center;${divider ? 'border-right:1px solid var(--g200)' : ''}">
     <div style="font-size:12px;font-weight:600;color:var(--g700);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</div>
     <div style="font-size:18px;font-weight:700;color:${c}">${pct}%</div>
@@ -2982,21 +2992,21 @@ function renderDashboardMatrix() {
       return accDir * (acceptancePct(a) - acceptancePct(b)) || a.company_name.localeCompare(b.company_name);
     }).map(a => {
       const pct = acceptancePct(a);
-      const color = pct >= 75 ? '#34D399' : pct >= 40 ? '#FBBF24' : pct > 0 ? '#F58220' : '#94A3B8';
+      const color = pct > 0 ? '#F58220' : '#94A3B8';
       const cell = 'display:flex;align-items:center;padding:7px 0;border-bottom:1px solid var(--g100);cursor:pointer';
       const sg = stepGain(a);
-      const sgHtml = sg > 0 ? `<span style="color:var(--success)">▲ ${sg}</span>` : `<span style="color:var(--g400)">0</span>`;
+      const sgHtml = sg > 0 ? `▲ ${sg}` : '0';
       return `<div onclick="showAccountDetail('${a.id}')" style="display:contents">
         <div style="${cell};font-size:13px;font-weight:600;color:var(--g700);white-space:nowrap">${esc(a.company_name)}</div>
         <div style="${cell}"><div style="width:100%;height:18px;background:var(--g100);border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width .3s"></div></div></div>
-        <div style="${cell};justify-content:center;font-size:12px;font-weight:700">${sgHtml}</div>
+        <div style="${cell};justify-content:center;font-size:13px;font-weight:700;color:var(--g700)">${sgHtml}</div>
         <div style="${cell};justify-content:flex-end;font-size:13px;font-weight:700;color:var(--g700)">${pct}%</div>
       </div>`;
     }).join('') + `</div>`;
   let totApproved = 0, totEligible = 0;
   rows.forEach(r => { totApproved += perProduct[r.id].approved; totEligible += perProduct[r.id].eligible; });
   const overallPct = totEligible > 0 ? Math.round(totApproved / totEligible * 100) : 0;
-  const overallColor = overallPct >= 75 ? '#34D399' : overallPct >= 40 ? '#FBBF24' : overallPct > 0 ? '#F58220' : '#94A3B8';
+  const overallColor = overallPct > 0 ? '#F58220' : '#94A3B8';
   // Step change: percentage points gained from approvals recorded within the selected month.
   // (Cells store current status + last-changed date, so this captures gains; genuine
   //  decreases can't be reconstructed without full status history.)
@@ -3006,7 +3016,7 @@ function renderDashboardMatrix() {
   const dColor = deltaPts > 0 ? 'var(--success)' : deltaPts < 0 ? '#ef4444' : 'var(--g400)';
   const dArrow = deltaPts > 0 ? '▲' : deltaPts < 0 ? '▼' : '–';
   el.innerHTML = `<div class="dash-section" style="text-align:center;padding:14px 16px">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Overall Acceptance</div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Overall Acceptance</div>
       <div style="font-size:28px;font-weight:800;color:${overallColor};line-height:1">${overallPct}%</div>
       <div style="font-size:11px;font-weight:700;color:var(--g500);margin-top:5px;display:flex;align-items:center;justify-content:center;gap:6px">
         <span>${dArrow} ${Math.abs(deltaPts)} pts ${stageMonthLabel()}</span>
@@ -3022,7 +3032,7 @@ function renderDashboardMatrix() {
       ${prodHtml}
     </div>
     <div class="dash-section">
-      <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Acceptance by Customer</h3>
+      <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Customer Acceptance</h3>
       ${accounts.length ? rowsHtml : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No accounts match the current filters.</div>'}
     </div>`;
 }
@@ -3430,7 +3440,7 @@ function renderMatrixView(targetId, embedded) {
   rows.forEach(r => {
     const pp = perProduct[r.id];
     const pct = pp.eligible > 0 ? Math.round(pp.approved / pp.eligible * 100) : 0;
-    const pColor = pct >= 75 ? '#34D399' : pct >= 40 ? '#FBBF24' : pct > 0 ? '#F58220' : '#94A3B8';
+    const pColor = pct > 0 ? '#F58220' : '#94A3B8';
     kpiHtml += `<div style="display:flex;align-items:center;gap:10px">
       <span style="font-size:12px;font-weight:600;min-width:120px;color:var(--g700)">${esc(r.label)}</span>
       <div style="flex:1;height:16px;background:var(--g100);border-radius:4px;overflow:hidden;display:flex">
@@ -3711,9 +3721,9 @@ function renderDashboardHeatmap(targetId) {
         } catch(e) { console.warn('NZ GeoJSON failed', e); }
       }
 
-      // Add account pin dots
+      // Add account pin dots — only once one or more reps are selected.
       const pinGroup = L.featureGroup().addTo(leafletMap);
-      filteredAccounts.forEach(a => {
+      if (state.dashFilterRep.length > 0) filteredAccounts.forEach(a => {
         const city = a.hq_city ? a.hq_city.trim() : '';
         let coord = CITY_COORDS[city];
         if (!coord) {
