@@ -806,6 +806,7 @@ let state = {
   dashFilterCountry: [],
   dashFilterStage: 'all',
   dashFilterTier: [],
+  dashFilterSector: [],
   dashSortCol: 'company',
   dashSortDir: 'asc',
   dashStageMonth: (function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');})(),
@@ -989,7 +990,7 @@ document.addEventListener('mouseover', (e) => { if (_openFilterDrop && e.target.
 document.addEventListener('mouseout', (e) => { if (_openFilterDrop && e.target.closest && e.target.closest('.fd-wrap.open')) armDropTimer(); });
 
 function removeTag(key, val) {
-  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry') {
+  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry' || key === 'dashFilterSector') {
     const idx = state[key].indexOf(val);
     if (idx >= 0) state[key].splice(idx, 1);
     if (key === 'dashFilterManager') {
@@ -1036,7 +1037,7 @@ function stalledSort(col) {
 }
 function clearDashFilters() {
   state.dashFilterRep = []; state.dashFilterManager = []; state.dashFilterRegion = [];
-  state.dashFilterCountry = []; state.dashFilterStage = 'all'; state.dashFilterTier = [];
+  state.dashFilterCountry = []; state.dashFilterStage = 'all'; state.dashFilterTier = []; state.dashFilterSector = [];
   state.dashSearch = '';
   _rerenderCurrentFilterView();
 }
@@ -1069,7 +1070,7 @@ function pagePdfButton() {
   return `<button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:11px 24px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>`;
 }
 function setDashFilter(key, val) {
-  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry') {
+  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry' || key === 'dashFilterSector') {
     const arr = state[key];
     const idx = arr.indexOf(val);
     if (idx >= 0) arr.splice(idx, 1);
@@ -1108,6 +1109,7 @@ function getDashFilteredAccounts() {
   if (state.dashFilterCountry.length > 0) accts = accts.filter(a => state.dashFilterCountry.includes(a.country));
   if (state.dashFilterStage !== 'all') accts = accts.filter(a => a.current_stage === parseInt(state.dashFilterStage));
   if (state.dashFilterTier.length > 0) accts = accts.filter(a => state.dashFilterTier.includes(String(a.tier)));
+  if (state.dashFilterSector.length > 0) accts = accts.filter(a => { const secs = (a.key_sectors||'').split(',').map(s=>s.trim()); return state.dashFilterSector.some(sec => secs.includes(sec)); });
   const q = (state.dashSearch || '').trim().toLowerCase();
   if (q) accts = accts.filter(a =>
     (a.company_name || '').toLowerCase().includes(q) ||
@@ -2549,7 +2551,7 @@ function renderDashboard() {
   const el = document.getElementById('view-dashboard');
   const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const allAccounts = getVisibleAccounts();
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || state.dashFilterSector.length > 0 || (state.dashSearch||'').trim() !== '';
 
   // Dropdown filter system
   let filterHtml = '';
@@ -2573,9 +2575,9 @@ function renderDashboard() {
     const filteredMgrs = [...managers];
     filteredMgrs.sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
 
-    const _dropFor = { dashFilterCountry:'fd-country', dashFilterRegion:'fd-region', dashFilterTier:'fd-tier', dashFilterManager:'fd-mgr', dashFilterRep:'fd-rep' };
+    const _dropFor = { dashFilterCountry:'fd-country', dashFilterRegion:'fd-region', dashFilterTier:'fd-tier', dashFilterManager:'fd-mgr', dashFilterRep:'fd-rep', dashFilterSector:'fd-sector' };
     const fdItem = (label, key, val) => {
-      const multi = key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry';
+      const multi = key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry' || key === 'dashFilterSector';
       const active = multi ? state[key].includes(val) : state[key] === val;
       const reopen = multi && _dropFor[key] ? `setTimeout(()=>{const d=document.getElementById('${_dropFor[key]}');if(d)d.classList.add('open')},0);` : '';
       return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');${reopen}">${label}</div>`;
@@ -2588,12 +2590,14 @@ function renderDashboard() {
     const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
     const mgrLabel = state.dashFilterManager.length ? state.dashFilterManager.length + ' selected' : 'Manager';
     const repLabel = state.dashFilterRep.length ? state.dashFilterRep.length + ' selected' : 'Rep';
+    const sectorLabel = state.dashFilterSector.length ? state.dashFilterSector.length + ' selected' : 'Sector';
 
     // Build active tags
     const tags = [];
     state.dashFilterCountry.forEach(c => tags.push({ label: c, key: 'dashFilterCountry', val: c, css: 't-country' }));
     state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
     state.dashFilterTier.forEach(v => tags.push({ label: _tierName(v), key: 'dashFilterTier', val: v, css: 't-tier' }));
+    state.dashFilterSector.forEach(s => tags.push({ label: s, key: 'dashFilterSector', val: s, css: 't-tier' }));
     if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
     state.dashFilterManager.forEach(id => { const p = (state.profiles||[]).find(x=>x.id===id); tags.push({ label: p?.full_name||'—', key: 'dashFilterManager', val: id, css: 't-manager' }); });
     state.dashFilterRep.filter(id => !state.dashFilterManager.includes(id)).map(id => { const p = (state.profiles||[]).find(x=>x.id===id); return { label: p?.full_name||'—', key: 'dashFilterRep', val: id, css: 't-rep' }; }).sort((a,b) => a.label.localeCompare(b.label)).forEach(t => tags.push(t));
@@ -2615,6 +2619,10 @@ function renderDashboard() {
       <div class="fd-wrap" id="fd-stage" onclick="toggleFilterDrop('fd-stage',event)">
         <div class="fd-btn${state.dashFilterStage!=='all'?' has-val':''}">${stageLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
         <div class="fd-menu">${[1,2,3,4,5].map(s => fdItem(STAGES[s].name,'dashFilterStage',String(s))).join('')}</div>
+      </div>
+      <div class="fd-wrap" id="fd-sector" onclick="toggleFilterDrop('fd-sector',event)">
+        <div class="fd-btn${state.dashFilterSector.length?' has-val':''}">${sectorLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-menu">${getSectorsList().map(s => fdItem(s,'dashFilterSector',s)).join('')}</div>
       </div>
       <div class="fd-wrap" id="fd-mgr" onclick="toggleFilterDrop('fd-mgr',event)">
         <div class="fd-btn${state.dashFilterManager.length?' has-val':''}">${mgrLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
@@ -2650,10 +2658,10 @@ function renderDashboard() {
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Conversion Summary</button>
       <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Sector Summary</button>
-      <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
-      <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
-      <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
       <button class="${state.dashMode==='matrix'?'active':''}" onclick="state.dashMode='matrix';renderDashboard()">Acceptance Matrix</button>
+      <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
+      <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
+      <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
     </div>
     ${filterHtml}
     <div id="dash-metrics"></div>
@@ -3014,9 +3022,9 @@ function renderDashboardStalled() {
     </tr>`;
   }).join('');
   el.innerHTML = `<div id="stalled-section" class="dash-section"><div class="table-wrap">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 8px">
-      <h3 style="color:#ef4444;margin:0;font-size:12px">Stalled Accounts</h3>
-      <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
+      <h3 style="color:#ef4444;margin:0;font-size:12px;white-space:nowrap">Stalled Accounts</h3>
+      <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="width:110px;flex:none;padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
         ${[14,30,60,90,120].map(d => `<option value="${d}"${state.stalledDays===d?' selected':''}>${d} days</option>`).join('')}
       </select>
     </div>
@@ -3132,7 +3140,7 @@ function renderMatrixView(targetId, embedded) {
   const rows = state.matrixConfig.rows;
   const cols = state.matrixConfig.cols;
   const statuses = state.matrixConfig.statuses;
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || state.dashFilterSector.length > 0 || (state.dashSearch||'').trim() !== '';
 
   if (!rows.length || !cols.length) {
     el.innerHTML = (embedded ? '' : '<div class="view-header"><h1>Acceptance Matrix</h1></div>') + '<div style="padding:24px;text-align:center;color:var(--g400)">No matrix configured yet. Set up product rows and milestone columns in Admin.</div>';
@@ -3157,7 +3165,7 @@ function renderMatrixView(targetId, embedded) {
 
   const _mxDropFor = { dashFilterCountry:'mx-fd-country', dashFilterRegion:'mx-fd-region', dashFilterTier:'mx-fd-tier', dashFilterManager:'mx-fd-mgr', dashFilterRep:'mx-fd-rep' };
   const mxFd = (label, key, val) => {
-    const multi = key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry';
+    const multi = key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry' || key === 'dashFilterSector';
     const active = multi ? state[key].includes(val) : state[key] === val;
     const reopen = multi && _mxDropFor[key] ? `setTimeout(()=>{const d=document.getElementById('${_mxDropFor[key]}');if(d)d.classList.add('open')},0);` : '';
     return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');renderMatrixView();${reopen}">${label}</div>`;
@@ -3673,7 +3681,7 @@ function renderDashboardHeatmap(targetId) {
     });
     const rsIcon = (col) => { if (rsc !== col) return ' ↕'; return rsd > 0 ? ' ↑' : ' ↓'; };
     repHtml = `<div class="dash-section">
-      <h3>Rep Coverage</h3>
+      <h3 style="margin:0 0 8px;font-size:12px">Rep Coverage</h3>
       <div class="table-wrap"><table class="data-table">
         <thead><tr>
           <th style="cursor:pointer" onclick="state.repSortCol=state.repSortCol==='name'?'name':'name';state.repSortDir=state.repSortCol==='name'&&state.repSortDir==='asc'?'desc':'asc';state.repSortCol='name';renderDashboardHeatmap('${el.id}')">Rep${rsIcon('name')}</th>
