@@ -295,7 +295,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .fd-btn.has-val { border-color: var(--vic-orange); color: var(--vic-orange); }
 .fd-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; z-index: 50; background: var(--white); border: 1px solid var(--g200); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,.1); margin-top: 2px; max-height: 70vh; overflow-y: auto; white-space: nowrap; }
 .fd-wrap.open .fd-menu { display: block; }
-.fd-item { padding: 6px 10px; font-size: 12px; font-weight: 500; color: var(--g600); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.fd-item { padding: 6px 10px; font-size: 12px; font-weight: 500; color: var(--g600); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
 .fd-item:hover { background: var(--g50); }
 .fd-item.active { color: var(--vic-orange); font-weight: 700; }
 .fd-item.active::after { content: '✓'; font-size: 11px; margin-left: 6px; }
@@ -2095,7 +2095,7 @@ function renderAccountDetail() {
           <div class="detail-meta" style="margin-top:6px">
             ${a.regions ? `<span class="meta-item"><strong>Regions:</strong> ${esc(a.regions)}</span>` : ''}
             ${a.key_sectors ? `<span class="meta-item"><strong>Sectors:</strong> ${esc(a.key_sectors)}</span>` : ''}
-            ${a.estimated_revenue ? `<span class="meta-item"><strong>Revenue:</strong> ${esc(a.currency || 'AUD')} $${formatNumber(a.estimated_revenue)}</span>` : ''}
+            ${a.estimated_revenue ? `<span class="meta-item"><strong>Opportunity:</strong> ${esc(a.currency || 'AUD')} $${formatNumber(a.estimated_revenue)}</span>` : ''}
             ${getRepName(a.assigned_to) ? `<span class="meta-item"><strong>Rep:</strong> ${esc(getRepName(a.assigned_to))}</span>` : ''}
           </div>
           <div class="detail-meta" style="margin-top:6px">
@@ -2107,10 +2107,8 @@ function renderAccountDetail() {
           </div>
         </div>
         <div style="display:flex;align-items:flex-start;gap:8px">
-          <button onclick="generateAccountReport()" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
-          <button onclick="showEditAccount('${a.id}')" style="padding:8px;color:var(--g500)">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
+          <button onclick="showEditAccount('${a.id}')" style="padding:8px 14px;background:#3b82f6;color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+          <button onclick="generateAccountReport()" style="padding:8px 14px;background:#d23b36;color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
         </div>
       </div>
     </div>
@@ -2236,7 +2234,7 @@ function renderAcceptanceTab(container) {
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr>
         <th style="text-align:left;padding:10px 12px;background:var(--g50);font-weight:600;color:var(--g600);border-bottom:2px solid var(--g200);position:sticky;left:0;z-index:2"></th>
-        ${cols.map(c => `<th style="text-align:center;padding:8px 6px;background:var(--g50);font-weight:600;color:var(--g600);font-size:11px;border-bottom:2px solid var(--g200);border-left:1px solid var(--g200)">${esc(c.label)}</th>`).join('')}
+        ${cols.map(c => `<th style="text-align:center;padding:8px 6px;background:var(--g50);font-weight:600;color:var(--g700);font-size:11px;border-bottom:2px solid var(--g200);border-left:1px solid var(--g200)">${esc(c.label)}</th>`).join('')}
       </tr></thead>
       <tbody>`;
 
@@ -2554,8 +2552,8 @@ function renderDashboard() {
     const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
     const scopedAccounts = state.dashFilterCountry.length > 0 ? allAccounts.filter(a => state.dashFilterCountry.includes(a.country)) : allAccounts;
     const scopedReps = state.dashFilterCountry.length > 0 ? reps.filter(p => state.dashFilterCountry.includes(p.country)) : reps;
-    const hasReports = new Set(scopedReps.filter(p => p.reports_to).map(p => p.reports_to));
-    const managers = scopedReps.filter(p => hasReports.has(p.id));
+    const hasReports = new Set(reps.filter(p => p.reports_to).map(p => p.reports_to));
+    const managers = reps.filter(p => hasReports.has(p.id));
     const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
 
     const auRegions = ['NT','QLD','WA','SA','NSW','ACT','VIC','TAS'];
@@ -2647,7 +2645,7 @@ function renderDashboard() {
             <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';localStorage.setItem('kac_currency_'+state.user?.id,'NZD');renderDashboard()">NZD$</div>
           </div>
         </div>
-        <button onclick="generatePageReport()" style="padding:11px 24px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button onclick="generatePageReport()" style="padding:11px 24px;background:#d23b36;color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
       </div>
     </div>
     <div class="dash-toggle">
@@ -5467,7 +5465,7 @@ function generateAccountReport() {
     'Country: ' + (a.country === 'AU' ? 'Australia' : 'New Zealand'),
     a.regions ? 'Regions: ' + a.regions : null,
     a.key_sectors ? 'Sectors: ' + a.key_sectors : null,
-    a.estimated_revenue ? 'Revenue: ' + (a.currency || 'AUD') + ' $' + formatNumber(a.estimated_revenue) : null,
+    a.estimated_revenue ? 'Opportunity: ' + (a.currency || 'AUD') + ' $' + formatNumber(a.estimated_revenue) : null,
     'Rep: ' + (_repNm(a.assigned_to) || '—'),
     'Stage: ' + STAGES[a.current_stage].name + '  |  Checklist: ' + _ovPct(a.id) + '%'
   ].filter(Boolean);
