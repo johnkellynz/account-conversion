@@ -371,13 +371,14 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
   .hamburger-btn { display: block; }
   .nav-drawer-overlay { display: none !important; }
   .nav-drawer {
-    position: fixed; left: 0 !important; top: var(--header-height); bottom: 0;
-    width: var(--sidebar-width) !important; height: auto;
-    padding-top: 8px; box-shadow: none;
-    background: var(--white); z-index: 110;
+    position: fixed; left: 0 !important; top: var(--header-height) !important; bottom: 0;
+    width: var(--sidebar-width) !important; height: auto !important;
+    padding-top: 8px !important; box-shadow: none;
+    background: var(--white); z-index: 90 !important;
     transform: translateX(-100%);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
+  #app-header { z-index: 120 !important; }
   .nav-drawer::before { display: none; }
   .nav-drawer.open { transform: translateX(0) !important; box-shadow: 2px 0 16px rgba(0,0,0,.15); }
   .nav-drawer.force-closed { transform: translateX(-100%) !important; box-shadow: none !important; }
@@ -815,8 +816,8 @@ let state = {
   dashFilterCountry: 'all',
   dashFilterStage: 'all',
   dashFilterTier: [],
-  dashSortCol: 'progress',
-  dashSortDir: 'desc',
+  dashSortCol: 'company',
+  dashSortDir: 'asc',
   sbSortCol: 'name',
   sbSortDir: 'asc',
   dashFiltersOpen: true,
@@ -2554,7 +2555,7 @@ function renderDashboard() {
     <div class="view-header">
       <h1>Dashboard ${hasFilter?'<span style="font-size:14px;font-weight:400;color:var(--g400)">— '+filtered.length+' of '+allAccounts.length+' accounts</span>':''}</h1>
       <div style="display:flex;gap:8px;align-items:center">
-        ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer">✕ Clear</button>` : ''}
+        ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">✕ Clear</button>` : ''}
         ${pageSearchBox()}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
           <div class="fd-btn" style="padding:8px 12px;font-size:13px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
@@ -2569,7 +2570,7 @@ function renderDashboard() {
     </div>
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Summary</button>
-      <button class="${state.dashMode==='table'?'active':''}" onclick="state.dashMode='table';state.dashSortCol='progress';state.dashSortDir='asc';renderDashboard()">Account List</button>
+      <button class="${state.dashMode==='table'?'active':''}" onclick="state.dashMode='table';state.dashSortCol='company';state.dashSortDir='asc';renderDashboard()">Account List</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
     </div>
     ${filterHtml}
@@ -2862,16 +2863,17 @@ function renderDashboardTable() {
     return state.dashSortDir === 'asc' ? '<span style="font-size:10px"> ↑</span>' : '<span style="font-size:10px"> ↓</span>';
   };
   const thStyle = 'cursor:pointer;user-select:none;white-space:nowrap';
+  const thActive = (col) => state.dashSortCol === col ? ';color:var(--vic-orange)' : '';
 
   const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
   el.innerHTML = `<div class="dash-section"><div class="table-wrap">
     <table class="data-table">
       <thead><tr>
-        <th style="${thStyle}" onclick="dashSort('company')">Company${sortIcon('company')}</th>
-        <th style="${thStyle};min-width:180px;width:40%" onclick="dashSort('progress')">Progress${sortIcon('progress')}</th>
-        <th style="${thStyle};white-space:nowrap" onclick="dashSort('revenue')">Revenue${sortIcon('revenue')}</th>
-        <th style="${thStyle};white-space:nowrap" onclick="dashSort('rep')">Rep${sortIcon('rep')}</th>
-        <th style="${thStyle};text-align:center;white-space:nowrap" onclick="dashSort('activity')">Last Activity${sortIcon('activity')}</th>
+        <th style="${thStyle}${thActive('company')}" onclick="dashSort('company')">Company${sortIcon('company')}</th>
+        <th style="${thStyle};min-width:180px;width:40%${thActive('progress')}" onclick="dashSort('progress')">Progress${sortIcon('progress')}</th>
+        <th style="${thStyle};white-space:nowrap${thActive('revenue')}" onclick="dashSort('revenue')">Revenue${sortIcon('revenue')}</th>
+        <th style="${thStyle};white-space:nowrap${thActive('rep')}" onclick="dashSort('rep')">Rep${sortIcon('rep')}</th>
+        <th style="${thStyle};text-align:center;white-space:nowrap${thActive('activity')}" onclick="dashSort('activity')">Last Activity${sortIcon('activity')}</th>
       </tr></thead>
       <tbody>
         ${accounts.map(a => {
