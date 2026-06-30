@@ -1806,7 +1806,7 @@ function showAccountDetail(id) {
   if (state.currentView) pushHistory({ type: 'view', view: state.currentView });
   state.currentAccountId = id;
   state.currentView = 'detail';
-  state.detailTab = 'checklist';
+  state.detailTab = 'acceptance';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-detail').classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
