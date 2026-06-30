@@ -2188,22 +2188,36 @@ function renderAcceptanceTab(container) {
 
   // ---- SCORECARD (above grid) ----
   // Overall Acceptance box (mirrors the dashboard), with the orange/blue progress bar
-  let html = `<div style="text-align:center;padding:14px 16px;background:var(--g50);border-radius:8px;margin-bottom:12px">
-    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Acceptance</div>
+  let html = `<div class="dash-section" style="text-align:center;padding:14px 16px;margin:0 0 12px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Product Acceptance</div>
     <div style="font-size:28px;font-weight:800;color:${scoreColor};line-height:1">${acceptanceRate}%</div>`;
   if (eligibleCells > 0) {
-    html += `<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--g400);margin:10px auto 3px;max-width:480px">
+    html += `<div style="display:flex;justify-content:space-between;font-size:14px;color:var(--g400);margin:10px auto 3px;max-width:480px">
         <span>${approvedCount}/${eligibleCells} accepted</span>
         <span>${activeCells} active</span>
       </div>
-      <div style="height:8px;background:var(--g200);border-radius:4px;overflow:hidden;display:flex;max-width:480px;margin:0 auto">
+      <div style="height:8px;background:var(--g100);border-radius:4px;overflow:hidden;display:flex;max-width:480px;margin:0 auto">
         ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#F58220"></div>` : ''}
         ${activeCells - approvedCount > 0 ? `<div style="width:${(activeCells-approvedCount)/eligibleCells*100}%;background:#38BDF8"></div>` : ''}
       </div>`;
   }
   html += `</div>`;
 
-  // Status boxes (below the overall box)
+  // ---- PER-PRODUCT SUMMARY ----
+  html += `<div class="dash-section" style="margin:0 0 12px">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr)">`;
+  rows.forEach((row, i) => {
+    const rowData = data.filter(d => d.row_id === row.id);
+    const rowApproved = rowData.filter(d => approvedStatus && d.status_id === approvedStatus.id).length;
+    const rowNA = rowData.filter(d => naStatus && d.status_id === naStatus.id).length;
+    const rowEligible = cols.length - rowNA;
+    const rowPct = rowEligible > 0 ? Math.round(rowApproved / rowEligible * 100) : 0;
+    const divider = (i % 5 !== 4) && (i !== rows.length - 1);
+    html += acceptanceBox(row.label, rowPct, divider);
+  });
+  html += `</div></div>`;
+
+  // Status boxes (below product acceptance)
   html += `<div style="display:flex;gap:6px;margin-bottom:12px">`;
   statuses.forEach(s => {
     const count = statusCounts[s.id] || 0;
@@ -2214,19 +2228,6 @@ function renderAcceptanceTab(container) {
         <div style="font-size:20px;font-weight:700;color:${bc};line-height:1.1;margin-top:2px">${count}</div>
       </div>`;
     }
-  });
-  html += `</div>`;
-
-  // ---- PER-PRODUCT SUMMARY (between scorecard and grid) ----
-  html += `<div style="display:grid;grid-template-columns:repeat(5,1fr);margin-bottom:12px">`;
-  rows.forEach((row, i) => {
-    const rowData = data.filter(d => d.row_id === row.id);
-    const rowApproved = rowData.filter(d => approvedStatus && d.status_id === approvedStatus.id).length;
-    const rowNA = rowData.filter(d => naStatus && d.status_id === naStatus.id).length;
-    const rowEligible = cols.length - rowNA;
-    const rowPct = rowEligible > 0 ? Math.round(rowApproved / rowEligible * 100) : 0;
-    const divider = (i % 5 !== 4) && (i !== rows.length - 1);
-    html += acceptanceBox(row.label, rowPct, divider);
   });
   html += `</div>`;
 
@@ -3022,7 +3023,7 @@ function renderDashboardMatrix() {
   const dColor = deltaPts > 0 ? 'var(--success)' : deltaPts < 0 ? '#ef4444' : 'var(--g400)';
   const dArrow = deltaPts > 0 ? '▲' : deltaPts < 0 ? '▼' : '–';
   el.innerHTML = `<div class="dash-section" style="text-align:center;padding:14px 16px">
-      <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Overall Acceptance</div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Product Acceptance</div>
       <div style="font-size:28px;font-weight:800;color:${overallColor};line-height:1">${overallPct}%</div>
       <div style="font-size:11px;font-weight:700;color:var(--g500);margin-top:5px;display:flex;align-items:center;justify-content:center;gap:6px">
         <span>${dArrow} ${Math.abs(deltaPts)} pts ${stageMonthLabel()}</span>
@@ -3034,11 +3035,9 @@ function renderDashboardMatrix() {
       <div style="height:8px;background:var(--g100);border-radius:4px;overflow:hidden;margin:10px auto 0;max-width:480px"><div style="width:${overallPct}%;height:100%;background:${overallColor};border-radius:4px;transition:width .3s"></div></div>
     </div>
     <div class="dash-section">
-      <h3 style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Product Acceptance</h3>
       ${prodHtml}
     </div>
     <div class="dash-section">
-      <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Customer Acceptance</h3>
       ${accounts.length ? rowsHtml : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No accounts match the current filters.</div>'}
     </div>`;
 }
