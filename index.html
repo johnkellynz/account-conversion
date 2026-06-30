@@ -2624,6 +2624,7 @@ function renderDashboard() {
     </div>
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Summary</button>
+      <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Opportunity by Sector</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
     </div>
     ${filterHtml}
@@ -2632,6 +2633,7 @@ function renderDashboard() {
   `;
   renderDashMetrics();
   if (state.dashMode === 'heatmap') renderDashboardHeatmap();
+  else if (state.dashMode === 'oppsector') renderDashboardOppSector();
   else renderDashboardSummary();
 }
 
@@ -2694,6 +2696,9 @@ function renderDashMetrics() {
   </div>
   ${oppHtml}`;
 }
+
+// Opportunity by Sector tab — currently duplicates the Summary view; customize here to diverge.
+function renderDashboardOppSector() { renderDashboardSummary(); }
 
 function renderDashboardSummary() {
   const el = document.getElementById('dash-content');
