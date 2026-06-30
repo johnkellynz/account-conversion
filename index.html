@@ -618,26 +618,27 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
         <h1>Accounts</h1>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="acct-clear-btn"></span>
+          <div style="position:relative;flex:0 1 200px;min-width:130px">
+            <input type="text" id="search-accounts" placeholder="Search accounts..." oninput="renderAccountsList()" autocomplete="off"
+              style="width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:13px;background:var(--white);box-sizing:border-box;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:9px center">
+          </div>
+          <div class="fd-wrap" id="af-sort" onclick="toggleFilterDrop('af-sort',event)" style="flex:none;min-width:auto">
+            <div class="fd-btn" style="padding:8px 12px;font-size:12px;gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
+              <span id="af-sort-label">Name</span>
+              <span style="font-size:10px;opacity:.5">▼</span>
+            </div>
+            <div class="fd-menu" style="min-width:140px;right:0;left:auto">
+              <div class="fd-item" onclick="event.stopPropagation();setAcctSort('name')">Name</div>
+              <div class="fd-item" onclick="event.stopPropagation();setAcctSort('tier')">Stakeholder</div>
+              <div class="fd-item" onclick="event.stopPropagation();setAcctSort('stage')">Stage</div>
+              <div class="fd-item" onclick="event.stopPropagation();setAcctSort('city')">City</div>
+              <div class="fd-item" onclick="event.stopPropagation();setAcctSort('rep')">Rep</div>
+              <div class="fd-item" onclick="event.stopPropagation();setAcctSort('revenue')">Revenue</div>
+            </div>
+          </div>
           <button class="btn-add" onclick="showAddAccount()" style="padding:8px 14px;font-size:13px;border-radius:var(--radius-xs);border:none">+ Add</button>
           <button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;padding:0 16px 8px;align-items:center">
-        <div style="flex:1"><input type="text" id="search-accounts" placeholder="Search accounts..." oninput="renderAccountsList()" style="width:100%;padding:8px 12px 8px 36px;border:1px solid var(--g200);border-radius:var(--radius-sm);font-size:13px;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:10px center"></div>
-        <div class="fd-wrap" id="af-sort" onclick="toggleFilterDrop('af-sort',event)" style="flex:none;min-width:auto">
-          <div class="fd-btn" style="padding:8px 12px;font-size:12px;gap:6px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
-            <span id="af-sort-label">Name</span>
-            <span style="font-size:10px;opacity:.5">▼</span>
-          </div>
-          <div class="fd-menu" style="min-width:140px;right:0;left:auto">
-            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('name')">Name</div>
-            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('tier')">Stakeholder</div>
-            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('stage')">Stage</div>
-            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('city')">City</div>
-            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('rep')">Rep</div>
-            <div class="fd-item" onclick="event.stopPropagation();setAcctSort('revenue')">Revenue</div>
-          </div>
         </div>
       </div>
       <div id="account-filters"></div>
@@ -1957,7 +1958,7 @@ function renderAccountsList() {
         <h3>${esc(a.company_name)}</h3>
         <div class="badges">
           ${repName ? `<span class="badge" style="background:#E1F5EE;color:#085041">${esc(repName)}</span>` : ''}
-          <span class="badge ${tierClass}">${a.tier===-1?'Owner':a.tier===0?'Eng':'T'+a.tier}</span>
+          <span class="badge" style="background:#EAF3DE;color:#27500A">${a.tier===-1?'Owner':a.tier===0?'Engineer':'T'+a.tier}</span>
           <span class="badge ${countryClass}">${a.country}</span>
           ${a.hq_city ? `<span class="badge badge-region">${esc(a.hq_city)}</span>` : ''}
         </div>
@@ -2015,7 +2016,7 @@ function renderAccountDetail() {
         <div style="flex:1">
           <h2>${esc(a.company_name)}</h2>
           <div class="detail-meta">
-            <span class="badge ${tierClass}">${a.tier===-1?'Owner':a.tier===0?'Engineer':'Tier '+a.tier}</span>
+            <span class="badge" style="background:#EAF3DE;color:#27500A">${a.tier===-1?'Owner':a.tier===0?'Engineer':'Tier '+a.tier}</span>
             <span class="badge ${countryClass}">${a.country === 'AU' ? 'Australia' : 'New Zealand'}</span>
             ${a.regions ? `<span class="badge" style="background:#EFF6FF;color:#1E40AF">${esc(a.regions)}</span>` : ''}
             ${getRepName(a.assigned_to) ? `<span class="badge" style="background:#E1F5EE;color:#085041">${esc(getRepName(a.assigned_to))}</span>` : ''}
@@ -4487,7 +4488,7 @@ function renderProfile() {
           <label style="font-size:13px;font-weight:600;color:var(--g500)">Confirm Password</label>
           <input type="password" id="pw-confirm" placeholder="Repeat new password" style="width:100%;padding:10px 12px;border:1px solid var(--g200);border-radius:var(--radius-xs);font-size:14px">
         </div>
-        <button class="btn-export" onclick="handleChangePassword()" style="background:var(--vic-orange);color:#fff;width:100%">Save Changes</button>
+        <button class="btn-export" onclick="handleChangePassword()" style="background:var(--vic-orange);color:#fff;width:100%;justify-content:center">Save Changes</button>
       </div>
     </div>
     <div class="profile-card">
