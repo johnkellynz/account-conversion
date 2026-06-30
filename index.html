@@ -2095,8 +2095,8 @@ function renderAccountDetail() {
     </div>
 
     <div class="detail-tabs">
-      <button class="detail-tab ${state.detailTab==='acceptance'?'active':''}" onclick="switchDetailTab('acceptance')">Acceptance</button>
       <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
+      <button class="detail-tab ${state.detailTab==='acceptance'?'active':''}" onclick="switchDetailTab('acceptance')">Acceptance</button>
       <button class="detail-tab ${state.detailTab==='contacts'?'active':''}" onclick="switchDetailTab('contacts')">Contacts</button>
       <button class="detail-tab ${state.detailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')">Notes</button>
     </div>
@@ -3018,10 +3018,10 @@ function renderDashboardKeyAccounts() {
     }
     statusBar += '</div>';
     return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
-      <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
+      <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g600);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
       <td>${statusBar}</td>
       <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
-      <td style="font-size:13px;color:var(--g500)">${esc(repName(a.assigned_to))}</td>
+      <td style="font-size:13px;color:var(--g700)">${esc(repName(a.assigned_to))}</td>
       <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
     </tr>`;
   }).join('');
@@ -3085,10 +3085,10 @@ function renderDashboardStalled() {
     }
     statusBar += '</div>';
     return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
-      <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
+      <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g600);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
       <td>${statusBar}</td>
       <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
-      <td style="font-size:13px;color:var(--g500)">${esc(repName(a.assigned_to))}</td>
+      <td style="font-size:13px;color:var(--g700)">${esc(repName(a.assigned_to))}</td>
       <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
     </tr>`;
   }).join('');
@@ -4144,7 +4144,7 @@ function renderPlaybook() {
     const stage = STAGES[s];
     const pb = PLAYBOOK[s];
     html += `
-    <div class="playbook-stage ${s === 1 ? 'open' : ''}" id="pb-stage-${s}">
+    <div class="playbook-stage" id="pb-stage-${s}">
       <div class="playbook-stage-header" onclick="document.getElementById('pb-stage-${s}').classList.toggle('open')">
         <div class="stage-num" style="background:${pb.colour}">${s}</div>
         <h3>${stage.name} <span style="font-weight:400;color:var(--g400);font-size:13px">— ${stage.subtitle}</span></h3>
