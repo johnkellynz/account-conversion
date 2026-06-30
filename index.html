@@ -4342,7 +4342,7 @@ function renderAdminPanel() {
             <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
               <button onclick="adminResetPassword('${p.id}')" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:var(--vic-orange);color:#fff" title="Force password change on next login">Reset PW</button>
               <button onclick="adminToggleLock('${p.id}',${!isLocked})" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:${isLocked?'var(--success)':'var(--danger)'};color:#fff">${isLocked ? 'Unlock' : 'Lock'}</button>
-              <button onclick="adminDeleteUser('${p.id}')" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:#dc2626;color:#fff" title="Permanently delete user and their accounts">Delete</button>
+              <button onclick="adminDeleteUser('${p.id}',event)" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:#dc2626;color:#fff" title="Reassign their accounts, then delete the user">Delete</button>
             </td>
           </tr>`;
         }).join('')}</tbody>
@@ -4584,27 +4584,77 @@ async function adminResetPassword(userId) {
   } catch (e) { toast('Error: ' + e.message); }
 }
 
-async function adminDeleteUser(userId) {
+// ---- Reassign-before-delete modal (shared) ----
+function showReassignModal({ title, intro, optionsHtml, listHtml, confirmLabel, onConfirm }) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:10px;max-width:560px;width:100%;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.25)">
+    <div style="padding:18px 20px 12px">
+      <h3 style="margin:0 0 6px;font-size:16px;color:var(--g700)">${title}</h3>
+      <p style="margin:0 0 12px;font-size:13px;color:var(--g500);line-height:1.45">${intro}</p>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:var(--g700);white-space:nowrap">Reassign all to:</span>
+        <select id="reassign-target" style="flex:1;padding:7px 8px;border:1px solid var(--g300);border-radius:6px;font-size:13px">${optionsHtml}</select>
+      </div>
+    </div>
+    <div style="overflow:auto;padding:8px 20px;border-top:1px solid var(--g150);background:var(--g50)">${listHtml}</div>
+    <div style="padding:14px 20px;display:flex;gap:8px;justify-content:flex-end">
+      <button id="reassign-cancel" style="padding:8px 16px;border:1px solid var(--g300);background:#fff;border-radius:6px;font-size:13px;cursor:pointer;color:var(--g600)">Cancel</button>
+      <button id="reassign-confirm" style="padding:8px 16px;border:none;background:var(--vic-orange);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">${confirmLabel}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  overlay.querySelector('#reassign-cancel').onclick = close;
+  overlay.querySelector('#reassign-confirm').onclick = async () => {
+    const target = overlay.querySelector('#reassign-target').value;
+    const btn = overlay.querySelector('#reassign-confirm');
+    btn.disabled = true; btn.textContent = 'Working…';
+    try { await onConfirm(target); close(); }
+    catch (e) { toast('Error: ' + e.message); btn.disabled = false; btn.textContent = confirmLabel; }
+  };
+}
+function reassignTableHtml(headers, rows) {
+  return `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr>${headers.map(h=>`<th style="text-align:left;padding:6px 4px;color:var(--g500);font-weight:600;position:sticky;top:0;background:var(--g50)">${h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td style="padding:5px 4px;border-top:1px solid var(--g150);${i===0?'color:var(--g700);font-weight:600':'color:var(--g500)'}">${c}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+}
+
+async function adminDeleteUser(userId, event) {
   if (userId === state.profile?.id) { toast('Cannot delete yourself'); return; }
   const name = getRepName(userId);
   const accts = state.accounts.filter(a => a.assigned_to === userId);
-  const msg = accts.length
-    ? `Permanently delete ${name} and their ${accts.length} account${accts.length!==1?'s':''}? This cannot be undone.`
-    : `Permanently delete ${name}? This cannot be undone.`;
-  if (!confirm(msg)) return;
-  if (!confirm(`Are you absolutely sure? Type OK to confirm deletion of ${name}.`)) return;
-  try {
-    // Delete their accounts first
-    if (accts.length) {
-      await supa.from('kac_accounts').delete().eq('assigned_to', userId);
-      state.accounts = state.accounts.filter(a => a.assigned_to !== userId);
+  if (!accts.length) {
+    showPopup({ title:'Delete User', message:`Permanently delete <strong>${esc(name)}</strong>? This cannot be undone.`, confirmLabel:'Delete', danger:true,
+      onConfirm: async () => { try { await reallyDeleteUser(userId, name); } catch(e){ toast('Error: '+e.message); } } }, event);
+    return;
+  }
+  const others = state.profiles.filter(p => p.id !== userId);
+  if (!others.length) { toast('No other user to reassign accounts to'); return; }
+  const optionsHtml = others.map(p => `<option value="${p.id}">${esc(p.full_name||'—')}</option>`).join('');
+  const rows = accts.map(a => [esc(a.company_name), `${fxSymbol()}${formatNumber(Math.round(toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency)))}`]);
+  showReassignModal({
+    title: `Delete ${esc(name)}`,
+    intro: `<strong>${esc(name)}</strong> has <strong>${accts.length}</strong> account${accts.length!==1?'s':''} assigned. Pick who inherits them, then ${esc(name)} is deleted.`,
+    optionsHtml,
+    listHtml: reassignTableHtml(['Account','Opportunity'], rows),
+    confirmLabel: 'Reassign & Delete',
+    onConfirm: async (targetId) => {
+      const { error } = await supa.from('kac_accounts').update({ assigned_to: targetId, updated_at: new Date().toISOString() }).eq('assigned_to', userId);
+      if (error) throw error;
+      state.accounts.forEach(a => { if (a.assigned_to === userId) a.assigned_to = targetId; });
+      await reallyDeleteUser(userId, name);
     }
-    // Delete profile
-    await supa.from('profiles').delete().eq('id', userId);
-    state.profiles = state.profiles.filter(p => p.id !== userId);
-    toast(`${name} permanently deleted`);
-    renderAdminPanel();
-  } catch (e) { toast('Error: ' + e.message); }
+  });
+}
+async function reallyDeleteUser(userId, name) {
+  const { error } = await supa.from('profiles').delete().eq('id', userId);
+  if (error) throw error;
+  state.profiles = state.profiles.filter(p => p.id !== userId);
+  toast(`${name} deleted`);
+  renderAdminPanel();
 }
 
 // ======================== MATRIX ADMIN FUNCTIONS ========================
@@ -4645,22 +4695,58 @@ async function addMatrixStatus() {
 function deleteMatrixItem(id, type, event) {
   const arr = type === 'row' ? state.matrixConfig.rows : type === 'col' ? state.matrixConfig.cols : state.matrixConfig.statuses;
   const item = arr.find(r => r.id === id);
-  showPopup({
-    title: 'Delete Item',
-    message: `Delete "<strong>${item?.label || ''}</strong>"? Any matrix data using this will be affected.`,
-    confirmLabel: 'Delete',
-    danger: true,
-    onConfirm: async () => {
-      try {
-        const { error } = await supa.from('kac_matrix_config').delete().eq('id', id);
-        if (error) throw error;
-        const idx = arr.findIndex(r => r.id === id);
-        if (idx >= 0) arr.splice(idx, 1);
-        renderAdminPanel();
-        toast('Deleted');
-      } catch (e) { toast('Error: ' + e.message); }
-    }
-  }, event);
+  if (!item) return;
+  const field = type === 'row' ? 'row_id' : type === 'col' ? 'col_id' : 'status_id';
+  const perAcct = [];
+  let usage = 0;
+  Object.entries(state.matrixData).forEach(([acctId, cells]) => {
+    const n = cells.filter(c => c[field] === id).length;
+    if (n) { usage += n; const a = state.accounts.find(x => x.id === acctId); perAcct.push([esc(a ? a.company_name : '(unknown)'), `${n} cell${n!==1?'s':''}`]); }
+  });
+  if (!usage) {
+    showPopup({ title:'Delete Item', message:`Delete "<strong>${esc(item.label)}</strong>"?`, confirmLabel:'Delete', danger:true,
+      onConfirm: async () => { try { await reallyDeleteMatrixItem(id, arr); } catch(e){ toast('Error: '+e.message); } } }, event);
+    return;
+  }
+  const others = arr.filter(x => x.id !== id);
+  if (!others.length) { toast('Add another item to reassign the data to first'); return; }
+  const noun = type === 'row' ? 'product' : type === 'col' ? 'milestone' : 'status';
+  const optionsHtml = others.map(x => `<option value="${x.id}">${esc(x.label)}</option>`).join('');
+  const overwriteNote = type === 'status' ? '' : ` (overwrites the chosen ${noun}'s existing cells)`;
+  showReassignModal({
+    title: `Delete ${noun}: ${esc(item.label)}`,
+    intro: `<strong>${esc(item.label)}</strong> holds <strong>${usage}</strong> cell${usage!==1?'s':''} across <strong>${perAcct.length}</strong> account${perAcct.length!==1?'s':''}. Move that data to another ${noun}${overwriteNote}, then delete.`,
+    optionsHtml,
+    listHtml: reassignTableHtml(['Account','Data'], perAcct),
+    confirmLabel: 'Reassign & Delete',
+    onConfirm: async (targetId) => { await reassignMatrixRefAndDelete(id, type, field, targetId, arr); }
+  });
+}
+async function reassignMatrixRefAndDelete(id, type, field, targetId, arr) {
+  // For row/col the target already has its own cells per account, so clear them first
+  // (overwrite), then re-point the deleted item's cells onto the target.
+  if (type !== 'status') {
+    const { error: e1 } = await supa.from('kac_matrix_data').delete().eq(field, targetId);
+    if (e1) throw e1;
+  }
+  const { error: e2 } = await supa.from('kac_matrix_data').update({ [field]: targetId, updated_at: new Date().toISOString() }).eq(field, id);
+  if (e2) throw e2;
+  const { error: e3 } = await supa.from('kac_matrix_config').delete().eq('id', id);
+  if (e3) throw e3;
+  Object.values(state.matrixData).forEach(cells => {
+    if (type !== 'status') for (let i = cells.length - 1; i >= 0; i--) if (cells[i][field] === targetId) cells.splice(i, 1);
+    cells.forEach(c => { if (c[field] === id) c[field] = targetId; });
+  });
+  const idx = arr.findIndex(x => x.id === id); if (idx >= 0) arr.splice(idx, 1);
+  renderAdminPanel();
+  toast('Reassigned & deleted');
+}
+async function reallyDeleteMatrixItem(id, arr) {
+  const { error } = await supa.from('kac_matrix_config').delete().eq('id', id);
+  if (error) throw error;
+  const idx = arr.findIndex(r => r.id === id); if (idx >= 0) arr.splice(idx, 1);
+  renderAdminPanel();
+  toast('Deleted');
 }
 
 async function moveMatrixItem(id, type, currentIdx, direction) {
@@ -4727,22 +4813,44 @@ async function addSectorItem() {
 
 function deleteSectorItem(id, event) {
   const item = state.sectorConfig.find(s => s.id === id);
-  showPopup({
-    title: 'Delete Sector',
-    message: `Delete "<strong>${item?.label || ''}</strong>"? Existing accounts keep their saved sector text — it just won't be a selectable chip anymore.`,
-    confirmLabel: 'Delete',
-    danger: true,
-    onConfirm: async () => {
-      try {
-        const { error } = await supa.from('kac_sectors').delete().eq('id', id);
-        if (error) throw error;
-        const idx = state.sectorConfig.findIndex(s => s.id === id);
-        if (idx >= 0) state.sectorConfig.splice(idx, 1);
-        renderAdminPanel();
-        toast('Deleted');
-      } catch (e) { toast('Error: ' + e.message); }
-    }
-  }, event);
+  if (!item) return;
+  const label = item.label;
+  const affected = state.accounts.filter(a => (a.key_sectors||'').split(',').map(s=>s.trim()).includes(label));
+  if (!affected.length) {
+    showPopup({ title:'Delete Sector', message:`Delete "<strong>${esc(label)}</strong>"?`, confirmLabel:'Delete', danger:true,
+      onConfirm: async () => { try { await reallyDeleteSector(id); } catch(e){ toast('Error: '+e.message); } } }, event);
+    return;
+  }
+  const others = state.sectorConfig.filter(s => s.id !== id);
+  const optionsHtml = others.map(s => `<option value="${esc(s.label)}">${esc(s.label)}</option>`).join('') + `<option value="__REMOVE__">— Remove the tag —</option>`;
+  const rows = affected.map(a => [esc(a.company_name), esc(a.key_sectors||'')]);
+  showReassignModal({
+    title: `Delete sector: ${esc(label)}`,
+    intro: `<strong>${affected.length}</strong> account${affected.length!==1?'s':''} use "${esc(label)}". Reassign them to another sector (or remove the tag), then delete.`,
+    optionsHtml,
+    listHtml: reassignTableHtml(['Account','Current sectors'], rows),
+    confirmLabel: 'Reassign & Delete',
+    onConfirm: async (target) => { await reassignSectorAndDelete(id, label, target, affected); }
+  });
+}
+async function reassignSectorAndDelete(id, oldLabel, target, affected) {
+  for (const a of affected) {
+    let secs = (a.key_sectors||'').split(',').map(s=>s.trim()).filter(Boolean).filter(s => s !== oldLabel);
+    if (target !== '__REMOVE__' && !secs.includes(target)) secs.push(target);
+    secs.sort();
+    const newVal = secs.join(', ');
+    const { error } = await supa.from('kac_accounts').update({ key_sectors: newVal, updated_at: new Date().toISOString() }).eq('id', a.id);
+    if (error) throw error;
+    a.key_sectors = newVal;
+  }
+  await reallyDeleteSector(id);
+}
+async function reallyDeleteSector(id) {
+  const { error } = await supa.from('kac_sectors').delete().eq('id', id);
+  if (error) throw error;
+  const idx = state.sectorConfig.findIndex(s => s.id === id); if (idx >= 0) state.sectorConfig.splice(idx, 1);
+  renderAdminPanel();
+  toast('Deleted');
 }
 
 async function moveSectorItem(id, currentIdx, direction) {
