@@ -285,7 +285,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* Dashboard toggle */
 .dash-toggle, .detail-tabs { display: flex; flex-wrap: wrap; gap: 6px; background: transparent; padding: 0; margin: 0 16px 14px; }
 .dash-toggle button, .detail-tab { flex: 1 1 30%; padding: 7px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); background: var(--g100); border: 1px solid var(--g300); transition: all .15s; letter-spacing: .2px; }
-.detail-tab { flex: 1 1 0; }
+.detail-tab { flex: 1 1 0; color: var(--g700); }
 .dash-toggle button.active, .detail-tab.active { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
 /* Filter dropdowns */
@@ -298,7 +298,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .fd-item { padding: 6px 10px; font-size: 12px; font-weight: 500; color: var(--g600); cursor: pointer; display: flex; align-items: center; gap: 6px; }
 .fd-item:hover { background: var(--g50); }
 .fd-item.active { color: var(--vic-orange); font-weight: 700; }
-.fd-item.active::before { content: '✓'; font-size: 11px; }
+.fd-item.active::after { content: '✓'; font-size: 11px; margin-left: 6px; }
 .fd-tags { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 16px 10px; }
 .fd-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; }
 .fd-tag:hover { filter: brightness(0.95); }
@@ -2065,7 +2065,7 @@ function renderFunnelBar(accountId) {
     const shortNames = { 1: 'Identify', 2: 'Engage', 3: 'Demonstrate', 4: 'Convert', 5: 'Grow' };
     const segColor = complete ? stageColors[s] : '#94A3B8';
     const segBg = complete ? segColor + 'd9' : segColor + '33';
-    html += `<div class="${cls}" style="background:${segBg}"><div class="fill" style="width:${fillW}%;background:${segColor}d9"></div><span class="seg-label">${shortNames[s]}</span></div>`;
+    html += `<div class="${cls}" style="background:${segBg}"><div class="fill" style="width:${fillW}%;background:${segColor}d9"></div><span class="seg-label" style="color:${complete ? '#fff' : 'var(--g500)'}">${shortNames[s]}</span></div>`;
   }
   html += '</div>';
   return html;
@@ -2091,19 +2091,19 @@ function renderAccountDetail() {
       <div class="detail-company">
         <div style="flex:1">
           <h2>${esc(a.company_name)}</h2>
-          <div class="detail-meta">
+          ${a.hq_city ? `<div style="font-size:16px;font-weight:500;color:var(--g500);margin-top:3px">${esc(a.hq_city)}</div>` : ''}
+          <div class="detail-meta" style="margin-top:6px">
+            ${a.regions ? `<span class="meta-item"><strong>Regions:</strong> ${esc(a.regions)}</span>` : ''}
+            ${a.key_sectors ? `<span class="meta-item"><strong>Sectors:</strong> ${esc(a.key_sectors)}</span>` : ''}
+            ${a.estimated_revenue ? `<span class="meta-item"><strong>Revenue:</strong> ${esc(a.currency || 'AUD')} $${formatNumber(a.estimated_revenue)}</span>` : ''}
+            ${getRepName(a.assigned_to) ? `<span class="meta-item"><strong>Rep:</strong> ${esc(getRepName(a.assigned_to))}</span>` : ''}
+          </div>
+          <div class="detail-meta" style="margin-top:6px">
             <span class="badge" style="background:#EAF3DE;color:#27500A">${a.tier===-1?'Owner':a.tier===0?'Engineer':'Tier '+a.tier}</span>
             <span class="badge ${countryClass}">${a.country === 'AU' ? 'Australia' : 'New Zealand'}</span>
             ${a.regions ? `<span class="badge" style="background:#EFF6FF;color:#1E40AF">${esc(a.regions)}</span>` : ''}
             ${getRepName(a.assigned_to) ? `<span class="badge" style="background:#E1F5EE;color:#085041">${esc(getRepName(a.assigned_to))}</span>` : ''}
             ${a.psa_tier ? `<span class="badge" style="background:#FEF3C7;color:#92400E">PSA ${a.psa_tier}</span>` : ''}
-          </div>
-          <div class="detail-meta" style="margin-top:6px">
-            ${a.hq_city ? `<span class="meta-item"><strong>HQ:</strong> ${esc(a.hq_city)}</span>` : ''}
-            ${a.regions ? `<span class="meta-item"><strong>Regions:</strong> ${esc(a.regions)}</span>` : ''}
-            ${a.key_sectors ? `<span class="meta-item"><strong>Sectors:</strong> ${esc(a.key_sectors)}</span>` : ''}
-            ${a.estimated_revenue ? `<span class="meta-item"><strong>Revenue:</strong> ${esc(a.currency || 'AUD')} $${formatNumber(a.estimated_revenue)}</span>` : ''}
-            ${getRepName(a.assigned_to) ? `<span class="meta-item"><strong>Rep:</strong> ${esc(getRepName(a.assigned_to))}</span>` : ''}
           </div>
         </div>
         <button onclick="showEditAccount('${a.id}')" style="padding:8px;color:var(--g500)">
