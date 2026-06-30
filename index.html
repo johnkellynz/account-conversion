@@ -619,7 +619,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
         <div style="display:flex;gap:8px;align-items:center">
           <span id="acct-clear-btn"></span>
           <div style="position:relative;flex:0 1 200px;min-width:130px">
-            <input type="text" id="search-accounts" placeholder="Search accounts..." oninput="renderAccountsList()" autocomplete="off"
+            <input type="text" id="search-accounts" placeholder="Search" oninput="renderAccountsList()" autocomplete="off"
               style="width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:13px;background:var(--white);box-sizing:border-box;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:9px center">
           </div>
           <div class="fd-wrap" id="af-sort" onclick="toggleFilterDrop('af-sort',event)" style="flex:none;min-width:auto">
@@ -815,7 +815,7 @@ let state = {
   dashFilterRep: [],
   dashFilterManager: [],
   dashFilterRegion: [],
-  dashFilterCountry: 'all',
+  dashFilterCountry: [],
   dashFilterStage: 'all',
   dashFilterTier: [],
   dashSortCol: 'company',
@@ -981,7 +981,7 @@ function toggleFilterDrop(id, evt) {
 document.addEventListener('click', () => document.querySelectorAll('.fd-wrap.open').forEach(w => w.classList.remove('open')));
 
 function removeTag(key, val) {
-  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') {
+  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry') {
     const idx = state[key].indexOf(val);
     if (idx >= 0) state[key].splice(idx, 1);
     if (key === 'dashFilterManager') {
@@ -1014,7 +1014,7 @@ function stalledSort(col) {
 }
 function clearDashFilters() {
   state.dashFilterRep = []; state.dashFilterManager = []; state.dashFilterRegion = [];
-  state.dashFilterCountry = 'all'; state.dashFilterStage = 'all'; state.dashFilterTier = [];
+  state.dashFilterCountry = []; state.dashFilterStage = 'all'; state.dashFilterTier = [];
   state.dashSearch = '';
   _rerenderCurrentFilterView();
 }
@@ -1028,7 +1028,7 @@ function _rerenderCurrentFilterView() {
 function pageSearchBox() {
   const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E";
   return `<div style="position:relative;flex:0 1 200px;min-width:130px">
-    <input type="text" id="page-search-input" value="${esc(state.dashSearch||'')}" placeholder="Search accounts..." oninput="onPageSearch(this.value)" autocomplete="off"
+    <input type="text" id="page-search-input" value="${esc(state.dashSearch||'')}" placeholder="Search" oninput="onPageSearch(this.value)" autocomplete="off"
       style="width:100%;padding:8px 12px 8px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:13px;background:var(--white);box-sizing:border-box;background-image:url(&quot;${icon}&quot;);background-repeat:no-repeat;background-position:9px center">
   </div>`;
 }
@@ -1047,7 +1047,7 @@ function pagePdfButton() {
   return `<button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>`;
 }
 function setDashFilter(key, val) {
-  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') {
+  if (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry') {
     const arr = state[key];
     const idx = arr.indexOf(val);
     if (idx >= 0) arr.splice(idx, 1);
@@ -1083,7 +1083,7 @@ function getDashFilteredAccounts() {
       return regs.some(r => selected.has(r));
     });
   }
-  if (state.dashFilterCountry !== 'all') accts = accts.filter(a => a.country === state.dashFilterCountry);
+  if (state.dashFilterCountry.length > 0) accts = accts.filter(a => state.dashFilterCountry.includes(a.country));
   if (state.dashFilterStage !== 'all') accts = accts.filter(a => a.current_stage === parseInt(state.dashFilterStage));
   if (state.dashFilterTier.length > 0) accts = accts.filter(a => state.dashFilterTier.includes(String(a.tier)));
   const q = (state.dashSearch || '').trim().toLowerCase();
@@ -1744,10 +1744,10 @@ function renderFilters(targetId) {
   if (el._regionRow) { el._regionRow.remove(); el._regionRow = null; }
 
   const allAccounts = getVisibleAccounts();
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0;
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0;
 
   const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
-  const scopedReps = state.dashFilterCountry !== 'all' ? reps.filter(p => p.country === state.dashFilterCountry) : reps;
+  const scopedReps = state.dashFilterCountry.length > 0 ? reps.filter(p => state.dashFilterCountry.includes(p.country)) : reps;
   const hasReports = new Set(scopedReps.filter(p => p.reports_to).map(p => p.reports_to));
   const managers = scopedReps.filter(p => hasReports.has(p.id));
   const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
@@ -1758,13 +1758,13 @@ function renderFilters(targetId) {
   state.accounts.forEach(a => (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(r => acctRegions.add(r)));
   const activeNZ = nzRegionCodes.filter(r => acctRegions.has(r));
   const activeAU = auRegions.filter(r => acctRegions.has(r));
-  const visibleRegions = state.dashFilterCountry === 'AU' ? activeAU : state.dashFilterCountry === 'NZ' ? activeNZ : [...activeAU, ...activeNZ];
+  const visibleRegions = (state.dashFilterCountry.length===1 && state.dashFilterCountry[0]==='AU') ? activeAU : (state.dashFilterCountry.length===1 && state.dashFilterCountry[0]==='NZ') ? activeNZ : [...activeAU, ...activeNZ];
 
   const mgrOrder = ['Steve','David','Josh','Ben'];
   const filteredMgrs = [...managers];
   filteredMgrs.sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
 
-  const isMulti = k => k === 'dashFilterRep' || k === 'dashFilterManager' || k === 'dashFilterRegion' || k === 'dashFilterTier';
+  const isMulti = k => k === 'dashFilterRep' || k === 'dashFilterManager' || k === 'dashFilterRegion' || k === 'dashFilterTier' || k === 'dashFilterCountry';
   const fdItem = (label, key, val, dropId) => {
     const active = isMulti(key) ? state[key].includes(val) : state[key] === val;
     const reopen = isMulti(key) && dropId ? `setTimeout(()=>{const d=document.getElementById('${dropId}');if(d)d.classList.add('open')},0);` : '';
@@ -1772,7 +1772,7 @@ function renderFilters(targetId) {
   };
   const _tierName = v => v === '-1' ? 'Owner' : v === '0' ? 'Engineer' : 'T' + v;
 
-  const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
+  const countryLabel = state.dashFilterCountry.length > 0 ? state.dashFilterCountry.join(', ') : 'Country';
   const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
   const tierLabel = state.dashFilterTier.length > 0 ? (state.dashFilterTier.length === 1 ? _tierName(state.dashFilterTier[0]) : state.dashFilterTier.length + ' selected') : 'Stakeholder';
   const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
@@ -1781,7 +1781,7 @@ function renderFilters(targetId) {
 
   // Build active tags
   const tags = [];
-  if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
+  state.dashFilterCountry.forEach(c => tags.push({ label: c, key: 'dashFilterCountry', val: c, css: 't-country' }));
   state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
   state.dashFilterTier.forEach(v => tags.push({ label: _tierName(v), key: 'dashFilterTier', val: v, css: 't-tier' }));
   if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
@@ -1793,7 +1793,7 @@ function renderFilters(targetId) {
   el.innerHTML = `
     <div class="fd-row" style="flex-wrap:wrap">
       <div class="fd-wrap" id="af-country" onclick="toggleFilterDrop('af-country',event)">
-        <div class="fd-btn${state.dashFilterCountry!=='all'?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-btn${state.dashFilterCountry.length?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
         <div class="fd-menu">${fdItem('AU','dashFilterCountry','AU','af-country')}${fdItem('NZ','dashFilterCountry','NZ','af-country')}</div>
       </div>
       <div class="fd-wrap" id="af-region" onclick="toggleFilterDrop('af-region',event)">
@@ -1844,7 +1844,7 @@ function filterByStage(stageNum) {
 }
 function filterByCountry(country) {
   clearDashFilters();
-  state.dashFilterCountry = country;
+  state.dashFilterCountry = country ? [country] : [];
   showView('accounts');
   renderFilters();
 }
@@ -2486,14 +2486,14 @@ function renderDashboard() {
   const el = document.getElementById('view-dashboard');
   const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const allAccounts = getVisibleAccounts();
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
 
   // Dropdown filter system
   let filterHtml = '';
   {
     const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
-    const scopedAccounts = state.dashFilterCountry !== 'all' ? allAccounts.filter(a => a.country === state.dashFilterCountry) : allAccounts;
-    const scopedReps = state.dashFilterCountry !== 'all' ? reps.filter(p => p.country === state.dashFilterCountry) : reps;
+    const scopedAccounts = state.dashFilterCountry.length > 0 ? allAccounts.filter(a => state.dashFilterCountry.includes(a.country)) : allAccounts;
+    const scopedReps = state.dashFilterCountry.length > 0 ? reps.filter(p => state.dashFilterCountry.includes(p.country)) : reps;
     const hasReports = new Set(scopedReps.filter(p => p.reports_to).map(p => p.reports_to));
     const managers = scopedReps.filter(p => hasReports.has(p.id));
     const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
@@ -2504,19 +2504,22 @@ function renderDashboard() {
     allAccounts.forEach(a => (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(r => acctRegions.add(r)));
     const activeNZ = nzRegionCodes.filter(r => acctRegions.has(r));
     const activeAU = auRegions.filter(r => acctRegions.has(r));
-    const visibleRegions = state.dashFilterCountry === 'AU' ? activeAU : state.dashFilterCountry === 'NZ' ? activeNZ : [...activeAU, ...activeNZ];
+    const visibleRegions = (state.dashFilterCountry.length===1 && state.dashFilterCountry[0]==='AU') ? activeAU : (state.dashFilterCountry.length===1 && state.dashFilterCountry[0]==='NZ') ? activeNZ : [...activeAU, ...activeNZ];
 
     const mgrOrder = ['Steve','David','Josh','Ben'];
     const filteredMgrs = [...managers];
     filteredMgrs.sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
 
+    const _dropFor = { dashFilterCountry:'fd-country', dashFilterRegion:'fd-region', dashFilterTier:'fd-tier', dashFilterManager:'fd-mgr', dashFilterRep:'fd-rep' };
     const fdItem = (label, key, val) => {
-      const active = (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') ? state[key].includes(val) : state[key] === val;
-      return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}')">${label}</div>`;
+      const multi = key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry';
+      const active = multi ? state[key].includes(val) : state[key] === val;
+      const reopen = multi && _dropFor[key] ? `setTimeout(()=>{const d=document.getElementById('${_dropFor[key]}');if(d)d.classList.add('open')},0);` : '';
+      return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');${reopen}">${label}</div>`;
     };
     const _tierName = v => v === '-1' ? 'Owner' : v === '0' ? 'Engineer' : 'T' + v;
 
-    const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
+    const countryLabel = state.dashFilterCountry.length > 0 ? state.dashFilterCountry.join(', ') : 'Country';
     const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
     const tierLabel = state.dashFilterTier.length > 0 ? (state.dashFilterTier.length === 1 ? _tierName(state.dashFilterTier[0]) : state.dashFilterTier.length + ' selected') : 'Stakeholder';
     const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
@@ -2525,7 +2528,7 @@ function renderDashboard() {
 
     // Build active tags
     const tags = [];
-    if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
+    state.dashFilterCountry.forEach(c => tags.push({ label: c, key: 'dashFilterCountry', val: c, css: 't-country' }));
     state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
     state.dashFilterTier.forEach(v => tags.push({ label: _tierName(v), key: 'dashFilterTier', val: v, css: 't-tier' }));
     if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
@@ -2535,7 +2538,7 @@ function renderDashboard() {
     filterHtml = `
     <div class="fd-row">
       <div class="fd-wrap" id="fd-country" onclick="toggleFilterDrop('fd-country',event)">
-        <div class="fd-btn${state.dashFilterCountry!=='all'?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-btn${state.dashFilterCountry.length?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
         <div class="fd-menu">${fdItem('AU','dashFilterCountry','AU')}${fdItem('NZ','dashFilterCountry','NZ')}</div>
       </div>
       <div class="fd-wrap" id="fd-region" onclick="toggleFilterDrop('fd-region',event)">
@@ -2613,7 +2616,7 @@ function renderDashMetrics() {
     const cl = state.checklist[a.id] || [];
     return cl.some(c => c.completed_at && c.completed_at.slice(0,7) === thisMonth);
   }).length;
-  const avgProgress = Math.round(accounts.reduce((sum,a) => { let total=0,done=0; for(let s=1;s<=5;s++){const c=getStageCompletion(a.id,s); total+=c.total; done+=c.done;} return sum+(total?done/total*100:0); },0)/(accounts.length||1));
+  const stagesAdvanced = accounts.reduce((sum,a) => sum + Math.max(0, (a.current_stage||1) - 1), 0);
   const isManager = state.profile?.role === 'manager' || state.profile?.role === 'admin' || state.profile?.role === 'director';
   const au = accounts.filter(a => a.country === 'AU');
   const nz = accounts.filter(a => a.country === 'NZ');
@@ -2645,7 +2648,7 @@ function renderDashMetrics() {
       <div onclick="filterToAccounts()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:var(--vic-black)">${accounts.length}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Accounts</div></div>
       <div onclick="filterToStalled()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:${stalled > 0 ? '#ef4444' : 'var(--success)'}">${stalled}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Stalled</div></div>
       <div onclick="filterToActiveThisMonth()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><span style="font-size:20px;font-weight:700;color:#3b82f6">${active}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Active This Month</div></div>
-      <div style="flex:1"><span style="font-size:20px;font-weight:700;color:var(--success)">${avgProgress}%</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Avg Progress</div></div>
+      <div style="flex:1"><span style="font-size:20px;font-weight:700;color:var(--success)">${stagesAdvanced}</span><div style="font-size:10px;color:var(--g400);text-transform:uppercase;font-weight:600;margin-top:2px">Stages Advanced</div></div>
     </div>
   </div>
   ${oppHtml}`;
@@ -2705,15 +2708,15 @@ function renderDashboardSummary() {
       const stages = [0,0,0,0,0];
       pAccts.forEach(a => stages[a.current_stage-1]++);
       const avgStage = pAccts.length ? (pAccts.reduce((s,a)=>s+a.current_stage,0)/pAccts.length) : 0;
-      const avgProg = Math.round(pAccts.reduce((sum,a) => { let total=0,done=0; for(let s=1;s<=5;s++){const c=getStageCompletion(a.id,s); total+=c.total; done+=c.done;} return sum+(total?done/total*100:0); },0)/(pAccts.length||1));
-      return { ...p, accts: pAccts.length, rev, stages, avgStage, avgProg };
+      const stagesAdv = pAccts.reduce((sum,a) => sum + Math.max(0, (a.current_stage||1) - 1), 0);
+      return { ...p, accts: pAccts.length, rev, stages, avgStage, stagesAdv };
     });
 
     // Sort scoreboard
     const sbDir = state.sbSortDir === 'asc' ? 1 : -1;
     if (state.sbSortCol === 'name') repData.sort((a,b) => sbDir * (a.full_name||'').localeCompare(b.full_name||''));
     else if (state.sbSortCol === 'accts') repData.sort((a,b) => sbDir * (a.accts - b.accts));
-    else if (state.sbSortCol === 'prog') repData.sort((a,b) => sbDir * (a.avgProg - b.avgProg));
+    else if (state.sbSortCol === 'prog') repData.sort((a,b) => sbDir * (a.stagesAdv - b.stagesAdv));
     else if (state.sbSortCol === 'opp') repData.sort((a,b) => sbDir * (a.rev - b.rev));
 
     const stageColors = ['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
@@ -2737,7 +2740,7 @@ function renderDashboardSummary() {
             ${d.accts}
           </div>
           <div style="width:56px;flex-shrink:0;text-align:center;font-size:13px;color:var(--g600)">
-            ${d.avgProg}%
+            ${d.stagesAdv}
           </div>
           <div style="width:100px;flex-shrink:0;text-align:right;font-size:13px;color:var(--g600)">
             $${formatNumber(Math.round(d.rev))}
@@ -2750,7 +2753,7 @@ function renderDashboardSummary() {
           <div onclick="sbSort('name')" style="width:140px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Name${sbIcon('name')}</div>
           <div style="flex:1"></div>
           <div onclick="sbSort('accts')" style="width:44px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Accts${sbIcon('accts')}</div>
-          <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Prog${sbIcon('prog')}</div>
+          <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Steps${sbIcon('prog')}</div>
           <div onclick="sbSort('opp')" style="width:100px;flex-shrink:0;text-align:right;font-size:11px;font-weight:600;color:var(--g500);cursor:pointer">Opportunity${sbIcon('opp')}</div>
         </div>
         <div>
@@ -2783,16 +2786,49 @@ function renderDashboardSummary() {
     return stDir * aD.localeCompare(bD);
   });
   if (stalledAccounts.length) {
-    const stalledCards = stalledAccounts.slice(0,15).map(a => accountCardHtml(a)).join('');
-    html += `<div id="stalled-section" style="margin-top:8px">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px">
+    const repName = (uid) => { const p = state.profiles.find(pr => pr.id === uid); return p ? p.full_name : '—'; };
+    const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
+    const stIcon = (col) => state.stalledSortCol === col ? (state.stalledSortDir === 'asc' ? ' ↑' : ' ↓') : '';
+    const stalledRows = stalledAccounts.slice(0,15).map(a => {
+      const cl = state.checklist[a.id] || [];
+      const latest = cl.reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
+      const lastTxt = latest ? new Date(latest).toLocaleDateString('en-AU',{day:'numeric',month:'short'}) : '<span style="color:#ef4444">Never</span>';
+      const comp = getStageCompletion(a.id, a.current_stage);
+      let statusBar = '<div style="display:flex;gap:3px;align-items:center">';
+      for (let s = 1; s <= 5; s++) {
+        const sc = getStageCompletion(a.id, s);
+        const done = isStageComplete(a.id, s);
+        const isCur = s === a.current_stage;
+        const bg = done ? stageColors[s] : stageColors[s] + '40';
+        statusBar += `<div style="flex:1;min-width:16px;height:8px;background:${bg};border-radius:4px;overflow:hidden;position:relative">`;
+        if (isCur) statusBar += `<div style="width:${sc.pct}%;height:100%;background:${stageColors[s]};border-radius:2px"></div>`;
+        statusBar += '</div>';
+      }
+      statusBar += `<span style="font-size:11px;font-weight:600;color:var(--g500);white-space:nowrap;margin-left:6px">${STAGES[a.current_stage].name.split(' ')[0]} ${comp.done}/${comp.total}</span></div>`;
+      return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
+        <td><strong>${esc(a.company_name)}</strong>${a.hq_city ? `<span style="color:var(--g400);font-weight:400"> — ${esc(a.hq_city)}</span>` : ''}</td>
+        <td>${statusBar}</td>
+        <td style="font-size:13px;color:var(--g500)">${esc(repName(a.assigned_to))}</td>
+        <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
+      </tr>`;
+    }).join('');
+    html += `<div id="stalled-section" class="dash-section"><div class="table-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 8px">
         <h3 style="color:#ef4444;margin:0">Stalled Accounts</h3>
         <select onchange="state.stalledDays=parseInt(this.value);renderDashboard()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
           ${[14,30,60,90,120].map(d => `<option value="${d}"${state.stalledDays===d?' selected':''}>${d} days</option>`).join('')}
         </select>
       </div>
-      ${stalledCards}
-    </div>`;
+      <table class="data-table">
+        <thead><tr>
+          <th style="cursor:pointer;user-select:none" onclick="stalledSort('name')">Company${stIcon('name')}</th>
+          <th style="min-width:180px;cursor:pointer;user-select:none" onclick="stalledSort('progress')">Progress${stIcon('progress')}</th>
+          <th style="cursor:pointer;user-select:none" onclick="stalledSort('rep')">Rep${stIcon('rep')}</th>
+          <th style="text-align:center;cursor:pointer;user-select:none" onclick="stalledSort('activity')">Last Activity${stIcon('activity')}</th>
+        </tr></thead>
+        <tbody>${stalledRows}</tbody>
+      </table>
+    </div></div>`;
   }
 
   el.innerHTML = html;
@@ -2897,7 +2933,7 @@ function renderMatrixView() {
   const rows = state.matrixConfig.rows;
   const cols = state.matrixConfig.cols;
   const statuses = state.matrixConfig.statuses;
-  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry !== 'all' || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
+  const hasFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0 || state.dashFilterRegion.length > 0 || state.dashFilterCountry.length > 0 || state.dashFilterStage !== 'all' || state.dashFilterTier.length > 0 || (state.dashSearch||'').trim() !== '';
 
   if (!rows.length || !cols.length) {
     el.innerHTML = '<div class="view-header"><h1>Acceptance Matrix</h1></div><div style="padding:24px;text-align:center;color:var(--g400)">No matrix configured yet. Set up product rows and milestone columns in Admin.</div>';
@@ -2906,7 +2942,7 @@ function renderMatrixView() {
 
   // Build filters (same pattern as dashboard)
   const reps = (state.profiles || []).filter(p => (p.role === 'rep' || p.role === 'manager' || p.role === 'admin') && p.role !== 'director').sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
-  const scopedReps = state.dashFilterCountry !== 'all' ? reps.filter(p => p.country === state.dashFilterCountry) : reps;
+  const scopedReps = state.dashFilterCountry.length > 0 ? reps.filter(p => state.dashFilterCountry.includes(p.country)) : reps;
   const hasReports = new Set(scopedReps.filter(p => p.reports_to).map(p => p.reports_to));
   const managers = scopedReps.filter(p => hasReports.has(p.id));
   const activeReps = scopedReps.filter(p => !hasReports.has(p.id)).sort((a,b) => (a.full_name||'').localeCompare(b.full_name||''));
@@ -2916,17 +2952,20 @@ function renderMatrixView() {
   allAccounts.forEach(a => (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean).forEach(r => acctRegions.add(r)));
   const activeNZ = nzRegionCodes.filter(r => acctRegions.has(r));
   const activeAU = auRegions.filter(r => acctRegions.has(r));
-  const visibleRegions = state.dashFilterCountry === 'AU' ? activeAU : state.dashFilterCountry === 'NZ' ? activeNZ : [...activeAU, ...activeNZ];
+  const visibleRegions = (state.dashFilterCountry.length===1 && state.dashFilterCountry[0]==='AU') ? activeAU : (state.dashFilterCountry.length===1 && state.dashFilterCountry[0]==='NZ') ? activeNZ : [...activeAU, ...activeNZ];
   const mgrOrder = ['Steve','David','Josh','Ben'];
   const filteredMgrs = [...managers].sort((a,b) => { const ia = mgrOrder.findIndex(n => (a.full_name||'').startsWith(n)); const ib = mgrOrder.findIndex(n => (b.full_name||'').startsWith(n)); return (ia===-1?99:ia) - (ib===-1?99:ib); });
 
+  const _mxDropFor = { dashFilterCountry:'mx-fd-country', dashFilterRegion:'mx-fd-region', dashFilterTier:'mx-fd-tier', dashFilterManager:'mx-fd-mgr', dashFilterRep:'mx-fd-rep' };
   const mxFd = (label, key, val) => {
-    const active = (key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier') ? state[key].includes(val) : state[key] === val;
-    return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');renderMatrixView()">${label}</div>`;
+    const multi = key === 'dashFilterRep' || key === 'dashFilterManager' || key === 'dashFilterRegion' || key === 'dashFilterTier' || key === 'dashFilterCountry';
+    const active = multi ? state[key].includes(val) : state[key] === val;
+    const reopen = multi && _mxDropFor[key] ? `setTimeout(()=>{const d=document.getElementById('${_mxDropFor[key]}');if(d)d.classList.add('open')},0);` : '';
+    return `<div class="fd-item${active?' active':''}" onclick="event.stopPropagation();setDashFilter('${key}','${val}');renderMatrixView();${reopen}">${label}</div>`;
   };
   const _tierName = v => v === '-1' ? 'Owner' : v === '0' ? 'Engineer' : 'T' + v;
 
-  const countryLabel = state.dashFilterCountry !== 'all' ? state.dashFilterCountry : 'Country';
+  const countryLabel = state.dashFilterCountry.length > 0 ? state.dashFilterCountry.join(', ') : 'Country';
   const regionLabel = state.dashFilterRegion.length ? state.dashFilterRegion.length + ' selected' : 'Region';
   const tierLabel = state.dashFilterTier.length > 0 ? (state.dashFilterTier.length === 1 ? _tierName(state.dashFilterTier[0]) : state.dashFilterTier.length + ' selected') : 'Stakeholder';
   const stageLabel = state.dashFilterStage !== 'all' ? STAGES[parseInt(state.dashFilterStage)].name : 'Stage';
@@ -2934,7 +2973,7 @@ function renderMatrixView() {
   const repLabel = state.dashFilterRep.length ? state.dashFilterRep.length + ' selected' : 'Rep';
 
   const tags = [];
-  if (state.dashFilterCountry !== 'all') tags.push({ label: state.dashFilterCountry, key: 'dashFilterCountry', val: state.dashFilterCountry, css: 't-country' });
+  state.dashFilterCountry.forEach(c => tags.push({ label: c, key: 'dashFilterCountry', val: c, css: 't-country' }));
   state.dashFilterRegion.forEach(r => tags.push({ label: r, key: 'dashFilterRegion', val: r, css: 't-region' }));
   state.dashFilterTier.forEach(v => tags.push({ label: _tierName(v), key: 'dashFilterTier', val: v, css: 't-tier' }));
   if (state.dashFilterStage !== 'all') tags.push({ label: STAGES[parseInt(state.dashFilterStage)].name, key: 'dashFilterStage', val: state.dashFilterStage, css: 't-stage' + state.dashFilterStage });
@@ -2944,7 +2983,7 @@ function renderMatrixView() {
   const filterHtml = `
     <div class="fd-row">
       <div class="fd-wrap" id="mx-fd-country" onclick="toggleFilterDrop('mx-fd-country',event)">
-        <div class="fd-btn${state.dashFilterCountry!=='all'?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
+        <div class="fd-btn${state.dashFilterCountry.length?' has-val':''}">${countryLabel} <span style="font-size:10px;opacity:.5">▼</span></div>
         <div class="fd-menu">${mxFd('AU','dashFilterCountry','AU')}${mxFd('NZ','dashFilterCountry','NZ')}</div>
       </div>
       <div class="fd-wrap" id="mx-fd-region" onclick="toggleFilterDrop('mx-fd-region',event)">
@@ -3473,12 +3512,13 @@ function renderDashboardHeatmap(targetId) {
   }
 
   // Determine which countries to show based on filters and actual account data
-  const filterCountry = state.dashFilterCountry;
+  const auSel = state.dashFilterCountry.includes('AU');
+  const nzSel = state.dashFilterCountry.includes('NZ');
   const hasFilteredAU = accounts.some(a => a.country === 'AU');
   const hasFilteredNZ = accounts.some(a => a.country === 'NZ');
   const hasActiveFilter = state.dashFilterRep.length > 0 || state.dashFilterManager.length > 0;
-  const mapShowAU = filterCountry === 'AU' ? true : filterCountry === 'NZ' ? false : hasActiveFilter ? hasFilteredAU : showAU;
-  const mapShowNZ = filterCountry === 'NZ' ? true : filterCountry === 'AU' ? false : hasActiveFilter ? hasFilteredNZ : showNZ;
+  const mapShowAU = auSel ? true : nzSel ? false : hasActiveFilter ? hasFilteredAU : showAU;
+  const mapShowNZ = nzSel ? true : auSel ? false : hasActiveFilter ? hasFilteredNZ : showNZ;
 
   el.innerHTML = `
     <div class="dash-section">
