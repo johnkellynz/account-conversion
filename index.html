@@ -245,7 +245,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 /* Heatmap */
 .heatmap-legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 8px 16px; }
-.leaflet-map-container { height: 410px; width: 100%; border-radius: var(--radius); border: 1px solid var(--g200); z-index: 1; }
+.leaflet-map-container { height: 580px; width: 100%; border-radius: var(--radius); border: 1px solid var(--g200); z-index: 1; }
 @media (max-width: 768px) { .leaflet-map-container { height: 300px; } }
 .leaflet-popup-content-wrapper { border-radius: 8px !important; }
 .leaflet-popup-content { margin: 10px 14px !important; font-family: inherit !important; font-size: 13px !important; }
@@ -3760,7 +3760,7 @@ function renderDashboardHeatmap(targetId) {
           leafletMap.invalidateSize();
           const b = boundsGroup.getBounds();
           if (b && b.isValid()) {
-            leafletMap.fitBounds(b, { padding: [8, 8], maxZoom: 10, animate: false });
+            leafletMap.fitBounds(b, { padding: [2, 2], maxZoom: 11, animate: false });
           }
         } catch(e) {}
       };
