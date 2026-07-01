@@ -2201,14 +2201,14 @@ function renderAcceptanceTab(container) {
   let html = `<div class="dash-section" style="text-align:center;padding:14px 16px;margin:0 0 12px">
     <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Product Acceptance</div>
     <div style="font-size:28px;font-weight:800;color:${scoreColor};line-height:1">${acceptanceRate}%</div>`;
-  if (eligibleCells > 0) {
-    html += `<div style="display:flex;justify-content:space-between;font-size:14px;color:var(--g400);margin:10px auto 3px;max-width:480px">
-        <span>${approvedCount}/${eligibleCells} accepted</span>
-        <span>${activeCells} active</span>
-      </div>
-      <div style="height:8px;background:var(--g100);border-radius:4px;overflow:hidden;display:flex;max-width:480px;margin:0 auto">
-        ${approvedCount ? `<div style="width:${approvedCount/eligibleCells*100}%;background:#F58220"></div>` : ''}
-        ${activeCells - approvedCount > 0 ? `<div style="width:${(activeCells-approvedCount)/eligibleCells*100}%;background:#38BDF8"></div>` : ''}
+  if (totalCells > 0) {
+    html += `<div style="height:10px;background:var(--g100);border-radius:5px;overflow:hidden;display:flex;max-width:600px;margin:12px auto 0">
+        ${statuses.map(s => {
+          const cnt = statusCounts[s.id] || 0;
+          if (!cnt) return '';
+          const segColor = (s.label === 'N/A' || s.label === 'Not Started') ? '#94A3B8' : s.color;
+          return `<div style="width:${cnt/totalCells*100}%;background:${segColor}" title="${esc(s.label)}: ${cnt}"></div>`;
+        }).join('')}
       </div>`;
   }
   html += `</div>`;
@@ -3067,24 +3067,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
 
     const drilled = state.dashFilterRep.length === 1 && state.dashFilterStage !== 'all';
     if (drilled && !showSector) {
-      const rep = (state.profiles||[]).find(p => p.id === state.dashFilterRep[0]);
-      const stageNum = parseInt(state.dashFilterStage);
-      const listAccts = accounts.slice().sort((a,b) => a.company_name.localeCompare(b.company_name));
-      const listRows = listAccts.map(a => `
-        <div onclick="showAccountDetail('${a.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--g100);cursor:pointer" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:600;font-size:13px;color:var(--g700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.company_name)}</div>
-            ${a.hq_city ? `<div style="font-size:12px;color:var(--g600);margin-top:1px">${esc(a.hq_city)}</div>` : ''}
-          </div>
-          <div style="font-size:13px;color:var(--g600);text-align:right;white-space:nowrap">$${formatNumber(Math.round(toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency)))}</div>
-        </div>`).join('');
-      html += `<div class="dash-section" style="padding:12px">
-        <div style="display:flex;align-items:center;gap:8px;margin:0 0 8px">
-          <span style="width:11px;height:11px;border-radius:3px;background:${stageColors[stageNum-1]};flex-shrink:0"></span>
-          <h3 style="margin:0;font-size:12px">${esc(rep?.full_name||'—')} · ${STAGES[stageNum].name} <span style="color:var(--g400);font-weight:400">(${listAccts.length})</span></h3>
-        </div>
-        <div>${listRows || '<div style="color:var(--g400);font-size:13px;padding:8px 0">No accounts at this stage.</div>'}</div>
-      </div>`;
+      html += keyAccountsTableSection();
     } else if (repData.length && !showSector) {
       let rows = repData.map(d => `
         <div onclick="setDashFilter('dashFilterRep','${d.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g100);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
@@ -3210,9 +3193,13 @@ function renderDashboardMatrix() {
       const cell = 'display:flex;align-items:center;padding:9px 0;border-bottom:1px solid var(--g100);cursor:pointer';
       const sg = stepGain(a);
       const sgHtml = sg > 0 ? `▲ ${sg}` : '0';
+      const aData = state.matrixData[a.id] || [];
+      const aCounts = {}; statuses.forEach(s => aCounts[s.id] = 0);
+      aData.forEach(d => { if (aCounts[d.status_id] !== undefined) aCounts[d.status_id]++; });
+      const barSegs = statuses.map(s => { const cnt = aCounts[s.id] || 0; if (!cnt) return ''; const segColor = (s.label === 'N/A' || s.label === 'Not Started') ? '#94A3B8' : s.color; return `<div style="width:${cnt/totalCells*100}%;background:${segColor}" title="${esc(s.label)}: ${cnt}"></div>`; }).join('');
       return `<div onclick="showAccountDetail('${a.id}')" style="display:contents">
         <div style="${cell};flex-direction:column;align-items:flex-start;justify-content:center;white-space:nowrap"><span style="font-size:13px;font-weight:600;color:var(--g700)">${esc(a.company_name)}</span>${a.hq_city ? `<span style="font-size:12px;color:var(--g600);margin-top:1px">${esc(a.hq_city)}</span>` : ''}</div>
-        <div style="${cell}"><div style="width:100%;height:8px;background:var(--g100);border-radius:4px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width .3s"></div></div></div>
+        <div style="${cell}"><div style="width:100%;height:10px;background:var(--g100);border-radius:5px;overflow:hidden;display:flex">${barSegs}</div></div>
         <div style="${cell};justify-content:center;font-size:13px;font-weight:700;color:var(--g700)">${sgHtml}</div>
         <div style="${cell};justify-content:flex-end;font-size:13px;font-weight:700;color:var(--g700)">${pct}%</div>
       </div>`;
@@ -3239,7 +3226,7 @@ function renderDashboardMatrix() {
           <input type="month" value="${state.dashStageMonth}" max="${new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')}" onchange="setStageMonth(this.value)" style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none">
         </span>
       </div>
-      <div style="height:8px;background:var(--g100);border-radius:4px;overflow:hidden;margin:10px auto 0;max-width:480px"><div style="width:${overallPct}%;height:100%;background:${overallColor};border-radius:4px;transition:width .3s"></div></div>
+      <div style="height:8px;background:var(--g100);border-radius:4px;overflow:hidden;margin:10px auto 0;max-width:600px"><div style="width:${overallPct}%;height:100%;background:${overallColor};border-radius:4px;transition:width .3s"></div></div>
     </div>
     <div class="dash-section">
       ${prodHtml}
@@ -3249,8 +3236,7 @@ function renderDashboardMatrix() {
     </div>`;
 }
 
-function renderDashboardKeyAccounts() {
-  const el = document.getElementById('dash-content');
+function keyAccountsTableSection() {
   state.accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
   let accounts = getDashFilteredAccounts();
   const kDir = state.kaSortDir === 'asc' ? 1 : -1;
@@ -3290,7 +3276,7 @@ function renderDashboardKeyAccounts() {
       <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
     </tr>`;
   }).join('');
-  el.innerHTML = `<div class="dash-section"><div class="table-wrap">
+  return `<div class="dash-section"><div class="table-wrap">
     <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Key Accounts</h3>
     ${accounts.length ? `<table class="data-table">
       <thead><tr>
@@ -3303,6 +3289,9 @@ function renderDashboardKeyAccounts() {
       <tbody>${rows}</tbody>
     </table>` : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No accounts match the current filters.</div>'}
   </div></div>`;
+}
+function renderDashboardKeyAccounts() {
+  document.getElementById('dash-content').innerHTML = keyAccountsTableSection();
 }
 
 function renderDashboardStalled() {
