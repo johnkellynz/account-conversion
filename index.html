@@ -3213,6 +3213,13 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
   const stageOpp = [0, 0, 0, 0, 0];
   accounts.forEach(a => { stageCounts[a.current_stage - 1]++; stageOpp[a.current_stage - 1] += toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency); });
   const maxCount = Math.max(...stageCounts, 1);
+  // Per-stage movement: accounts that reached each stage during the selected month.
+  const _pmonth = state.dashStageMonth;
+  const stageArrivals = [0,0,0,0,0];
+  accounts.forEach(a => {
+    if ((a.created_at||'').slice(0,7) === _pmonth) stageArrivals[0]++;
+    for (let s = 2; s <= 5; s++) { const d = stageCrossDate(a.id, s-1); if (d && d.slice(0,7) === _pmonth) stageArrivals[s-1]++; }
+  });
 
   // Opportunity by sector (each account counts toward every sector it lists).
   // Only show sectors that still exist in the admin list, so deleted ones (e.g. a
@@ -3278,15 +3285,13 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
   else pipeStages.sort((a,b)=>pdir*(a-b));
   const stageColors = ['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
   const pipelineSection = showPipeline ? `
-    <div class="dash-section" style="flex:1 1 380px;min-width:300px;margin:0;padding:12px">
-      <h3 style="margin:0 0 10px;font-size:12px">Conversion Pipeline</h3>
+    <div class="dash-section" style="flex:1 1 380px;min-width:300px;margin:0;padding:14px 12px">
       <div style="display:flex;gap:6px">
-        ${[1,2,3,4,5].map((s,i) => { const c = stageColors[i]; const cnt = stageCounts[s-1]; return `
+        ${[1,2,3,4,5].map((s,i) => { const c = stageColors[i]; const cnt = stageCounts[s-1]; const mv = stageArrivals[s-1]; const mColor = mv > 0 ? 'var(--success)' : 'var(--g400)'; const mArrow = mv > 0 ? '▲' : '–'; return `
           <div class="pipe-card" onclick="filterByStage(${s})" title="View ${STAGES[s].name} accounts">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${STAGES[s].name}</div>
-            <div style="font-size:24px;font-weight:800;color:${c};line-height:1.1;margin-top:3px">${cnt}</div>
-            <div style="font-size:10px;color:var(--g400);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stageOpp[s-1] ? fxSymbol()+formatNumber(Math.round(stageOpp[s-1])) : '—'}</div>
-            <div style="height:4px;background:var(--g100);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:${cnt>0?Math.max(cnt/maxCount*100,6):0}%;background:${c};transition:width .3s"></div></div>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${STAGES[s].name}</div>
+            <div style="font-size:20px;font-weight:700;color:${c};line-height:1.1;margin-top:2px">${cnt}</div>
+            <div style="font-size:12px;font-weight:700;color:${mColor};margin-top:3px" title="Reached this stage in ${stageMonthLabel()}">${mArrow} ${mv}</div>
           </div>`; }).join('')}
       </div>
     </div>` : '';
