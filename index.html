@@ -309,7 +309,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* Dashboard toggle */
 .dash-toggle, .detail-tabs { display: flex; flex-wrap: wrap; gap: 6px; background: transparent; padding: 0; margin: 0 16px 14px; }
 .dash-toggle button, .detail-tab { flex: 1 1 30%; padding: 7px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); background: var(--g100); border: 1px solid var(--g300); transition: all .15s; letter-spacing: .2px; }
-.dash-toggle button { padding: 10px 7px; background: #D9731614; color: #D97316; border-color: #D9731633; }
+.dash-toggle button { padding: 10px 7px; background: var(--white); color: var(--g500); border-color: var(--g200); }
 .detail-tab { flex: 1 1 0; color: var(--g700); }
 .dash-toggle button.active, .detail-tab.active { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
@@ -1112,7 +1112,7 @@ function _rerenderCurrentFilterView() {
 // Shared search box shown in Dashboard / Matrix / Heatmap headers (filters via getDashFilteredAccounts)
 function pageSearchBox() {
   const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E";
-  return `<div style="position:relative;flex:0 1 200px;min-width:130px">
+  return `<div style="position:relative;flex:0 1 220px;min-width:130px">
     <input type="text" id="page-search-input" value="${esc(state.dashSearch||'')}" placeholder="Search" oninput="onPageSearch(this.value)" autocomplete="off"
       style="width:100%;padding:11px 12px 11px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:12px;background:var(--white);box-sizing:border-box;background-image:url(&quot;${icon}&quot;);background-repeat:no-repeat;background-position:9px center;height:40px">
   </div>`;
@@ -2384,7 +2384,7 @@ function renderAcceptanceTab(container) {
     const m = scStatusMeta(s);
     return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${m.bc}14;border:1px solid ${m.bc}33">
       <div style="font-size:11px;font-weight:600;color:${m.bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
-      <div style="font-size:21px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
+      <div style="font-size:22px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
       <div style="font-size:11px;font-weight:500;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   }).join('') : '';
@@ -3093,25 +3093,25 @@ function renderDashboard() {
 
   el.innerHTML = `
     <div class="view-header">
-      <h1>Dashboard ${hasFilter?'<span style="font-size:14px;font-weight:400;color:var(--g400)">— '+filtered.length+' of '+allAccounts.length+' accounts</span>':''}</h1>
+      <h1>Dashboard</h1>
       <div style="display:flex;gap:8px;align-items:center">
         ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">✕ Clear</button>` : ''}
         ${pageSearchBox()}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
-          <div class="fd-btn" style="padding:11px 18px;height:40px;box-sizing:border-box">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
+          <div class="fd-btn" style="padding:11px 12px;height:40px;box-sizing:border-box;background:#47556914;border:1px solid #47556933;color:#475569;width:120px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
           <div class="fd-menu" style="min-width:90px">
             <div class="fd-item${state.dashCurrency==='AUD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='AUD';localStorage.setItem('kac_currency_'+state.user?.id,'AUD');renderDashboard()">AUD$</div>
             <div class="fd-item${state.dashCurrency==='USD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='USD';localStorage.setItem('kac_currency_'+state.user?.id,'USD');renderDashboard()">USD$</div>
             <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';localStorage.setItem('kac_currency_'+state.user?.id,'NZD');renderDashboard()">NZD$</div>
           </div>
         </div>
-        <button onclick="showAddAccount()" style="padding:11px 24px;background:#68D9AF;color:#1B5E3F;border:none;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Account</button>
-        <button onclick="generatePageReport()" style="padding:11px 24px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button onclick="showAddAccount()" style="padding:11px 12px;width:120px;justify-content:center;background:#05966914;color:#059669;border:1px solid #05966933;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Account</button>
+        <button onclick="generatePageReport()" style="padding:11px 12px;width:120px;justify-content:center;background:#DC262614;color:#DC2626;border:1px solid #DC262633;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
       </div>
     </div>
     <div class="dash-toggle">
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Conversion Summary</button>
-      <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Sector Summary</button>
+      <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Market Summary</button>
       <button class="${state.dashMode==='matrix'?'active':''}" onclick="state.dashMode='matrix';renderDashboard()">Acceptance Matrix</button>
       <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
       <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
@@ -3182,7 +3182,7 @@ function renderDashMetrics() {
   </div>`;
 
   const sLabel = 'font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:4px';
-  const sNum = 'font-size:21px;font-weight:700;line-height:1';
+  const sNum = 'font-size:22px;font-weight:700;line-height:1';
   const statStrip = `<div class="dash-section" style="padding:14px 0">
     <div style="display:flex;text-align:center;align-items:center">
       <div class="stat-tile" onclick="filterToAccounts()" style="flex:1;border-right:1px solid var(--g200)"><div style="${sLabel}">Accounts</div><div style="${sNum};color:var(--vic-black)">${accounts.length}</div></div>
@@ -3298,7 +3298,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
         ${[1,2,3,4,5].map((s,i) => { const c = stageColors[i]; const tc = stageTextColors[i]; const cnt = stageCounts[s-1]; const mv = stageArrivals[s-1]; const mColor = mv > 0 ? 'var(--success)' : 'var(--g400)'; const mArrow = mv > 0 ? '▲' : '–'; return `
           <div class="pipe-card" onclick="filterByStage(${s})" title="View ${STAGES[s].name} accounts" style="background:${tc}14;border:1px solid ${tc}33">
             <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:${tc}cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${STAGES[s].name}</div>
-            <div style="font-size:21px;font-weight:700;color:${tc}cc;line-height:1.1;margin-top:2px">${cnt}</div>
+            <div style="font-size:22px;font-weight:700;color:${tc}cc;line-height:1.1;margin-top:2px">${cnt}</div>
             <div style="font-size:11px;font-weight:500;color:${mColor};margin-top:3px" title="Reached this stage in ${stageMonthLabel()}">${mArrow} ${mv} this mo</div>
           </div>`; }).join('')}
       </div>
@@ -3391,7 +3391,7 @@ function acceptanceBox(label, pct, divider, onclick, deltaPts) {
   }
   return `<div ${onclick ? `class="mx-click" onclick="${onclick}"` : ''} style="padding:8px 10px;text-align:center;${divider ? 'border-right:1px solid var(--g200);' : ''}${onclick ? 'cursor:pointer' : ''}">
     <div style="font-size:11px;font-weight:600;color:var(--g700);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</div>
-    <div style="font-size:21px;font-weight:700;color:${c}">${pct}%</div>
+    <div style="font-size:22px;font-weight:700;color:${c}">${pct}%</div>
     ${movement}
   </div>`;
 }
@@ -3523,7 +3523,7 @@ function renderDashboardMatrix() {
     const m = statusMeta(s);
     return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${m.bc}14;border:1px solid ${m.bc}33">
       <div style="font-size:11px;font-weight:600;color:${m.bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
-      <div style="font-size:21px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
+      <div style="font-size:22px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
       <div style="font-size:11px;font-weight:500;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   }).join('') : '';
