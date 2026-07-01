@@ -3154,7 +3154,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
       </div>
       <div class="funnel-chart">
         ${sectorRows.length ? sectorRows.map(([sec,o]) => `
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;padding:7px 6px;margin-left:-6px;margin-right:-6px">
+          <div style="display:flex;align-items:center;gap:8px;padding:7px 6px;margin-left:-6px;margin-right:-6px;border-bottom:1px solid var(--g100)">
             <div style="width:120px;flex-shrink:0;font-size:13px;font-weight:600;text-align:left;color:var(--g600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(sec)}</div>
             <div style="width:100px;flex-shrink:0;font-size:13px;font-weight:600;color:var(--vic-orange);text-align:right;white-space:nowrap">${o.au ? '$'+formatNumber(Math.round(o.au)) : ''}</div>
             <div style="flex:1;height:10px;background:var(--g100);border-radius:5px;overflow:hidden;position:relative">
