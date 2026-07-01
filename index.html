@@ -316,7 +316,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* Filter dropdowns */
 .fd-row { display: flex; gap: 6px; padding: 0 16px 8px; flex-wrap: wrap; }
 .fd-wrap { position: relative; flex: 1; min-width: 90px; }
-.fd-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 10px; border-radius: var(--radius-sm); border: 1px solid var(--g200); background: var(--white); font-size: 12px; font-weight: 600; color: var(--g500); cursor: pointer; white-space: nowrap; }
+.fd-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 10px; border-radius: var(--radius-sm); border: 1px solid #47556933; background: #47556914; font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; white-space: nowrap; }
 .fd-btn.has-val { border-color: var(--vic-orange); color: var(--vic-orange); }
 .fd-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; z-index: 50; background: var(--white); border: 1px solid var(--g200); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,.1); margin-top: 2px; max-height: 70vh; overflow-y: auto; white-space: nowrap; }
 .fd-wrap.open .fd-menu { display: block; }
@@ -1608,7 +1608,7 @@ async function saveAccount(data) {
   const isNew = !data.id;
   if (isNew) {
     data.id = uuid();
-    data.assigned_to = state.user.id;
+    if (!data.assigned_to) data.assigned_to = state.user.id;
     data.created_at = new Date().toISOString();
     data.current_stage = 1;
     data.conversion_status = 'New';
@@ -2421,7 +2421,8 @@ function renderAcceptanceTab(container) {
     const rejGain = rowData.filter(d => rejectedStatus && d.status_id === rejectedStatus.id && _inMon(d)).length;
     const gPts = rowEligible > 0 ? Math.round((apprGain - rejGain) / rowEligible * 1000)/10 : 0;
     const divider = (i % 5 !== 4) && (i !== rows.length - 1);
-    html += acceptanceBox(row.label, rowPct, divider, editable ? `editMatrixRow('${accountId}','${row.id}')` : '', gPts);
+    const bottomDivider = Math.floor(i/5) < Math.floor((rows.length-1)/5);
+    html += acceptanceBox(row.label, rowPct, divider, editable ? `editMatrixRow('${accountId}','${row.id}')` : '', gPts, bottomDivider);
   });
   html += `</div></div>`;
 
@@ -3101,8 +3102,8 @@ function renderDashboard() {
           <div class="fd-btn" style="padding:11px 12px;height:40px;box-sizing:border-box;background:#47556914;border:1px solid #47556933;color:#475569;width:120px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
           <div class="fd-menu" style="min-width:90px">
             <div class="fd-item${state.dashCurrency==='AUD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='AUD';localStorage.setItem('kac_currency_'+state.user?.id,'AUD');renderDashboard()">AUD$</div>
-            <div class="fd-item${state.dashCurrency==='USD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='USD';localStorage.setItem('kac_currency_'+state.user?.id,'USD');renderDashboard()">USD$</div>
             <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';localStorage.setItem('kac_currency_'+state.user?.id,'NZD');renderDashboard()">NZD$</div>
+            <div class="fd-item${state.dashCurrency==='USD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='USD';localStorage.setItem('kac_currency_'+state.user?.id,'USD');renderDashboard()">USD$</div>
           </div>
         </div>
         <button onclick="showAddAccount()" style="padding:11px 12px;width:120px;justify-content:center;background:#05966914;color:#059669;border:1px solid #05966933;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Account</button>
@@ -3381,7 +3382,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
 
 // Shared product-acceptance box — used by the dashboard Acceptance Matrix tab AND the
 // customer page Acceptance tab, so styling changes mirror across both.
-function acceptanceBox(label, pct, divider, onclick, deltaPts) {
+function acceptanceBox(label, pct, divider, onclick, deltaPts, bottomDivider) {
   const c = pct > 0 ? '#F58220' : '#94A3B8';
   let movement = '';
   if (deltaPts !== undefined && deltaPts !== null) {
@@ -3389,7 +3390,7 @@ function acceptanceBox(label, pct, divider, onclick, deltaPts) {
     const mArrow = deltaPts > 0 ? '▲' : deltaPts < 0 ? '▼' : '–';
     movement = `<div style="font-size:11px;font-weight:500;color:${mColor};margin-top:2px">${mArrow} ${Math.abs(deltaPts)} pts</div>`;
   }
-  return `<div ${onclick ? `class="mx-click" onclick="${onclick}"` : ''} style="padding:8px 10px;text-align:center;${divider ? 'border-right:1px solid var(--g200);' : ''}${onclick ? 'cursor:pointer' : ''}">
+  return `<div ${onclick ? `class="mx-click" onclick="${onclick}"` : ''} style="padding:8px 10px;text-align:center;${divider ? 'border-right:1px solid var(--g200);' : ''}${bottomDivider ? 'border-bottom:1px solid var(--g200);' : ''}${onclick ? 'cursor:pointer' : ''}">
     <div style="font-size:11px;font-weight:600;color:var(--g700);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</div>
     <div style="font-size:22px;font-weight:700;color:${c}">${pct}%</div>
     ${movement}
@@ -3451,7 +3452,8 @@ function renderDashboardMatrix() {
     const pct = pp.eligible > 0 ? Math.round(pp.approved / pp.eligible * 100) : 0;
     const gPts = pp.eligible > 0 ? Math.round((pp.apprGain - pp.rejGain) / pp.eligible * 1000)/10 : 0;
     const divider = (i % 5 !== 4) && (i !== rows.length - 1);
-    return acceptanceBox(r.label, pct, divider, null, gPts);
+    const bottomDivider = Math.floor(i/5) < Math.floor((rows.length-1)/5);
+    return acceptanceBox(r.label, pct, divider, null, gPts, bottomDivider);
   }).join('') + `</div>`;
 
   const accIcon = (col) => state.accSortCol === col ? (state.accSortDir === 'asc' ? ' ↑' : ' ↓') : '';
@@ -6421,6 +6423,10 @@ function showAddAccount() {
           <input type="text" id="acc-revenue" placeholder="e.g. 90000000" oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/\B(?=(\d{3})+(?!\d))/g,',')">
         </div>
       </div>
+      <div class="form-group">
+        <label>Assigned Rep</label>
+        <select id="acc-assigned">${[...state.profiles].sort((a,b)=>(a.id===state.user?.id?-1:0)-(b.id===state.user?.id?-1:0)).map(p => `<option value="${p.id}" ${state.user?.id===p.id?'selected':''}>${esc(p.full_name||'—')}${state.user?.id===p.id?' (you)':''}</option>`).join('')}</select>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
         <button type="submit" class="btn-save">Add Account</button>
@@ -6509,7 +6515,7 @@ async function handleSaveAccount(e, existingId) {
   data.currency = document.getElementById('acc-currency').value;
   data.estimated_revenue = document.getElementById('acc-revenue').value.replace(/,/g, '').trim();
   if (existingId) data.psa_tier = document.getElementById('acc-psa')?.value || '';
-  if (existingId) data.assigned_to = document.getElementById('acc-assigned')?.value || data.assigned_to;
+  data.assigned_to = document.getElementById('acc-assigned')?.value || data.assigned_to;
 
   await saveAccount(data);
   closeModal();
