@@ -2220,7 +2220,7 @@ function renderAcceptanceTab(container) {
   statuses.forEach(s => {
     const count = statusCounts[s.id] || 0;
     if (count > 0 || s.label === 'Approved') {
-      const bc = (s.label === 'N/A' && defaultStatus && defaultStatus.color) ? defaultStatus.color : s.color;
+      const bc = (s.label === 'N/A' || s.label === 'Not Started') ? '#94A3B8' : s.color;
       html += `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${bc}14;border:1px solid ${bc}33">
         <div style="font-size:11px;font-weight:600;color:${bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
         <div style="font-size:20px;font-weight:700;color:${bc};line-height:1.1;margin-top:2px">${count}</div>
@@ -2241,7 +2241,7 @@ function renderAcceptanceTab(container) {
   rows.forEach((row, ri) => {
     const isLast = ri === rows.length - 1;
     html += `<tr>
-      <td ${editable ? `onclick="editMatrixRow('${accountId}','${row.id}')"` : ''} style="padding:8px 12px;font-weight:600;font-size:12px;color:var(--g700);background:var(--g50);border-bottom:${isLast?'none':'1px solid var(--g200)'};position:sticky;left:0;z-index:1;white-space:nowrap;cursor:${editable?'pointer':'default'}" title="${editable?'Set the status for every milestone of this product':''}">${esc(row.label)}</td>`;
+      <td ${editable ? `onclick="editMatrixRow('${accountId}','${row.id}')"` : ''} style="padding:8px 12px;font-weight:600;font-size:12px;color:var(--g700);background:var(--g50);border-bottom:${isLast?'none':'1px solid var(--g200)'};position:sticky;left:0;z-index:1;white-space:nowrap;cursor:${editable?'pointer':'default'}" title="${editable?'Click to set the status for every milestone of this product':''}">${esc(row.label)}${editable ? ` <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="vertical-align:-1px;margin-left:5px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>` : ''}</td>`;
     cols.forEach(col => {
       const cell = getCell(row.id, col.id);
       const status = cell ? getStatus(cell.status_id) : defaultStatus;
@@ -2250,8 +2250,10 @@ function renderAcceptanceTab(container) {
       const actioned = cell && status && status.label !== 'Not Started' && status.label !== 'N/A';
       const dateTxt = actioned && cell.updated_at ? new Date(cell.updated_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'2-digit'}) : '';
       html += `<td ${editable ? `onclick="editMatrixCell('${accountId}','${row.id}','${col.id}')"` : ''} style="padding:7px 4px;border-left:1px solid var(--g200);border-bottom:${isLast?'none':'1px solid var(--g200)'};background:${(status && status.label === 'Not Started') ? 'transparent' : displayColor + '2b'};text-align:center;min-width:80px;cursor:${editable?'pointer':'default'}" title="${editable?'Update status & date':''}">
-        <div style="font-size:11px;font-weight:600;color:${displayColor};line-height:1.2">${esc(status?.label || 'Not Started')}</div>
-        <div style="font-size:11px;color:var(--g400);margin-top:2px;line-height:1;min-height:11px">${actioned && dateTxt ? dateTxt : ''}</div>
+        <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:26px">
+          <div style="font-size:11px;font-weight:600;color:${displayColor};line-height:1.2">${esc(status?.label || 'Not Started')}</div>
+          ${actioned && dateTxt ? `<div style="font-size:11px;color:var(--g400);margin-top:2px;line-height:1">${dateTxt}</div>` : ''}
+        </div>
       </td>`;
     });
     html += `</tr>`;
