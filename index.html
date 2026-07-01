@@ -154,8 +154,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 
 /* ---------- ACCOUNT DETAIL ---------- */
 .detail-header { padding: 16px; }
-.detail-back { display: flex; align-items: center; gap: 6px; color: var(--vic-orange); font-weight: 600; font-size: 14px; margin-bottom: 16px; padding: 4px 0; }
-.detail-back svg { width: 20px; height: 20px; }
+.detail-back { display: flex; align-items: center; gap: 6px; color: var(--vic-orange); font-weight: 600; font-size: 16px; margin-bottom: 16px; padding: 4px 0; }
+.detail-back svg { width: 22px; height: 22px; }
 .detail-company { display: flex; align-items: flex-start; justify-content: space-between; }
 .detail-company h2 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; flex: 1; }
 .detail-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
@@ -2358,7 +2358,7 @@ function renderAcceptanceTab(container) {
   const statusGain = {}; statuses.forEach(s => statusGain[s.id] = 0);
   data.forEach(d => { if (statusGain[d.status_id] !== undefined && d.updated_at && d.updated_at >= _mStart && d.updated_at < _mEnd) statusGain[d.status_id]++; });
   const scActioned = statuses.reduce((n,s) => s.label === 'Not Started' ? n : n + (statusCounts[s.id]||0), 0);
-  const scStatusBoxes = totalCells > 0 ? statuses.map(s => {
+  const scStatusMeta = (s) => {
     const cnt = s.label === 'Not Started' ? (totalCells - scActioned) : (statusCounts[s.id] || 0);
     const boxPct = Math.round(cnt / totalCells * 100);
     let gPts = Math.round((statusGain[s.id]||0) / totalCells * 1000) / 10;
@@ -2366,10 +2366,23 @@ function renderAcceptanceTab(container) {
     const gColor = gPts > 0 ? 'var(--success)' : gPts < 0 ? '#ef4444' : 'var(--g400)';
     const gArrow = gPts > 0 ? '▲' : gPts < 0 ? '▼' : '–';
     const bc = s.label === 'Not Started' ? '#1f2937' : (s.label === 'N/A') ? '#94A3B8' : s.color;
-    return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${bc}14;border:1px solid ${bc}33">
-      <div style="font-size:11px;font-weight:600;color:${bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
-      <div style="font-size:20px;font-weight:700;color:${bc};line-height:1.1;margin-top:2px">${boxPct}%</div>
-      <div style="font-size:12px;font-weight:700;color:${gColor};margin-top:3px">${gArrow} ${Math.abs(gPts)} pts</div>
+    return { boxPct, gPts, gColor, gArrow, bc };
+  };
+  // Accepted shown as a big heading; the other statuses stay as tiles below the bar.
+  const scAcceptedHeading = (totalCells > 0 && approvedStatus) ? (() => {
+    const m = scStatusMeta(approvedStatus);
+    return `<div style="text-align:center;padding:2px 0 0">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:${m.bc}">${esc(approvedStatus.label)}</div>
+      <div style="font-size:40px;font-weight:800;color:${m.bc};line-height:1.05">${m.boxPct}%</div>
+      <div style="font-size:13px;font-weight:700;color:${m.gColor};margin-top:1px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
+    </div>`;
+  })() : '';
+  const scOtherBoxes = totalCells > 0 ? statuses.filter(s => s.label !== 'Accepted').map(s => {
+    const m = scStatusMeta(s);
+    return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${m.bc}14;border:1px solid ${m.bc}33">
+      <div style="font-size:11px;font-weight:600;color:${m.bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
+      <div style="font-size:20px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
+      <div style="font-size:12px;font-weight:700;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   }).join('') : '';
   const scBarSegs = totalCells > 0 ? statuses.map(s => {
@@ -2386,8 +2399,9 @@ function renderAcceptanceTab(container) {
         <input type="month" value="${state.dashStageMonth}" max="${new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')}" onchange="setStageMonth(this.value)" style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none">
       </span>
     </div>
-    <div style="display:flex;gap:6px">${scStatusBoxes}</div>
-    <div style="height:10px;background:var(--g100);border-radius:5px;overflow:hidden;margin:12px 0 0;display:flex">${scBarSegs}</div>
+    ${scAcceptedHeading}
+    <div style="height:10px;background:var(--g100);border-radius:5px;overflow:hidden;margin:10px 0 0;display:flex">${scBarSegs}</div>
+    <div style="display:flex;gap:6px;margin-top:12px">${scOtherBoxes}</div>
   </div>`;
 
   // ---- PER-PRODUCT SUMMARY ----
@@ -3466,7 +3480,7 @@ function renderDashboardMatrix() {
   const grandCells = accounts.length * totalCells;
   const totActioned = statuses.reduce((n,s) => s.label === 'Not Started' ? n : n + (totCounts[s.id]||0), 0);
   // Per-status breakdown boxes: share of all matrix cells + points gained this month
-  const statusBoxes = grandCells > 0 ? statuses.map(s => {
+  const statusMeta = (s) => {
     const cnt = s.label === 'Not Started' ? (grandCells - totActioned) : (totCounts[s.id] || 0);
     const boxPct = Math.round(cnt / grandCells * 100);
     let gPts = Math.round((statusGain[s.id] || 0) / grandCells * 1000) / 10;
@@ -3474,10 +3488,23 @@ function renderDashboardMatrix() {
     const gColor = gPts > 0 ? 'var(--success)' : gPts < 0 ? '#ef4444' : 'var(--g400)';
     const gArrow = gPts > 0 ? '▲' : gPts < 0 ? '▼' : '–';
     const bc = s.label === 'Not Started' ? '#1f2937' : (s.label === 'N/A') ? '#94A3B8' : s.color;
-    return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${bc}14;border:1px solid ${bc}33">
-      <div style="font-size:11px;font-weight:600;color:${bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
-      <div style="font-size:20px;font-weight:700;color:${bc};line-height:1.1;margin-top:2px">${boxPct}%</div>
-      <div style="font-size:12px;font-weight:700;color:${gColor};margin-top:3px">${gArrow} ${Math.abs(gPts)} pts</div>
+    return { boxPct, gPts, gColor, gArrow, bc };
+  };
+  // Accepted shown as a big heading; the other statuses stay as tiles below the bar.
+  const acceptedHeading = (grandCells > 0 && approvedStatus) ? (() => {
+    const m = statusMeta(approvedStatus);
+    return `<div style="text-align:center;padding:2px 0 0">
+      <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:${m.bc}">${esc(approvedStatus.label)}</div>
+      <div style="font-size:40px;font-weight:800;color:${m.bc};line-height:1.05">${m.boxPct}%</div>
+      <div style="font-size:13px;font-weight:700;color:${m.gColor};margin-top:1px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
+    </div>`;
+  })() : '';
+  const otherBoxes = grandCells > 0 ? statuses.filter(s => s.label !== 'Accepted').map(s => {
+    const m = statusMeta(s);
+    return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${m.bc}14;border:1px solid ${m.bc}33">
+      <div style="font-size:11px;font-weight:600;color:${m.bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
+      <div style="font-size:20px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
+      <div style="font-size:12px;font-weight:700;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   }).join('') : '';
   const topBarSegs = grandCells > 0 ? statuses.map(s => { const cnt = s.label === 'Not Started' ? (grandCells - totActioned) : (totCounts[s.id] || 0); if (cnt <= 0) return ''; const segStyle = s.label === 'Not Started' ? 'background:#1f2937' : `background:${s.label === 'N/A' ? '#94A3B8' : s.color}`; return `<div style="width:${cnt/grandCells*100}%;${segStyle}" title="${esc(s.label)}: ${cnt}"></div>`; }).join('') : '';
@@ -3497,8 +3524,9 @@ function renderDashboardMatrix() {
           <input type="month" value="${state.dashStageMonth}" max="${new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')}" onchange="setStageMonth(this.value)" style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none">
         </span>
       </div>
-      <div style="display:flex;gap:6px">${statusBoxes}</div>
-      <div style="height:10px;background:var(--g100);border-radius:5px;overflow:hidden;margin:12px 0 0;display:flex">${topBarSegs}</div>
+      ${acceptedHeading}
+      <div style="height:10px;background:var(--g100);border-radius:5px;overflow:hidden;margin:10px 0 0;display:flex">${topBarSegs}</div>
+      <div style="display:flex;gap:6px;margin-top:12px">${otherBoxes}</div>
     </div>
     <div class="dash-section">
       ${prodHtml}
