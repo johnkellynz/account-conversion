@@ -604,7 +604,10 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     <!-- ACCOUNTS LIST -->
     <div id="view-accounts" class="view active">
       <div class="view-header">
-        <h1>Key Accounts</h1>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button onclick="goBack()" title="Back" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--white);border:1.5px solid var(--g200);border-radius:var(--radius-xs);cursor:pointer;color:var(--g600);flex-shrink:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <h1>Key Accounts</h1>
+        </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="acct-clear-btn"></span>
           <div style="position:relative;flex:0 1 200px;min-width:130px">
@@ -626,8 +629,8 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
               <div class="fd-item" onclick="event.stopPropagation();setAcctSort('revenue')">Revenue</div>
             </div>
           </div>
-          <button class="btn-add" onclick="showAddAccount()" style="padding:8px 14px;font-size:13px;border-radius:var(--radius-xs);border:none">+ Add</button>
-          <button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:8px 14px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+          <button class="btn-add" onclick="showAddAccount()" style="padding:8px 14px;font-size:13px;border-radius:var(--radius-xs);border:none;white-space:nowrap;flex-shrink:0;cursor:pointer">+ Add</button>
+          <button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:8px 14px;background:#d23b36;color:#fff;border-radius:var(--radius-xs);font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
         </div>
       </div>
       <div id="account-filters"></div>
@@ -1017,6 +1020,13 @@ function removeTag(key, val) {
 function sbSort(col) {
   if (state.sbSortCol === col) state.sbSortDir = state.sbSortDir === 'asc' ? 'desc' : 'asc';
   else { state.sbSortCol = col; state.sbSortDir = col === 'name' ? 'asc' : 'desc'; }
+  renderDashboard();
+}
+// Team Performance drill-down: click a rep's stage segment → filter to that rep + stage
+// and list the matching customers in place of the scoreboard.
+function sbDrillStage(repId, stage) {
+  state.dashFilterRep = [repId];
+  state.dashFilterStage = String(stage);
   renderDashboard();
 }
 function pipeSort(col) {
@@ -1710,7 +1720,7 @@ function updateBackBtn() {
   ham.style.display = '';
 }
 function goBack() {
-  if (!viewHistory.length) return;
+  if (!viewHistory.length) { if (state.currentView !== 'dashboard') showView('dashboard'); return; }
   const prev = viewHistory.pop();
   updateBackBtn();
   if (prev.type === 'detail') { showView(prev.view, true); }
@@ -1902,7 +1912,7 @@ function renderFilters(targetId) {
 
   // Update header clear button
   const clearEl = document.getElementById('acct-clear-btn');
-  if (clearEl) clearEl.innerHTML = hasFilter ? `<button onclick="clearDashFilters();renderFilters();renderAccountsList()" style="padding:8px 14px;background:var(--danger);color:#fff;border:none;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">✕ Clear</button>` : '';
+  if (clearEl) clearEl.innerHTML = hasFilter ? `<button onclick="clearDashFilters();renderFilters();renderAccountsList()" style="padding:8px 14px;background:var(--danger);color:#fff;border:none;border-radius:var(--radius-xs);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0">✕ Clear</button>` : '';
   restoreOpenFilterDrop();
 }
 function setFilter(type, val) {
@@ -3055,7 +3065,27 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
       return state.sbSortDir === 'asc' ? '<span style="font-size:10px"> ↑</span>' : '<span style="font-size:10px"> ↓</span>';
     };
 
-    if (repData.length && !showSector) {
+    const drilled = state.dashFilterRep.length === 1 && state.dashFilterStage !== 'all';
+    if (drilled && !showSector) {
+      const rep = (state.profiles||[]).find(p => p.id === state.dashFilterRep[0]);
+      const stageNum = parseInt(state.dashFilterStage);
+      const listAccts = accounts.slice().sort((a,b) => a.company_name.localeCompare(b.company_name));
+      const listRows = listAccts.map(a => `
+        <div onclick="showAccountDetail('${a.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--g100);cursor:pointer" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px;color:var(--g700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.company_name)}</div>
+            ${a.hq_city ? `<div style="font-size:12px;color:var(--g600);margin-top:1px">${esc(a.hq_city)}</div>` : ''}
+          </div>
+          <div style="font-size:13px;color:var(--g600);text-align:right;white-space:nowrap">$${formatNumber(Math.round(toDisplayCurrency(parseFloat(a.estimated_revenue)||0, a.currency)))}</div>
+        </div>`).join('');
+      html += `<div class="dash-section" style="padding:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin:0 0 8px">
+          <span style="width:11px;height:11px;border-radius:3px;background:${stageColors[stageNum-1]};flex-shrink:0"></span>
+          <h3 style="margin:0;font-size:12px">${esc(rep?.full_name||'—')} · ${STAGES[stageNum].name} <span style="color:var(--g400);font-weight:400">(${listAccts.length})</span></h3>
+        </div>
+        <div>${listRows || '<div style="color:var(--g400);font-size:13px;padding:8px 0">No accounts at this stage.</div>'}</div>
+      </div>`;
+    } else if (repData.length && !showSector) {
       let rows = repData.map(d => `
         <div onclick="setDashFilter('dashFilterRep','${d.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g100);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
           <div style="width:140px;flex-shrink:0">
@@ -3063,7 +3093,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;gap:1px;height:22px;border-radius:4px;overflow:hidden;width:100%${d.accts?'':''}">
-              ${d.accts ? d.stages.map((c,i) => c > 0 ? `<div style="flex:${c};background:${stageColors[i]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff" title="${STAGES[i+1].name}: ${c}">${c}</div>` : '').join('') : `<div style="flex:1;background:var(--g100);border-radius:4px"></div>`}
+              ${d.accts ? d.stages.map((c,i) => c > 0 ? `<div onclick="event.stopPropagation();sbDrillStage('${d.id}',${i+1})" style="flex:${c};background:${stageColors[i]};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;cursor:pointer" title="${esc(d.full_name||'')} · ${STAGES[i+1].name}: ${c} — click to list">${c}</div>` : '').join('') : `<div style="flex:1;background:var(--g100);border-radius:4px"></div>`}
             </div>
           </div>
           <div style="width:100px;flex-shrink:0;text-align:right;font-size:13px;color:var(--g600)">
