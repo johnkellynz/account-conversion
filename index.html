@@ -3183,7 +3183,10 @@ function renderDashboard() {
         <div class="fd-menu">${activeReps.map(p => fdItem(p.full_name||'—','dashFilterRep',p.id)).join('')}</div>
       </div>
     </div>
-    ${tags.length ? `<div class="fd-tags">${tags.map(t => `<div class="fd-tag ${t.css}" onclick="event.stopPropagation();removeTag('${t.key}','${t.val}')">${t.label} ×</div>`).join('')}</div>` : ''}`;
+    ${(tags.length || hasFilter) ? `<div class="fd-tags" style="justify-content:space-between;align-items:center">
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${tags.map(t => `<div class="fd-tag ${t.css}" onclick="event.stopPropagation();removeTag('${t.key}','${t.val}')">${t.label} ×</div>`).join('')}</div>
+      ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:4px 10px;background:var(--danger);color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">✕ Clear</button>` : ''}
+    </div>` : ''}`;
   }
 
   const filtered = getDashFilteredAccounts();
@@ -3192,7 +3195,6 @@ function renderDashboard() {
     <div class="view-header">
       <h1>Dashboard</h1>
       <div style="display:flex;gap:8px;align-items:center;flex:0 0 66.5%">
-        ${hasFilter ? `<button onclick="clearDashFilters()" style="padding:8px 12px;background:var(--danger);color:#fff;border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">✕ Clear</button>` : ''}
         ${pageSearchBox()}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
           <div class="fd-btn" style="padding:11px 12px;height:40px;box-sizing:border-box;background:#59667814;border:1px solid #59667833;color:#596678;width:120px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
