@@ -222,8 +222,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .stat-grid { display: flex; gap: 8px; }
 .stat-card { flex: 1; background: var(--g50); border: 1px solid var(--g200); border-radius: var(--radius-sm); padding: 8px 6px; text-align: center; transition: border-color .15s; }
 .stat-card:hover { border-color: var(--g300); }
-.pipe-card { flex: 1; border: 1px solid var(--g150); border-radius: 8px; padding: 10px 6px 8px; text-align: center; cursor: pointer; transition: background .12s, border-color .12s; }
-.pipe-card:hover { border-color: var(--g300); background: var(--g50); }
+.pipe-card { flex: 1; border: 1px solid var(--g150); border-radius: 8px; padding: 10px 6px 8px; text-align: center; cursor: pointer; transition: filter .12s; }
+.pipe-card:hover { filter: brightness(0.96); }
 .stat-card .stat-value { font-size: 20px; font-weight: 700; color: var(--vic-black); letter-spacing: -.3px; }
 .stat-card .stat-label { font-size: 9px; color: var(--g500); margin-top: 2px; text-transform: uppercase; letter-spacing: .4px; font-weight: 600; }
 
@@ -3195,7 +3195,7 @@ function renderDashMetrics() {
     </div>
   </div>`;
   // Conversion Summary page omits this KPI strip (Accounts/Stalled/Active/Steps); other tabs keep it.
-  mel.innerHTML = oppHtml + (state.dashMode === 'summary' ? '' : statStrip);
+  mel.innerHTML = oppHtml + ((state.dashMode === 'summary' || state.dashMode === 'oppsector') ? '' : statStrip);
 }
 
 // Sector tab — shows the sector graph and hides the conversion pipeline; Summary is the inverse.
@@ -3288,10 +3288,10 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
     <div class="dash-section" style="flex:1 1 380px;min-width:300px;margin:0;padding:14px 12px">
       <div style="display:flex;gap:6px">
         ${[1,2,3,4,5].map((s,i) => { const c = stageColors[i]; const cnt = stageCounts[s-1]; const mv = stageArrivals[s-1]; const mColor = mv > 0 ? 'var(--success)' : 'var(--g400)'; const mArrow = mv > 0 ? '▲' : '–'; return `
-          <div class="pipe-card" onclick="filterByStage(${s})" title="View ${STAGES[s].name} accounts">
-            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${STAGES[s].name}</div>
+          <div class="pipe-card" onclick="filterByStage(${s})" title="View ${STAGES[s].name} accounts" style="background:${c}14;border-color:${c}33">
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:${c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${STAGES[s].name}</div>
             <div style="font-size:20px;font-weight:700;color:${c};line-height:1.1;margin-top:2px">${cnt}</div>
-            <div style="font-size:12px;font-weight:700;color:${mColor};margin-top:3px" title="Reached this stage in ${stageMonthLabel()}">${mArrow} ${mv}</div>
+            <div style="font-size:12px;font-weight:700;color:${mColor};margin-top:3px" title="Reached this stage in ${stageMonthLabel()}">${mArrow} ${mv} this mo</div>
           </div>`; }).join('')}
       </div>
     </div>` : '';
@@ -3335,7 +3335,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
       html += keyAccountsTableSection();
     } else if (repData.length && !showSector) {
       let rows = repData.map(d => `
-        <div onclick="setDashFilter('dashFilterRep','${d.id}')" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g100);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
+        <div onclick="setDashFilter('dashFilterRep','${d.id}')" style="display:flex;align-items:center;gap:8px;padding:13px 0;border-bottom:1px solid var(--g100);cursor:pointer;transition:background .15s" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''">
           <div style="width:140px;flex-shrink:0">
             <div style="font-weight:600;font-size:13px;color:var(--g700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.full_name||'—')}</div>
           </div>
@@ -3353,7 +3353,6 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
         </div>
       `).join('');
       html += `<div class="dash-section" style="padding:12px">
-        <h3 style="margin:0 0 8px;font-size:12px">Team Performance</h3>
         <div style="display:flex;align-items:center;gap:8px;padding:2px 0;border-bottom:1px solid var(--g200)">
           <div onclick="sbSort('name')" style="width:140px;flex-shrink:0;font-size:12px;font-weight:600;color:${state.sbSortCol==='name'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Name${sbIcon('name')}</div>
           <div style="flex:1;display:flex;justify-content:center;gap:12px;font-size:11px;color:var(--g500)">
