@@ -309,6 +309,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* Dashboard toggle */
 .dash-toggle, .detail-tabs { display: flex; flex-wrap: wrap; gap: 6px; background: transparent; padding: 0; margin: 0 16px 14px; }
 .dash-toggle button, .detail-tab { flex: 1 1 30%; padding: 7px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); background: var(--g100); border: 1px solid var(--g300); transition: all .15s; letter-spacing: .2px; }
+.dash-toggle button { padding: 10px 7px; background: #D9731614; color: #D97316; border-color: #D9731633; }
 .detail-tab { flex: 1 1 0; color: var(--g700); }
 .dash-toggle button.active, .detail-tab.active { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
@@ -2376,15 +2377,15 @@ function renderAcceptanceTab(container) {
     return `<div style="text-align:center;padding:2px 0 0">
       <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:${m.bc}">${esc(approvedStatus.label)}</div>
       <div style="font-size:40px;font-weight:800;color:${m.bc};line-height:1.05">${m.boxPct}%</div>
-      <div style="font-size:13px;font-weight:700;color:${m.gColor};margin-top:1px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
+      <div style="font-size:11px;font-weight:500;color:${m.gColor};margin-top:1px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   })() : '';
   const scOtherBoxes = totalCells > 0 ? statuses.filter(s => s.label !== 'Accepted').map(s => {
     const m = scStatusMeta(s);
     return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${m.bc}14;border:1px solid ${m.bc}33">
       <div style="font-size:11px;font-weight:600;color:${m.bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
-      <div style="font-size:20px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
-      <div style="font-size:12px;font-weight:700;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
+      <div style="font-size:21px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
+      <div style="font-size:11px;font-weight:500;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   }).join('') : '';
   const scBarSegs = totalCells > 0 ? statuses.map(s => {
@@ -2415,8 +2416,12 @@ function renderAcceptanceTab(container) {
     const rowNA = rowData.filter(d => naStatus && d.status_id === naStatus.id).length;
     const rowEligible = cols.length - rowNA;
     const rowPct = rowEligible > 0 ? Math.round(rowApproved / rowEligible * 100) : 0;
+    const _inMon = d => d.updated_at && d.updated_at >= _mStart && d.updated_at < _mEnd;
+    const apprGain = rowData.filter(d => approvedStatus && d.status_id === approvedStatus.id && _inMon(d)).length;
+    const rejGain = rowData.filter(d => rejectedStatus && d.status_id === rejectedStatus.id && _inMon(d)).length;
+    const gPts = rowEligible > 0 ? Math.round((apprGain - rejGain) / rowEligible * 1000)/10 : 0;
     const divider = (i % 5 !== 4) && (i !== rows.length - 1);
-    html += acceptanceBox(row.label, rowPct, divider, editable ? `editMatrixRow('${accountId}','${row.id}')` : '');
+    html += acceptanceBox(row.label, rowPct, divider, editable ? `editMatrixRow('${accountId}','${row.id}')` : '', gPts);
   });
   html += `</div></div>`;
 
@@ -3128,7 +3133,7 @@ function renderDashMetrics() {
   const mel = document.getElementById('dash-metrics');
   if (!mel) return;
   // Acceptance Matrix tab hides the stat box + opportunity bar.
-  if (state.dashMode === 'matrix' || state.dashMode === 'heatmap' || state.dashMode === 'activity') { mel.innerHTML = ''; return; }
+  if (state.dashMode === 'matrix' || state.dashMode === 'activity') { mel.innerHTML = ''; return; }
   let accounts = getDashFilteredAccounts();
   accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
   if (state.dashMode === 'stalled') {
@@ -3159,24 +3164,24 @@ function renderDashMetrics() {
   const auPct = totalRev > 0 ? (auRev / totalRev * 100) : 50;
   const nzPct = totalRev > 0 ? (nzRev / totalRev * 100) : 50;
   const oppHtml = `<div class="dash-section" style="text-align:center;padding:14px 16px">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Total Opportunity</div>
-    <div style="font-size:28px;font-weight:800;color:var(--g700);line-height:1;margin:0 0 12px">${fx}${formatNumber(Math.round(totalRev))}</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:6px">Key Account Opportunity</div>
+    <div style="font-size:28px;font-weight:700;color:var(--g700);line-height:1;margin:0 0 12px">${fx}${formatNumber(Math.round(totalRev))}</div>
     <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;cursor:pointer">
       ${auRev > 0 ? `<div onclick="setDashFilter('dashFilterCountry','AU')" style="width:${Math.max(auPct,5)}%;background:var(--vic-orange);transition:width .3s"></div>` : ''}
       ${nzRev > 0 ? `<div onclick="setDashFilter('dashFilterCountry','NZ')" style="width:${Math.max(nzPct,5)}%;background:#3b82f6;transition:width .3s"></div>` : ''}
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;font-weight:600">
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:14px;font-weight:600">
       ${auRev > 0 ? `<span style="color:var(--vic-orange)">${fx}${formatNumber(Math.round(auRev))}</span>` : ''}
       ${nzRev > 0 ? `<span style="color:#3b82f6;margin-left:auto">${fx}${formatNumber(Math.round(nzRev))}</span>` : ''}
     </div>
-    <div style="display:flex;justify-content:space-between;margin-top:2px;font-size:12px;font-weight:700">
+    <div style="display:flex;justify-content:space-between;margin-top:2px;font-size:14px;font-weight:700">
       ${auRev > 0 ? `<span style="color:var(--vic-orange)">AU ${Math.round(auPct)}%</span>` : ''}
       ${nzRev > 0 ? `<span style="color:#3b82f6;margin-left:auto">NZ ${Math.round(nzPct)}%</span>` : ''}
     </div>
   </div>`;
 
   const sLabel = 'font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:4px';
-  const sNum = 'font-size:20px;font-weight:700;line-height:1';
+  const sNum = 'font-size:21px;font-weight:700;line-height:1';
   const statStrip = `<div class="dash-section" style="padding:14px 0">
     <div style="display:flex;text-align:center;align-items:center">
       <div class="stat-tile" onclick="filterToAccounts()" style="flex:1;border-right:1px solid var(--g200)"><div style="${sLabel}">Accounts</div><div style="${sNum};color:var(--vic-black)">${accounts.length}</div></div>
@@ -3195,7 +3200,8 @@ function renderDashMetrics() {
     </div>
   </div>`;
   // Conversion Summary page omits this KPI strip (Accounts/Stalled/Active/Steps); other tabs keep it.
-  mel.innerHTML = oppHtml + ((state.dashMode === 'summary' || state.dashMode === 'oppsector') ? '' : statStrip);
+  mel.innerHTML = state.dashMode === 'heatmap' ? statStrip
+    : oppHtml + ((state.dashMode === 'summary' || state.dashMode === 'oppsector') ? '' : statStrip);
 }
 
 // Sector tab — shows the sector graph and hides the conversion pipeline; Summary is the inverse.
@@ -3284,15 +3290,15 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
   else if (state.pipeSortCol === 'opp') pipeStages.sort((a,b)=>pdir*(stageOpp[a-1]-stageOpp[b-1]));
   else pipeStages.sort((a,b)=>pdir*(a-b));
   const stageColors = ['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
-  const stageTextColors = ['#475569','#0284C7','#059669','#B45309','#C2410C'];
+  const stageTextColors = ['#475569','#0284C7','#059669','#CA8A04','#D97316'];
   const pipelineSection = showPipeline ? `
     <div class="dash-section" style="flex:1 1 380px;min-width:300px;margin:0;padding:14px 12px">
       <div style="display:flex;gap:6px">
         ${[1,2,3,4,5].map((s,i) => { const c = stageColors[i]; const tc = stageTextColors[i]; const cnt = stageCounts[s-1]; const mv = stageArrivals[s-1]; const mColor = mv > 0 ? 'var(--success)' : 'var(--g400)'; const mArrow = mv > 0 ? '▲' : '–'; return `
           <div class="pipe-card" onclick="filterByStage(${s})" title="View ${STAGES[s].name} accounts" style="background:${tc}14;border:1px solid ${tc}33">
             <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:${tc}cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${STAGES[s].name}</div>
-            <div style="font-size:20px;font-weight:700;color:${tc}cc;line-height:1.1;margin-top:2px">${cnt}</div>
-            <div style="font-size:12px;font-weight:700;color:${mColor};margin-top:3px" title="Reached this stage in ${stageMonthLabel()}">${mArrow} ${mv} this mo</div>
+            <div style="font-size:21px;font-weight:700;color:${tc}cc;line-height:1.1;margin-top:2px">${cnt}</div>
+            <div style="font-size:11px;font-weight:500;color:${mColor};margin-top:3px" title="Reached this stage in ${stageMonthLabel()}">${mArrow} ${mv} this mo</div>
           </div>`; }).join('')}
       </div>
     </div>` : '';
@@ -3341,7 +3347,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
             <div style="font-weight:600;font-size:13px;color:var(--g700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(d.full_name||'—')}</div>
           </div>
           <div style="flex:1;min-width:0">
-            <div style="display:flex;gap:1px;height:10px;border-radius:5px;overflow:hidden;width:100%${d.accts?'':''}">
+            <div style="display:flex;gap:1px;height:10px;border-radius:5px;overflow:hidden;opacity:.95;width:100%${d.accts?'':''}">
               ${d.accts ? d.stages.map((c,i) => c > 0 ? `<div onclick="event.stopPropagation();sbDrillStage('${d.id}',${i+1})" style="flex:${c};background:${mutedStageColors[i]};cursor:pointer" title="${esc(d.full_name||'')} · ${STAGES[i+1].name}: ${c} — click to list"></div>` : '').join('') : `<div style="flex:1;background:var(--g100);border-radius:5px"></div>`}
             </div>
           </div>
@@ -3374,11 +3380,18 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
 
 // Shared product-acceptance box — used by the dashboard Acceptance Matrix tab AND the
 // customer page Acceptance tab, so styling changes mirror across both.
-function acceptanceBox(label, pct, divider, onclick) {
+function acceptanceBox(label, pct, divider, onclick, deltaPts) {
   const c = pct > 0 ? '#F58220' : '#94A3B8';
+  let movement = '';
+  if (deltaPts !== undefined && deltaPts !== null) {
+    const mColor = deltaPts > 0 ? 'var(--success)' : deltaPts < 0 ? '#ef4444' : 'var(--g400)';
+    const mArrow = deltaPts > 0 ? '▲' : deltaPts < 0 ? '▼' : '–';
+    movement = `<div style="font-size:11px;font-weight:500;color:${mColor};margin-top:2px">${mArrow} ${Math.abs(deltaPts)} pts</div>`;
+  }
   return `<div ${onclick ? `class="mx-click" onclick="${onclick}"` : ''} style="padding:8px 10px;text-align:center;${divider ? 'border-right:1px solid var(--g200);' : ''}${onclick ? 'cursor:pointer' : ''}">
     <div style="font-size:11px;font-weight:600;color:var(--g700);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</div>
-    <div style="font-size:20px;font-weight:700;color:${c}">${pct}%</div>
+    <div style="font-size:21px;font-weight:700;color:${c}">${pct}%</div>
+    ${movement}
   </div>`;
 }
 
@@ -3408,16 +3421,20 @@ function renderDashboardMatrix() {
   const accounts = getDashFilteredAccounts().slice().sort((a,b) => a.company_name.localeCompare(b.company_name));
 
   // Per-product acceptance (overall, across the filtered accounts)
+  const _ppMp = state.dashStageMonth.split('-').map(Number);
+  const _ppStart = state.dashStageMonth + '-01T00:00:00.000Z';
+  const _ppEnd = new Date(Date.UTC(_ppMp[0], _ppMp[1], 1)).toISOString();
   const perProduct = {};
-  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0 });
+  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0, apprGain: 0, rejGain: 0 });
   accounts.forEach(a => {
     const data = state.matrixData[a.id] || [];
     rows.forEach(row => cols.forEach(col => {
       perProduct[row.id].total++;
       const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
       if (cell) {
-        if (approvedStatus && cell.status_id === approvedStatus.id) perProduct[row.id].approved++;
-        else if (rejectedStatus && cell.status_id === rejectedStatus.id) perProduct[row.id].rejected++;
+        const inMonth = cell.updated_at && cell.updated_at >= _ppStart && cell.updated_at < _ppEnd;
+        if (approvedStatus && cell.status_id === approvedStatus.id) { perProduct[row.id].approved++; if (inMonth) perProduct[row.id].apprGain++; }
+        else if (rejectedStatus && cell.status_id === rejectedStatus.id) { perProduct[row.id].rejected++; if (inMonth) perProduct[row.id].rejGain++; }
         else if (naStatus && cell.status_id === naStatus.id) {}
         else if (cell.status_id) { const st = statuses.find(s => s.id === cell.status_id); if (st && st.label !== 'Not Started') perProduct[row.id].inProgress++; }
       }
@@ -3431,8 +3448,9 @@ function renderDashboardMatrix() {
   const prodHtml = `<div style="display:grid;grid-template-columns:repeat(5,1fr)">` + rows.map((r, i) => {
     const pp = perProduct[r.id];
     const pct = pp.eligible > 0 ? Math.round(pp.approved / pp.eligible * 100) : 0;
+    const gPts = pp.eligible > 0 ? Math.round((pp.apprGain - pp.rejGain) / pp.eligible * 1000)/10 : 0;
     const divider = (i % 5 !== 4) && (i !== rows.length - 1);
-    return acceptanceBox(r.label, pct, divider);
+    return acceptanceBox(r.label, pct, divider, null, gPts);
   }).join('') + `</div>`;
 
   const accIcon = (col) => state.accSortCol === col ? (state.accSortDir === 'asc' ? ' ↑' : ' ↓') : '';
@@ -3467,7 +3485,7 @@ function renderDashboardMatrix() {
       return `<div onclick="showAccountDetail('${a.id}')" style="display:contents">
         <div style="${cell};flex-direction:column;align-items:flex-start;justify-content:center;white-space:nowrap"><span style="font-size:13px;font-weight:600;color:var(--g700)">${acctLabel(a.company_name)}</span>${a.hq_city ? `<span style="font-size:12px;color:var(--g600);margin-top:1px">${esc(a.hq_city)}</span>` : ''}</div>
         <div style="${cell}"><div style="width:100%;height:10px;background:var(--g100);border-radius:5px;overflow:hidden;display:flex">${barSegs}</div></div>
-        <div style="${cell};justify-content:center;font-size:13px;font-weight:700;color:${sgColor}">${sgHtml}</div>
+        <div style="${cell};justify-content:center;font-size:13px;font-weight:500;color:${sgColor}">${sgHtml}</div>
         <div style="${cell};justify-content:flex-end;font-size:13px;font-weight:700;color:var(--g700)">${pct}%</div>
       </div>`;
     }).join('') + `</div>`;
@@ -3497,15 +3515,15 @@ function renderDashboardMatrix() {
     return `<div style="text-align:center;padding:2px 0 0">
       <div style="font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:${m.bc}">${esc(approvedStatus.label)}</div>
       <div style="font-size:40px;font-weight:800;color:${m.bc};line-height:1.05">${m.boxPct}%</div>
-      <div style="font-size:13px;font-weight:700;color:${m.gColor};margin-top:1px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
+      <div style="font-size:11px;font-weight:500;color:${m.gColor};margin-top:1px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   })() : '';
   const otherBoxes = grandCells > 0 ? statuses.filter(s => s.label !== 'Accepted').map(s => {
     const m = statusMeta(s);
     return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${m.bc}14;border:1px solid ${m.bc}33">
       <div style="font-size:11px;font-weight:600;color:${m.bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
-      <div style="font-size:20px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
-      <div style="font-size:12px;font-weight:700;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
+      <div style="font-size:21px;font-weight:700;color:${m.bc};line-height:1.1;margin-top:2px">${m.boxPct}%</div>
+      <div style="font-size:11px;font-weight:500;color:${m.gColor};margin-top:3px">${m.gArrow} ${Math.abs(m.gPts)} pts</div>
     </div>`;
   }).join('') : '';
   const topBarSegs = grandCells > 0 ? statuses.map(s => { const cnt = s.label === 'Not Started' ? (grandCells - totActioned) : (totCounts[s.id] || 0); if (cnt <= 0) return ''; const segStyle = s.label === 'Not Started' ? 'background:#1f2937' : `background:${s.label === 'N/A' ? '#94A3B8' : s.color}`; return `<div style="width:${cnt/grandCells*100}%;${segStyle}" title="${esc(s.label)}: ${cnt}"></div>`; }).join('') : '';
