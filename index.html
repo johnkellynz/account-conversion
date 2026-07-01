@@ -222,6 +222,8 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .stat-grid { display: flex; gap: 8px; }
 .stat-card { flex: 1; background: var(--g50); border: 1px solid var(--g200); border-radius: var(--radius-sm); padding: 8px 6px; text-align: center; transition: border-color .15s; }
 .stat-card:hover { border-color: var(--g300); }
+.pipe-card { flex: 1; border: 1px solid var(--g150); border-radius: 8px; padding: 10px 6px 8px; text-align: center; cursor: pointer; transition: background .12s, border-color .12s; }
+.pipe-card:hover { border-color: var(--g300); background: var(--g50); }
 .stat-card .stat-value { font-size: 20px; font-weight: 700; color: var(--vic-black); letter-spacing: -.3px; }
 .stat-card .stat-label { font-size: 9px; color: var(--g500); margin-top: 2px; text-transform: uppercase; letter-spacing: .4px; font-weight: 600; }
 
@@ -3175,8 +3177,7 @@ function renderDashMetrics() {
 
   const sLabel = 'font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:4px';
   const sNum = 'font-size:28px;font-weight:800;line-height:1';
-  mel.innerHTML = `${oppHtml}
-  <div class="dash-section" style="padding:14px 0">
+  const statStrip = `<div class="dash-section" style="padding:14px 0">
     <div style="display:flex;text-align:center;align-items:center">
       <div class="stat-tile" onclick="filterToAccounts()" style="flex:1;border-right:1px solid var(--g200)"><div style="${sLabel}">Accounts</div><div style="${sNum};color:var(--vic-black)">${accounts.length}</div></div>
       <div class="stat-tile" onclick="filterToStalled()" style="flex:1;border-right:1px solid var(--g200)"><div style="${sLabel}">Stalled</div><div style="${sNum};color:${stalled > 0 ? '#ef4444' : 'var(--success)'}">${stalled}</div></div>
@@ -3193,6 +3194,8 @@ function renderDashMetrics() {
       </div>
     </div>
   </div>`;
+  // Conversion Summary page omits this KPI strip (Accounts/Stalled/Active/Steps); other tabs keep it.
+  mel.innerHTML = oppHtml + (state.dashMode === 'summary' ? '' : statStrip);
 }
 
 // Sector tab — shows the sector graph and hides the conversion pipeline; Summary is the inverse.
@@ -3273,26 +3276,18 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
   if (state.pipeSortCol === 'accts') pipeStages.sort((a,b)=>pdir*(stageCounts[a-1]-stageCounts[b-1]));
   else if (state.pipeSortCol === 'opp') pipeStages.sort((a,b)=>pdir*(stageOpp[a-1]-stageOpp[b-1]));
   else pipeStages.sort((a,b)=>pdir*(a-b));
+  const stageColors = ['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
   const pipelineSection = showPipeline ? `
     <div class="dash-section" style="flex:1 1 380px;min-width:300px;margin:0;padding:12px">
-      <h3 style="margin:0 0 8px;font-size:12px">Conversion Pipeline</h3>
-      <div class="funnel-chart">
-        <div style="display:flex;align-items:center;gap:8px;padding:2px 0 6px;border-bottom:1px solid var(--g200);margin-bottom:4px">
-          <div onclick="pipeSort('stage')" style="width:140px;flex-shrink:0;font-size:12px;font-weight:600;color:${state.pipeSortCol==='stage'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Stage${pipeIcon('stage')}</div>
-          <div style="flex:1;display:flex;justify-content:center;gap:12px;font-size:11px;color:var(--g500)">
-            ${['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'].map((c,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:${c}"></span>${STAGES[i+1].name}</span>`).join('')}
-          </div>
-          <div onclick="pipeSort('accts')" style="width:56px;flex-shrink:0;text-align:center;font-size:12px;font-weight:600;color:${state.pipeSortCol==='accts'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Accts${pipeIcon('accts')}</div>
-        </div>
-        ${pipeStages.map(s => `
-          <div class="funnel-row" onclick="filterByStage(${s})" style="cursor:pointer" title="View ${STAGES[s].name} accounts">
-            <div class="funnel-row-label">${STAGES[s].name.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())}</div>
-            <div class="funnel-row-bar-wrap">
-              <div class="funnel-row-bar" style="width:${stageCounts[s-1] > 0 ? Math.max(stageCounts[s-1]/maxCount*100, 8) : 0}%;${stageCounts[s-1] > 0 ? '' : 'min-width:0;'}background:${s===1?'#94A3B8':s===2?'#38BDF8':s===3?'#34D399':s===4?'#FBBF24':'#F58220'}"></div>
-            </div>
-            <div style="width:56px;flex-shrink:0;text-align:center;font-size:13px;font-weight:600;color:var(--g700)">${stageCounts[s-1]}</div>
-          </div>
-        `).join('')}
+      <h3 style="margin:0 0 10px;font-size:12px">Conversion Pipeline</h3>
+      <div style="display:flex;gap:6px">
+        ${[1,2,3,4,5].map((s,i) => { const c = stageColors[i]; const cnt = stageCounts[s-1]; return `
+          <div class="pipe-card" onclick="filterByStage(${s})" title="View ${STAGES[s].name} accounts">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--g500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${STAGES[s].name}</div>
+            <div style="font-size:24px;font-weight:800;color:${c};line-height:1.1;margin-top:3px">${cnt}</div>
+            <div style="font-size:10px;color:var(--g400);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${stageOpp[s-1] ? fxSymbol()+formatNumber(Math.round(stageOpp[s-1])) : '—'}</div>
+            <div style="height:4px;background:var(--g100);border-radius:2px;margin-top:8px;overflow:hidden"><div style="height:100%;width:${cnt>0?Math.max(cnt/maxCount*100,6):0}%;background:${c};transition:width .3s"></div></div>
+          </div>`; }).join('')}
       </div>
     </div>` : '';
 
@@ -5157,33 +5152,55 @@ async function adminResetPassword(userId) {
 }
 
 // ---- Reassign-before-delete modal (shared) ----
-function showReassignModal({ title, intro, optionsHtml, listHtml, confirmLabel, onConfirm }) {
+function showReassignModal({ title, intro, optionsHtml, listHtml, confirmLabel, onConfirm, perRow, rowItems, rowHeaders }) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:10px;max-width:560px;width:100%;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.25)">
+  let bodyHtml = listHtml;
+  if (perRow) {
+    const heads = rowHeaders || ['Account','Current','Reassign to'];
+    bodyHtml = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr>${heads.map(h=>`<th style="text-align:left;padding:6px 4px;color:var(--g500);font-weight:600;position:sticky;top:0;background:var(--g50)">${h}</th>`).join('')}</tr></thead>
+      <tbody>${(rowItems||[]).map(it => `<tr>
+        <td style="padding:5px 4px;border-top:1px solid var(--g150);color:var(--g700);font-weight:600;white-space:nowrap">${it.label}</td>
+        <td style="padding:5px 4px;border-top:1px solid var(--g150);color:var(--g500)">${it.meta||''}</td>
+        <td style="padding:5px 4px;border-top:1px solid var(--g150)"><select class="reassign-row" data-id="${esc(it.id)}" style="width:100%;padding:5px 6px;border:1px solid var(--g300);border-radius:5px;font-size:12px">${optionsHtml}</select></td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  }
+  overlay.innerHTML = `<div style="background:#fff;border-radius:10px;max-width:${perRow?660:560}px;width:100%;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.25)">
     <div style="padding:18px 20px 12px">
       <h3 style="margin:0 0 6px;font-size:16px;color:var(--g700)">${title}</h3>
       <p style="margin:0 0 12px;font-size:13px;color:var(--g500);line-height:1.45">${intro}</p>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:13px;font-weight:600;color:var(--g700);white-space:nowrap">Reassign all to:</span>
+        <span style="font-size:13px;font-weight:600;color:var(--g700);white-space:nowrap">${perRow?'Set all to:':'Reassign all to:'}</span>
         <select id="reassign-target" style="flex:1;padding:7px 8px;border:1px solid var(--g300);border-radius:6px;font-size:13px">${optionsHtml}</select>
       </div>
     </div>
-    <div style="overflow:auto;padding:8px 20px;border-top:1px solid var(--g150);background:var(--g50)">${listHtml}</div>
+    <div style="overflow:auto;padding:8px 20px;border-top:1px solid var(--g150);background:var(--g50)">${bodyHtml}</div>
     <div style="padding:14px 20px;display:flex;gap:8px;justify-content:flex-end">
       <button id="reassign-cancel" style="padding:8px 16px;border:1px solid var(--g300);background:#fff;border-radius:6px;font-size:13px;cursor:pointer;color:var(--g600)">Cancel</button>
       <button id="reassign-confirm" style="padding:8px 16px;border:none;background:var(--vic-orange);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">${confirmLabel}</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
+  const bulkSel = overlay.querySelector('#reassign-target');
+  if (perRow) {
+    const rowSels = overlay.querySelectorAll('.reassign-row');
+    rowSels.forEach(sel => sel.value = bulkSel.value);
+    bulkSel.onchange = () => rowSels.forEach(sel => sel.value = bulkSel.value);
+  }
   const close = () => overlay.remove();
   overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
   overlay.querySelector('#reassign-cancel').onclick = close;
   overlay.querySelector('#reassign-confirm').onclick = async () => {
-    const target = overlay.querySelector('#reassign-target').value;
     const btn = overlay.querySelector('#reassign-confirm');
     btn.disabled = true; btn.textContent = 'Working…';
-    try { await onConfirm(target); close(); }
+    try {
+      let arg;
+      if (perRow) { arg = {}; overlay.querySelectorAll('.reassign-row').forEach(sel => { arg[sel.dataset.id] = sel.value; }); }
+      else { arg = bulkSel.value; }
+      await onConfirm(arg); close();
+    }
     catch (e) { toast('Error: ' + e.message); btn.disabled = false; btn.textContent = confirmLabel; }
   };
 }
@@ -5395,18 +5412,21 @@ function deleteSectorItem(id, event) {
   }
   const others = state.sectorConfig.filter(s => s.id !== id);
   const optionsHtml = others.map(s => `<option value="${esc(s.label)}">${esc(s.label)}</option>`).join('') + `<option value="__REMOVE__">— Remove the tag —</option>`;
-  const rows = affected.map(a => [esc(a.company_name), esc(a.key_sectors||'')]);
+  const rowItems = affected.map(a => ({ id: a.id, label: acctLabel(a.company_name), meta: esc(a.key_sectors||'') }));
   showReassignModal({
     title: `Delete sector: ${esc(label)}`,
-    intro: `<strong>${affected.length}</strong> account${affected.length!==1?'s':''} use "${esc(label)}". Reassign them to another sector (or remove the tag), then delete.`,
+    intro: `<strong>${affected.length}</strong> account${affected.length!==1?'s':''} use "${esc(label)}". Reassign all at once with "Set all to", or pick a different sector per account, then delete.`,
     optionsHtml,
-    listHtml: reassignTableHtml(['Account','Current sectors'], rows),
+    perRow: true,
+    rowItems,
+    rowHeaders: ['Account','Current sectors','Reassign to'],
     confirmLabel: 'Reassign & Delete',
-    onConfirm: async (target) => { await reassignSectorAndDelete(id, label, target, affected); }
+    onConfirm: async (targets) => { await reassignSectorAndDelete(id, label, targets, affected); }
   });
 }
-async function reassignSectorAndDelete(id, oldLabel, target, affected) {
+async function reassignSectorAndDelete(id, oldLabel, targets, affected) {
   for (const a of affected) {
+    const target = (targets && typeof targets === 'object') ? (targets[a.id] || '__REMOVE__') : targets;
     let secs = (a.key_sectors||'').split(',').map(s=>s.trim()).filter(Boolean).filter(s => s !== oldLabel);
     if (target !== '__REMOVE__' && !secs.includes(target)) secs.push(target);
     secs.sort();
