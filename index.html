@@ -3212,10 +3212,24 @@ function renderDashboardMatrix() {
   const overallPct = totEligible > 0 ? Math.round(totApproved / totEligible * 100) : 0;
   const overallColor = overallPct > 0 ? '#F58220' : '#94A3B8';
   // Aggregate status composition across all filtered accounts (for the top bar)
-  const totCounts = {}; statuses.forEach(s => totCounts[s.id] = 0);
-  accounts.forEach(a => (state.matrixData[a.id] || []).forEach(d => { if (totCounts[d.status_id] !== undefined) totCounts[d.status_id]++; }));
+  const totCounts = {}; const statusGain = {}; statuses.forEach(s => { totCounts[s.id] = 0; statusGain[s.id] = 0; });
+  accounts.forEach(a => (state.matrixData[a.id] || []).forEach(d => { if (totCounts[d.status_id] !== undefined) { totCounts[d.status_id]++; if (d.updated_at && d.updated_at >= _mStart && d.updated_at < _mEnd) statusGain[d.status_id]++; } }));
   const grandCells = accounts.length * totalCells;
   const totActioned = statuses.reduce((n,s) => s.label === 'Not Started' ? n : n + (totCounts[s.id]||0), 0);
+  // Per-status breakdown boxes: share of all matrix cells + points gained this month
+  const statusBoxes = grandCells > 0 ? statuses.map(s => {
+    const cnt = s.label === 'Not Started' ? (grandCells - totActioned) : (totCounts[s.id] || 0);
+    const boxPct = Math.round(cnt / grandCells * 100);
+    const gPts = Math.round((statusGain[s.id] || 0) / grandCells * 1000) / 10;
+    const gColor = gPts > 0 ? 'var(--success)' : gPts < 0 ? '#ef4444' : 'var(--g400)';
+    const gArrow = gPts > 0 ? '▲' : gPts < 0 ? '▼' : '–';
+    const bc = s.label === 'Not Started' ? '#1f2937' : (s.label === 'N/A') ? '#94A3B8' : s.color;
+    return `<div style="flex:1;text-align:center;padding:8px 6px;border-radius:6px;background:${bc}14;border:1px solid ${bc}33">
+      <div style="font-size:11px;font-weight:600;color:${bc};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.label)}</div>
+      <div style="font-size:20px;font-weight:700;color:${bc};line-height:1.1;margin-top:2px">${boxPct}%</div>
+      <div style="font-size:10px;font-weight:700;color:${gColor};margin-top:3px">${gArrow} ${Math.abs(gPts)} pts</div>
+    </div>`;
+  }).join('') : '';
   const topBarSegs = grandCells > 0 ? statuses.map(s => { const cnt = s.label === 'Not Started' ? (grandCells - totActioned) : (totCounts[s.id] || 0); if (cnt <= 0) return ''; const segStyle = s.label === 'Not Started' ? 'background:#1f2937' : `background:${s.label === 'N/A' ? '#94A3B8' : s.color}`; return `<div style="width:${cnt/grandCells*100}%;${segStyle}" title="${esc(s.label)}: ${cnt}"></div>`; }).join('') : '';
   // Step change: percentage points gained from approvals recorded within the selected month.
   // (Cells store current status + last-changed date, so this captures gains; genuine
@@ -3235,7 +3249,8 @@ function renderDashboardMatrix() {
           <input type="month" value="${state.dashStageMonth}" max="${new Date().getFullYear()+'-'+String(new Date().getMonth()+1).padStart(2,'0')}" onchange="setStageMonth(this.value)" style="position:absolute;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none">
         </span>
       </div>
-      <div style="height:10px;background:var(--g100);border-radius:5px;overflow:hidden;margin:10px auto 0;max-width:600px;display:flex">${topBarSegs}</div>
+      <div style="height:10px;background:var(--g100);border-radius:5px;overflow:hidden;margin:10px auto 14px;max-width:600px;display:flex">${topBarSegs}</div>
+      <div style="display:flex;gap:6px;max-width:600px;margin:0 auto">${statusBoxes}</div>
     </div>
     <div class="dash-section">
       ${prodHtml}
