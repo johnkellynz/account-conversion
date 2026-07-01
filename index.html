@@ -606,6 +606,10 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       <span>Reports</span>
     </button>
+    <button class="nav-drawer-item" data-view="activity" onclick="showView('activity')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Activity</span>
+    </button>
     <button class="nav-drawer-item" data-view="team" onclick="showView('team')">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
       <span>Teams</span>
@@ -667,6 +671,7 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     <!-- PROFILE -->
     <div id="view-matrix" class="view"></div>
     <div id="view-heatmap" class="view"></div>
+    <div id="view-activity" class="view"></div>
     <div id="view-playbook" class="view"></div>
     <div id="view-reporting" class="view"></div>
     <div id="view-team" class="view"></div>
@@ -695,6 +700,10 @@ DELETE_ME_LINE_527B_CAGJAIByAK5YAcoAEVgHzgIqkAtaABNoBWcBp3gPLgCroPb4C4YBo+BEEyCl
     <button class="nav-btn" data-view="reporting" onclick="showView('reporting')">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       <span>Reports</span>
+    </button>
+    <button class="nav-btn" data-view="activity" onclick="showView('activity')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Activity</span>
     </button>
     <button class="nav-btn" data-view="team" onclick="showView('team')">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
@@ -1846,6 +1855,7 @@ function showView(name, fromBack) {
   else if (name === 'dashboard') renderDashboard();
   else if (name === 'matrix') renderMatrixView();
   else if (name === 'heatmap') renderHeatmapView();
+  else if (name === 'activity') renderActivityView();
   else if (name === 'playbook') renderPlaybook();
   else if (name === 'reporting') renderReporting();
   else if (name === 'team') renderTeamView();
@@ -2999,7 +3009,6 @@ function renderDashboard() {
       <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
       <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
-      <button class="${state.dashMode==='activity'?'active':''}" onclick="state.dashMode='activity';renderDashboard()">Activity</button>
     </div>
     ${filterHtml}
     <div id="dash-metrics"></div>
@@ -3007,7 +3016,6 @@ function renderDashboard() {
   `;
   renderDashMetrics();
   if (state.dashMode === 'heatmap') renderDashboardHeatmap();
-  else if (state.dashMode === 'activity') renderDashboardActivity();
   else if (state.dashMode === 'oppsector') renderDashboardOppSector();
   else if (state.dashMode === 'stalled') renderDashboardStalled();
   else if (state.dashMode === 'keyaccounts') renderDashboardKeyAccounts();
@@ -3068,7 +3076,8 @@ function renderDashMetrics() {
 
   const sLabel = 'font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);margin-bottom:4px';
   const sNum = 'font-size:28px;font-weight:800;line-height:1';
-  mel.innerHTML = `<div class="dash-section" style="padding:14px 0">
+  mel.innerHTML = `${oppHtml}
+  <div class="dash-section" style="padding:14px 0">
     <div style="display:flex;text-align:center;align-items:center">
       <div onclick="filterToAccounts()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><div style="${sLabel}">Accounts</div><div style="${sNum};color:var(--vic-black)">${accounts.length}</div></div>
       <div onclick="filterToStalled()" style="cursor:pointer;flex:1;border-right:1px solid var(--g200)"><div style="${sLabel}">Stalled</div><div style="${sNum};color:${stalled > 0 ? '#ef4444' : 'var(--success)'}">${stalled}</div></div>
@@ -3084,8 +3093,7 @@ function renderDashMetrics() {
         </div>
       </div>
     </div>
-  </div>
-  ${oppHtml}`;
+  </div>`;
 }
 
 // Sector tab — shows the sector graph and hides the conversion pipeline; Summary is the inverse.
@@ -3940,18 +3948,19 @@ function renderHeatmapView() {
   renderDashboardHeatmap('heatmap-content');
 }
 
-function renderDashboardActivity() {
-  const el = document.getElementById('dash-content');
+function renderActivityView() {
+  const el = document.getElementById('view-activity');
+  el.innerHTML = `<div class="view-header"><h1>Activity</h1></div><div id="activity-content" style="padding:0 16px"></div>`;
+  const cel = document.getElementById('activity-content');
   if (!state._activitiesLoaded) {
-    el.innerHTML = '<div class="dash-section" style="color:var(--g400);font-size:13px;padding:16px">Loading activity…</div>';
-    loadAllActivities().then(() => { state._activitiesLoaded = true; if (state.dashMode === 'activity') renderDashboardActivity(); });
+    cel.innerHTML = '<div class="dash-section" style="color:var(--g400);font-size:13px;padding:16px">Loading activity…</div>';
+    loadAllActivities().then(() => { state._activitiesLoaded = true; if (state.currentView === 'activity') renderActivityView(); });
     return;
   }
   const days = state.activityDays || 30;
   const cutoff = days === 0 ? '' : new Date(Date.now() - days * 86400000).toISOString();
-  const scoped = new Set(getDashFilteredAccounts().map(a => a.id));
+  const scoped = new Set(getVisibleAccounts().map(a => a.id));
   let acts = state.allActivities.filter(x => (!cutoff || x.created_at >= cutoff) && (!scoped.size || scoped.has(x.account_id)));
-  if (state.dashFilterRep.length) acts = acts.filter(x => state.dashFilterRep.includes(x.user_id));
   const repName = (uid) => { const p = state.profiles.find(pr => pr.id === uid); return p ? p.full_name : 'Unknown'; };
   const acctName = (id) => (state.accounts.find(a => a.id === id) || {}).company_name || '—';
   const byRep = {};
@@ -3963,10 +3972,10 @@ function renderDashboardActivity() {
     if (x.created_at > byRep[k].last) byRep[k].last = x.created_at;
   });
   const repRows = Object.values(byRep).sort((a, b) => b.total - a.total);
-  const periodSel = `<select onchange="state.activityDays=parseInt(this.value);renderDashboard()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
+  const periodSel = `<select onchange="state.activityDays=parseInt(this.value);renderActivityView()" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:12px;color:var(--g500);background:var(--white);cursor:pointer">
       ${[7, 30, 90, 0].map(d => `<option value="${d}"${(state.activityDays || 30) === d ? ' selected' : ''}>${d === 0 ? 'All time' : 'Last ' + d + ' days'}</option>`).join('')}
     </select>`;
-  el.innerHTML = `
+  cel.innerHTML = `
     <div class="dash-section" style="padding:12px 16px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px">
         <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Activity by Rep <span style="color:var(--g400);font-weight:400">(${acts.length})</span></h3>
