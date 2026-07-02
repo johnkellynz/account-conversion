@@ -1170,6 +1170,24 @@ function setDashFilter(key, val) {
   }
   _rerenderCurrentFilterView();
 }
+function getRepFullName(id) {
+  return (state.profiles || []).find(p => p.id === id)?.full_name || '';
+}
+// Matches an account against a lowercased search term across company info,
+// assigned rep, contacts (name/role/email), and notes text.
+function accountMatchesSearch(a, q) {
+  if (!q) return true;
+  if ((a.company_name || '').toLowerCase().includes(q)) return true;
+  if ((a.hq_city || '').toLowerCase().includes(q)) return true;
+  if ((a.regions || '').toLowerCase().includes(q)) return true;
+  if ((a.key_sectors || '').toLowerCase().includes(q)) return true;
+  if (getRepFullName(a.assigned_to).toLowerCase().includes(q)) return true;
+  const contacts = state.contacts[a.id] || [];
+  if (contacts.some(c => (c.contact_name || '').toLowerCase().includes(q) || (c.role || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q))) return true;
+  const notes = state.notes[a.id] || [];
+  if (notes.some(n => (n.note || '').toLowerCase().includes(q))) return true;
+  return false;
+}
 function getDashFilteredAccounts() {
   let accts = getVisibleAccounts();
   if (state.dashFilterRep.length > 0) accts = accts.filter(a => state.dashFilterRep.includes(a.assigned_to));
@@ -1185,12 +1203,7 @@ function getDashFilteredAccounts() {
   if (state.dashFilterTier.length > 0) accts = accts.filter(a => state.dashFilterTier.includes(String(a.tier)));
   if (state.dashFilterSector.length > 0) accts = accts.filter(a => { const secs = (a.key_sectors||'').split(',').map(s=>s.trim()); return state.dashFilterSector.some(sec => secs.includes(sec)); });
   const q = (state.dashSearch || '').trim().toLowerCase();
-  if (q) accts = accts.filter(a =>
-    (a.company_name || '').toLowerCase().includes(q) ||
-    (a.hq_city || '').toLowerCase().includes(q) ||
-    (a.regions || '').toLowerCase().includes(q) ||
-    (a.key_sectors || '').toLowerCase().includes(q)
-  );
+  if (q) accts = accts.filter(a => accountMatchesSearch(a, q));
   return accts;
 }
 
@@ -1503,6 +1516,10 @@ async function initialSync() {
       }
     }
 
+    // Bulk-load all contacts and notes for these accounts so global search can
+    // match on rep, contact, and note text without opening each account.
+    await bulkLoadContactsAndNotes(ids);
+
     // Recalc current_stage from checklist truth
     for (const a of state.accounts) {
       const correct = recalcCurrentStage(a.id);
@@ -1558,6 +1575,50 @@ async function initialSync() {
   }
   // Always recalc stages from checklist truth (runs even after catch)
   state.accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
+}
+
+// Bulk-load contacts + notes for a set of account ids (paged past PostgREST's
+// 1000-row cap) so account search can match reps/contacts/notes app-wide.
+async function bulkLoadContactsAndNotes(ids) {
+  state.contacts = {};
+  state.notes = {};
+  if (!ids || !ids.length) return;
+  try {
+    const PAGE = 1000;
+    let from = 0;
+    while (true) {
+      const { data, error } = await supa.from('kac_contacts').select('*').in('account_id', ids).range(from, from + PAGE - 1);
+      if (error) throw error;
+      (data || []).forEach(c => {
+        if (!state.contacts[c.account_id]) state.contacts[c.account_id] = [];
+        state.contacts[c.account_id].push(c);
+      });
+      if (data && data.length) await db.contacts.bulkPut(data);
+      if (!data || data.length < PAGE) break;
+      from += PAGE;
+    }
+    from = 0;
+    while (true) {
+      const { data, error } = await supa.from('kac_notes').select('*').in('account_id', ids).order('created_at', { ascending: false }).range(from, from + PAGE - 1);
+      if (error) throw error;
+      (data || []).forEach(n => {
+        if (!state.notes[n.account_id]) state.notes[n.account_id] = [];
+        state.notes[n.account_id].push(n);
+      });
+      if (data && data.length) await db.notes.bulkPut(data);
+      if (!data || data.length < PAGE) break;
+      from += PAGE;
+    }
+  } catch (e) {
+    console.error('Bulk contacts/notes load error:', e);
+    // Offline fallback: rebuild from local Dexie cache
+    try {
+      const localContacts = await db.contacts.toArray();
+      localContacts.forEach(c => { if (!state.contacts[c.account_id]) state.contacts[c.account_id] = []; state.contacts[c.account_id].push(c); });
+      const localNotes = await db.notes.toArray();
+      localNotes.forEach(n => { if (!state.notes[n.account_id]) state.notes[n.account_id] = []; state.notes[n.account_id].push(n); });
+    } catch (e2) { console.error('Local contacts/notes fallback error:', e2); }
+  }
 }
 
 async function loadAccountDetails(accountId) {
@@ -2033,7 +2094,7 @@ function renderGlobalSearch() {
   const results = document.getElementById('global-search-results');
   const q = (input?.value || '').toLowerCase().trim();
   if (!q) { results.style.display = 'none'; return; }
-  const matches = (state.accounts || []).filter(a => a.company_name.toLowerCase().includes(q) || (a.hq_city||'').toLowerCase().includes(q)).slice(0, 8);
+  const matches = (state.accounts || []).filter(a => accountMatchesSearch(a, q)).slice(0, 8);
   if (!matches.length) { results.style.display = 'block'; results.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:var(--g400)">No accounts found</div>'; return; }
   results.style.display = 'block';
   results.innerHTML = matches.map(a => {
@@ -2233,10 +2294,10 @@ function setAcctSort(col) {
 function renderAccountsList() {
   // Recalc stages from checklist truth
   state.accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
-  const search = (document.getElementById('search-accounts')?.value || '').toLowerCase();
+  const search = (document.getElementById('search-accounts')?.value || '').trim().toLowerCase();
   let accounts = getDashFilteredAccounts();
   if (search) {
-    accounts = accounts.filter(a => a.company_name.toLowerCase().includes(search) || (a.hq_city||'').toLowerCase().includes(search) || (a.regions||'').toLowerCase().includes(search));
+    accounts = accounts.filter(a => accountMatchesSearch(a, search));
   }
   // Sort
   const dir = state.acctSortDir === 'asc' ? 1 : -1;
