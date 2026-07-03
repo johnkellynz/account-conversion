@@ -3516,6 +3516,9 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
           <div style="width:100px;flex-shrink:0;text-align:right;font-size:13px;color:var(--g600)">
             $${formatNumber(Math.round(d.rev))}
           </div>
+          <div style="width:70px;flex-shrink:0;text-align:center;font-size:13px;color:var(--g600)">
+            ${d.accts}
+          </div>
           <div style="width:56px;flex-shrink:0;text-align:center;font-size:13px;color:var(--g600)">
             ${d.stagesAdv}
           </div>
@@ -3528,6 +3531,7 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
             ${['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'].map((c,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:${c}"></span>${STAGES[i+1].name}</span>`).join('')}
           </div>
           <div onclick="sbSort('opp')" style="width:100px;flex-shrink:0;text-align:right;font-size:12px;font-weight:600;color:${state.sbSortCol==='opp'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Opportunity${sbIcon('opp')}</div>
+          <div onclick="sbSort('accts')" style="width:70px;flex-shrink:0;text-align:center;font-size:12px;font-weight:600;color:${state.sbSortCol==='accts'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Customers${sbIcon('accts')}</div>
           <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:12px;font-weight:600;color:${state.sbSortCol==='prog'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Steps${sbIcon('prog')}</div>
         </div>
         <div>
