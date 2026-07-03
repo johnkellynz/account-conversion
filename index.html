@@ -3526,13 +3526,13 @@ function renderDashboardSummary(showSector = false, showPipeline = true) {
       `).join('');
       html += `<div class="dash-section" style="padding:12px">
         <div style="display:flex;align-items:center;gap:8px;padding:2px 0;border-bottom:1px solid var(--g200)">
-          <div onclick="sbSort('name')" style="width:140px;flex-shrink:0;font-size:12px;font-weight:600;color:${state.sbSortCol==='name'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Name${sbIcon('name')}</div>
+          <div onclick="sbSort('name')" style="width:140px;flex-shrink:0;font-size:12px;font-weight:600;color:${state.sbSortCol==='name'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Name</div>
           <div style="flex:1;display:flex;justify-content:center;gap:12px;font-size:11px;color:var(--g500)">
             ${['#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'].map((c,i)=>`<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:${c}"></span>${STAGES[i+1].name}</span>`).join('')}
           </div>
-          <div onclick="sbSort('opp')" style="width:100px;flex-shrink:0;text-align:right;font-size:12px;font-weight:600;color:${state.sbSortCol==='opp'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Opportunity${sbIcon('opp')}</div>
-          <div onclick="sbSort('accts')" style="width:70px;flex-shrink:0;text-align:center;font-size:12px;font-weight:600;color:${state.sbSortCol==='accts'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Customers${sbIcon('accts')}</div>
-          <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:12px;font-weight:600;color:${state.sbSortCol==='prog'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Steps${sbIcon('prog')}</div>
+          <div onclick="sbSort('opp')" style="width:100px;flex-shrink:0;text-align:right;font-size:12px;font-weight:600;color:${state.sbSortCol==='opp'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Opportunity</div>
+          <div onclick="sbSort('accts')" style="width:70px;flex-shrink:0;text-align:center;font-size:12px;font-weight:600;color:${state.sbSortCol==='accts'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Customers</div>
+          <div onclick="sbSort('prog')" style="width:56px;flex-shrink:0;text-align:center;font-size:12px;font-weight:600;color:${state.sbSortCol==='prog'?'var(--vic-orange)':'var(--g500)'};cursor:pointer">Steps</div>
         </div>
         <div>
           ${rows}
