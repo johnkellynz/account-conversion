@@ -353,6 +353,11 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .data-table th:hover { color: var(--vic-orange); }
 .data-table td { padding: 12px; border-bottom: 1px solid var(--g100); }
 .data-table tr:hover td { background: var(--g50); }
+.data-table tr.user-main td { border-bottom: none; padding-bottom: 4px; }
+.data-table tr.user-actions td { padding-top: 0; padding-bottom: 14px; }
+.data-table tr.user-actions:hover td { background: transparent; }
+.user-action-btn { padding: 5px 12px; border: 1px solid var(--g300); border-radius: 5px; font-size: 12px; cursor: pointer; background: var(--white); color: var(--g700); }
+.user-action-btn:hover { background: var(--g50); }
 .stat-tile { cursor: pointer; transition: background .12s; }
 .stat-tile:hover { background: var(--g50); }
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -5137,13 +5142,12 @@ function renderAdminPanel() {
           <th style="cursor:pointer;user-select:none" onclick="sortAdminCol('reports_to')">Reports To${arrow('reports_to')}</th>
           <th style="cursor:pointer;user-select:none" onclick="sortAdminCol('admin')">Admin${arrow('admin')}</th>
           <th style="cursor:pointer;user-select:none" onclick="sortAdminCol('status')">Status${arrow('status')}</th>
-          <th>Actions</th>
         </tr></thead>
         <tbody>${profiles.map(p => {
           const mgr = profiles.find(m => m.id === p.reports_to);
           const acctCount = state.accounts.filter(a => a.assigned_to === p.id).length;
           const isLocked = p.locked;
-          return `<tr style="${isLocked ? 'opacity:0.5' : ''}">
+          return `<tr class="user-main" style="${isLocked ? 'opacity:0.5' : ''}">
             <td><strong>${esc(p.full_name || '—')}</strong><br><span style="font-size:11px;color:var(--g400)">${acctCount} account${acctCount!==1?'s':''}</span></td>
             <td><select onchange="adminUpdateRole('${p.id}',this.value)" style="width:140px;padding:4px 6px;border:1px solid var(--g200);border-radius:4px;font-size:12px">
               <option value="rep" ${getOrgRole(p)==='rep'?'selected':''}>Rep</option>
@@ -5164,11 +5168,16 @@ function renderAdminPanel() {
               <option value="director" ${p.role==='director'?'selected':''}>Director</option>
             </select></td>
             <td>${isLocked ? '<span style="color:var(--danger);font-weight:600">Locked</span>' : '<span style="color:var(--success);font-weight:600">Active</span>'}</td>
-            <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
-              <button onclick="adminSetPassword('${p.id}')" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:#2563eb;color:#fff" title="Set a new password for this user right now">Set PW</button>
-              <button onclick="adminResetPassword('${p.id}')" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:var(--vic-orange);color:#fff" title="Force password change on next login">Reset PW</button>
-              <button onclick="adminToggleLock('${p.id}',${!isLocked})" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:${isLocked?'var(--success)':'var(--danger)'};color:#fff">${isLocked ? 'Unlock' : 'Lock'}</button>
-              <button onclick="adminDeleteUser('${p.id}',event)" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:#dc2626;color:#fff" title="Reassign their accounts, then delete the user">Delete</button>
+          </tr>
+          <tr class="user-actions" style="${isLocked ? 'opacity:0.5' : ''}">
+            <td colspan="6">
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <span style="font-size:11px;color:var(--g400);text-transform:uppercase;letter-spacing:.5px;margin-right:2px">Actions</span>
+                <button onclick="adminSetPassword('${p.id}')" class="user-action-btn" title="Set a new password for this user right now">Set password</button>
+                <button onclick="adminResetPassword('${p.id}')" class="user-action-btn" title="Force password change on next login">Reset password</button>
+                <button onclick="adminToggleLock('${p.id}',${!isLocked})" class="user-action-btn" style="color:${isLocked?'var(--success)':'var(--danger)'}">${isLocked ? 'Unlock account' : 'Lock account'}</button>
+                <button onclick="adminDeleteUser('${p.id}',event)" class="user-action-btn" style="border-color:var(--danger);color:var(--danger)" title="Reassign their accounts, then delete the user">Delete user</button>
+              </div>
             </td>
           </tr>`;
         }).join('')}</tbody>
