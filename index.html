@@ -5173,7 +5173,7 @@ function renderAdminPanel() {
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end">
                 <button onclick="adminSetPassword('${p.id}')" class="user-action-btn" title="Set a new password for this user right now">Set password</button>
                 <button onclick="adminResetPassword('${p.id}')" class="user-action-btn" title="Force password change on next login">Reset password</button>
-                <button onclick="adminToggleLock('${p.id}',${!isLocked})" class="user-action-btn" style="color:${isLocked?'var(--success)':'var(--danger)'}">${isLocked ? 'Unlock account' : 'Lock account'}</button>
+                <button onclick="adminToggleLock('${p.id}',${!isLocked})" class="user-action-btn" style="color:${isLocked?'var(--success)':'var(--g700)'}">${isLocked ? 'Unlock account' : 'Lock account'}</button>
                 <button onclick="adminDeleteUser('${p.id}',event)" class="user-action-btn" style="border-color:var(--danger);color:var(--danger)" title="Reassign their accounts, then delete the user">Delete user</button>
               </div>
             </td>
