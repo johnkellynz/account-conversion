@@ -5165,6 +5165,7 @@ function renderAdminPanel() {
             </select></td>
             <td>${isLocked ? '<span style="color:var(--danger);font-weight:600">Locked</span>' : '<span style="color:var(--success);font-weight:600">Active</span>'}</td>
             <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap">
+              <button onclick="adminSetPassword('${p.id}')" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:#2563eb;color:#fff" title="Set a new password for this user right now">Set PW</button>
               <button onclick="adminResetPassword('${p.id}')" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:var(--vic-orange);color:#fff" title="Force password change on next login">Reset PW</button>
               <button onclick="adminToggleLock('${p.id}',${!isLocked})" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:${isLocked?'var(--success)':'var(--danger)'};color:#fff">${isLocked ? 'Unlock' : 'Lock'}</button>
               <button onclick="adminDeleteUser('${p.id}',event)" style="padding:4px 8px;border:1px solid var(--g200);border-radius:4px;font-size:11px;cursor:pointer;background:#dc2626;color:#fff" title="Reassign their accounts, then delete the user">Delete</button>
@@ -5419,6 +5420,22 @@ async function adminForcePasswordReset() {
     if (p) p.must_change_password = true;
     toast(`${name} must change password on next login`);
   } catch (e) { toast('Error: ' + e.message); }
+}
+
+async function adminSetPassword(userId) {
+  const name = getRepName(userId);
+  const pw = prompt(`Set a new password for ${name} (min 8 characters):`);
+  if (pw === null) return; // cancelled
+  if (pw.length < 8) { toast('Password must be at least 8 characters'); return; }
+  try {
+    const { error } = await supa.rpc('admin_set_user_password', { target_user: userId, new_password: pw });
+    if (error) throw error;
+    // Admin just set a known password — clear any pending forced-change flag
+    await supa.from('profiles').update({ must_change_password: false }).eq('id', userId);
+    const p = state.profiles.find(pr => pr.id === userId);
+    if (p) p.must_change_password = false;
+    toast(`Password updated for ${name}`);
+  } catch (e) { toast('Error: ' + (e.message || 'could not set password')); }
 }
 
 async function adminResetPassword(userId) {
