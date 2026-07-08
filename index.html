@@ -1341,14 +1341,9 @@ async function handleForgotPassword(e) {
 
 async function handleLogout() {
   await supa.auth.signOut();
-  state.user = null; state.profile = null; state.accounts = [];
   if (autoSyncInterval) { clearInterval(autoSyncInterval); autoSyncInterval = null; }
-  document.getElementById('app-header').style.display = 'none';
-  document.querySelector('.nav-drawer').style.display = 'none';
-  document.querySelector('.nav-drawer-overlay').classList.remove('open');
-  document.getElementById('auth-container').classList.remove('hidden');
-  document.getElementById('main-app').classList.remove('active');
-  showLoginForm();
+  // Full reload: clears all in-memory state and picks up any updated app code
+  location.reload();
 }
 
 function showForgotPassword() {
