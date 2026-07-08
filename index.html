@@ -4441,6 +4441,53 @@ function renderDashboardHeatmap(targetId) {
     'Westfield':[-31.91,115.80]
   };
 
+  // A filter is "on" if any dashboard filter or KPI filter narrows the account set.
+  const filterActive = state.dashFilterRep.length > 0
+    || state.dashFilterManager.length > 0
+    || state.dashFilterRegion.length > 0
+    || state.dashFilterCountry.length > 0
+    || (state.dashFilterStage && state.dashFilterStage !== 'all')
+    || (Array.isArray(state.dashFilterTier) && state.dashFilterTier.length > 0)
+    || (Array.isArray(state.dashFilterSector) && state.dashFilterSector.length > 0)
+    || !!state.heatmapKpiFilter;
+
+  // When a filter is active, clicking a region/dot lists that region's companies below the map.
+  function showMapRegionList(regionCode) {
+    const container = document.getElementById('map-company-list');
+    if (!container) return;
+    const c = allCounts[regionCode];
+    const list = (c && c.accounts) ? c.accounts.slice() : [];
+    const regionName = REGION_NAMES[regionCode] || regionCode;
+    const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
+    const closeBtn = `<button onclick="document.getElementById('map-company-list').innerHTML=''" style="background:none;border:none;color:var(--g400);font-size:12px;cursor:pointer;padding:4px 8px">✕ Close</button>`;
+    if (!list.length) {
+      container.innerHTML = `<div class="dash-section"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--vic-orange)">${esc(regionName)} (0)</h3>${closeBtn}</div><div style="color:var(--g400);font-size:13px;padding:8px 0">No matching accounts in this region.</div></div>`;
+      container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+    list.sort((a,b) => (a.company_name||'').localeCompare(b.company_name||''));
+    const rows = list.map(a => {
+      const sColor = stageColors[a.current_stage] || '#94A3B8';
+      const stalled = isStalled(a);
+      const stageName = (STAGES[a.current_stage] && STAGES[a.current_stage].name) || '—';
+      return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
+        <td style="white-space:nowrap"><strong style="color:var(--g700)">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g600);font-weight:400;font-size:12px;margin-top:1px">${esc(a.hq_city)}</div>` : ''}</td>
+        <td style="font-size:13px;white-space:nowrap"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${stalled?'#ef4444':sColor};margin-right:6px;vertical-align:middle"></span>${stalled ? 'Stalled' : stageName}</td>
+        <td style="font-size:13px;color:var(--g700);white-space:nowrap">${esc(getRepName(a.assigned_to)||'—')}</td>
+      </tr>`;
+    }).join('');
+    container.innerHTML = `<div class="dash-section"><div class="table-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
+        <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--vic-orange);white-space:nowrap">${esc(regionName)} (${list.length})</h3>
+        ${closeBtn}
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Company</th><th>Stage</th><th>Rep</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div></div>`;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   function initLeafletMap(containerId, regions, counts, filteredAccounts) {
     if (leafletMap) { leafletMap.remove(); leafletMap = null; }
     const container = document.getElementById(containerId);
@@ -4500,7 +4547,7 @@ function renderDashboardHeatmap(targetId) {
                 if (c['stage'+s]) popup += `<div class="map-popup-stat"><span><span class="map-popup-dot" style="background:${stageColors[s]}"></span>${stageNames[s]}</span><span>${c['stage'+s]}</span></div>`;
               }
               layer.bindPopup(popup, { maxWidth: 220 });
-              if (regionCode) layer.on('click', () => { setFilter('region', regionCode); showView('accounts'); });
+              if (regionCode) layer.on('click', () => { if (filterActive) { showMapRegionList(regionCode); } else { setFilter('region', regionCode); showView('accounts'); } });
             }
           }).addTo(leafletMap);
           geoLayers.push(auLayer);
@@ -4532,7 +4579,7 @@ function renderDashboardHeatmap(targetId) {
                 if (c['stage'+s]) popup += `<div class="map-popup-stat"><span><span class="map-popup-dot" style="background:${stageColors[s]}"></span>${stageNames[s]}</span><span>${c['stage'+s]}</span></div>`;
               }
               layer.bindPopup(popup, { maxWidth: 220 });
-              if (code) layer.on('click', () => { setFilter('region', code); showView('accounts'); });
+              if (code) layer.on('click', () => { if (filterActive) { showMapRegionList(code); } else { setFilter('region', code); showView('accounts'); } });
             }
           }).addTo(leafletMap);
           geoLayers.push(nzLayer);
@@ -4563,7 +4610,13 @@ function renderDashboardHeatmap(targetId) {
           ${stalled ? `<div class="map-popup-stat"><span>Status</span><span style="color:#ef4444;font-weight:700">⚠ Stalled</span></div>` : ''}
           ${a.hq_city ? `<div class="map-popup-stat"><span>City</span><span>${a.hq_city}</span></div>` : ''}`, { maxWidth: 220 });
         pin.bindTooltip(a.company_name, { direction: 'top', offset: [0, -6], className: 'map-tip' });
-        pin.on('click', () => showAccountDetail(a.id));
+        pin.on('click', () => {
+          if (filterActive) {
+            const regs = (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean);
+            const reg = regs.find(r => allCounts[r]) || regs[0];
+            if (reg && allCounts[reg]) showMapRegionList(reg); else showAccountDetail(a.id);
+          } else { showAccountDetail(a.id); }
+        });
       });
 
       // Fit map tightly to pins (dots), fall back to geo boundaries only if no pins
@@ -4688,6 +4741,7 @@ function renderDashboardHeatmap(targetId) {
         <span style="display:flex;align-items:center;gap:4.8px;font-size:13.2px;color:var(--g500)"><span style="width:9.6px;height:9.6px;border-radius:50%;background:#ef4444"></span>Stalled</span>
       </div>
     </div>
+    <div id="map-company-list"></div>
     ${kpiListHtml}
     ${repHtml}
     ${unassignedHtml}
