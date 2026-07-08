@@ -1417,6 +1417,19 @@ async function handleForcePasswordChange(e) {
 
 let autoSyncInterval = null;
 
+// Role-based default view on login:
+// - director / manager / admin: no person filter — see everyone
+// - rep: Rep filter preset to themselves (they can untick it or Clear to see the whole team)
+function applyRoleDefaultFilters() {
+  const role = state.profile?.role;
+  state.dashFilterManager = [];
+  if (role === 'rep' && state.user?.id) {
+    state.dashFilterRep = [state.user.id];
+  } else {
+    state.dashFilterRep = [];
+  }
+}
+
 function enterApp() {
   document.getElementById('app-header').style.display = '';
   document.querySelector('.nav-drawer').style.display = '';
@@ -1432,6 +1445,7 @@ function enterApp() {
   const savedCurrency = localStorage.getItem('kac_currency_' + state.user?.id);
   if (savedCurrency && ['AUD','NZD','USD'].includes(savedCurrency)) state.dashCurrency = savedCurrency;
   // Default dashboard: reps see only their own accounts, managers see all
+  applyRoleDefaultFilters();
   showView('dashboard');
   updateBackBtn();
   renderFilters();
