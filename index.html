@@ -317,7 +317,7 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 /* Dashboard toggle */
 .dash-toggle, .detail-tabs { display: flex; flex-wrap: wrap; gap: 6px; background: transparent; padding: 0; margin: 0 16px 14px; }
 .dash-toggle button, .detail-tab { flex: 1 1 30%; padding: 7px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; color: var(--g500); background: var(--g100); border: 1px solid var(--g300); transition: all .15s; letter-spacing: .2px; }
-.dash-toggle button { padding: 10px 7px; background: var(--white); color: var(--g500); border-color: var(--g200); }
+.dash-toggle button { flex: 1 1 22%; padding: 10px 7px; background: var(--white); color: var(--g500); border-color: var(--g200); }
 .detail-tab { flex: 1 1 0; color: var(--g700); }
 .dash-toggle button.active, .detail-tab.active { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
 
@@ -2129,6 +2129,7 @@ function showAccountDetail(id) {
   state.currentAccountId = id;
   state.currentView = 'detail';
   state.detailTab = 'acceptance';
+  state._expandContactId = null;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-detail').classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -3003,6 +3004,7 @@ function renderContacts(container) {
     contacts.forEach(c => {
       const initials = (c.contact_name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       const cActs = (state.activities[accountId] || []).filter(x => x.contact_id === c.id);
+      const _open = (c.id === state._expandContactId);
       html += `<div class="contact-card" style="display:block;cursor:pointer" onclick="toggleContactCard('${c.id}')">
         <div style="display:flex;align-items:center;gap:12px">
           <div class="contact-avatar">${initials}</div>
@@ -3011,9 +3013,9 @@ function renderContacts(container) {
             <p>${esc(c.role || 'No role specified')}</p>
           </div>
           <button onclick="showActivityMenu(event,'${accountId}','${c.id}')" title="Log activity" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;border:1px solid var(--g200);background:var(--white);color:var(--vic-orange);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
-          <svg id="chev-${c.id}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2" style="flex-shrink:0;transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg id="chev-${c.id}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2" style="flex-shrink:0;transition:transform .2s${_open ? ';transform:rotate(180deg)' : ''}"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div id="cdet-${c.id}" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--g150)">
+        <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};margin-top:12px;padding-top:12px;border-top:1px solid var(--g150)">
           <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--g700)">
             ${c.is_key_influencer ? `<div><span style="color:var(--vic-orange)">&#9733;</span> Key influencer</div>` : ''}
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Role</span><br>${esc(c.role || '—')}</div>
@@ -3055,12 +3057,18 @@ function renderContacts(container) {
   }
 
   container.innerHTML = html;
+  // If we arrived here by jumping to a specific person, scroll their (already-expanded) card into view
+  if (state._expandContactId) {
+    const _t = state._expandContactId;
+    setTimeout(() => { const c = document.getElementById('cdet-' + _t); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 80);
+  }
 }
 
 function toggleContactCard(id) {
   const el = document.getElementById('cdet-' + id);
   const chev = document.getElementById('chev-' + id);
   if (!el) return;
+  if (state._expandContactId === id) state._expandContactId = null;
   const open = el.style.display !== 'none';
   el.style.display = open ? 'none' : 'block';
   if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
@@ -3287,9 +3295,11 @@ function renderDashboard() {
       <button class="${state.dashMode==='summary'?'active':''}" onclick="state.dashMode='summary';renderDashboard()">Conversion Summary</button>
       <button class="${state.dashMode==='oppsector'?'active':''}" onclick="state.dashMode='oppsector';renderDashboard()">Market Summary</button>
       <button class="${state.dashMode==='matrix'?'active':''}" onclick="state.dashMode='matrix';renderDashboard()">Acceptance Matrix</button>
-      <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
-      <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
+      <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Key Accounts</button>
+      <button class="${state.dashMode==='contacts'?'active':''}" onclick="state.dashMode='contacts';renderDashboard()">Contacts</button>
+      <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
+      <button class="${state.dashMode==='actions'?'active':''}" onclick="state.dashMode='actions';renderDashboard()">Actions</button>
     </div>
     ${filterHtml}
     <div id="dash-metrics"></div>
@@ -3300,6 +3310,8 @@ function renderDashboard() {
   else if (state.dashMode === 'oppsector') renderDashboardOppSector();
   else if (state.dashMode === 'stalled') renderDashboardStalled();
   else if (state.dashMode === 'keyaccounts') renderDashboardKeyAccounts();
+  else if (state.dashMode === 'contacts') renderDashboardContacts();
+  else if (state.dashMode === 'actions') renderDashboardActions();
   else if (state.dashMode === 'matrix') renderDashboardMatrix();
   else renderDashboardSummary();
 }
@@ -3308,7 +3320,7 @@ function renderDashMetrics() {
   const mel = document.getElementById('dash-metrics');
   if (!mel) return;
   // Acceptance Matrix tab hides the stat box + opportunity bar.
-  if (state.dashMode === 'matrix' || state.dashMode === 'activity') { mel.innerHTML = ''; return; }
+  if (state.dashMode === 'matrix' || state.dashMode === 'activity' || state.dashMode === 'contacts' || state.dashMode === 'actions') { mel.innerHTML = ''; return; }
   let accounts = getDashFilteredAccounts();
   accounts.forEach(a => { a.current_stage = recalcCurrentStage(a.id); });
   if (state.dashMode === 'stalled') {
@@ -3791,6 +3803,155 @@ function keyAccountsTableSection() {
 }
 function renderDashboardKeyAccounts() {
   document.getElementById('dash-content').innerHTML = keyAccountsTableSection();
+}
+
+// Global contacts directory — flat, filterable/searchable list of every person across
+// all accounts, so you can jump straight to a contact without drilling company-by-company.
+// Respects the dashboard dropdown filters; the header Search box filters people directly.
+function renderDashboardContacts() {
+  const el = document.getElementById('dash-content');
+  // Apply the dropdown filters but run search at the contact level ourselves
+  const _savedSearch = state.dashSearch;
+  state.dashSearch = '';
+  const accounts = getDashFilteredAccounts();
+  state.dashSearch = _savedSearch;
+  const q = (_savedSearch || '').trim().toLowerCase();
+
+  let rows = [];
+  accounts.forEach(a => (state.contacts[a.id] || []).forEach(c => rows.push({ c, a })));
+
+  if (q) rows = rows.filter(({ c, a }) =>
+    (c.contact_name || '').toLowerCase().includes(q) ||
+    (c.role || '').toLowerCase().includes(q) ||
+    (c.email || '').toLowerCase().includes(q) ||
+    (c.phone || '').toLowerCase().includes(q) ||
+    (a.company_name || '').toLowerCase().includes(q));
+
+  const col = state.contactSortCol || 'name';
+  const dir = state.contactSortDir === 'desc' ? -1 : 1;
+  rows.sort((x, y) => {
+    let av, bv;
+    if (col === 'company') { av = x.a.company_name || ''; bv = y.a.company_name || ''; }
+    else if (col === 'role') { av = x.c.role || ''; bv = y.c.role || ''; }
+    else { av = x.c.contact_name || ''; bv = y.c.contact_name || ''; }
+    return dir * av.localeCompare(bv);
+  });
+
+  const sIcon = (c) => col === c ? (dir === 1 ? ' ↑' : ' ↓') : '';
+  const sActive = (c) => col === c ? ';color:var(--vic-orange)' : '';
+
+  const body = rows.map(({ c, a }) => {
+    const initials = (c.contact_name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    const star = c.is_key_influencer ? ' <span style="color:var(--vic-orange)" title="Key influencer">&#9733;</span>' : '';
+    const bits = [];
+    if (c.email) bits.push(`<a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()" style="color:var(--info);text-decoration:none">${esc(c.email)}</a>`);
+    if (c.phone) bits.push(`<a href="tel:${esc(c.phone)}" onclick="event.stopPropagation()" style="color:var(--g600);text-decoration:none">${esc(c.phone)}</a>`);
+    return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
+      <td style="white-space:nowrap"><div style="display:flex;align-items:center;gap:10px"><div class="contact-avatar" style="width:30px;height:30px;font-size:11px;flex:none">${initials}</div><span><strong style="color:var(--g800)">${esc(c.contact_name)}</strong>${star}</span></div></td>
+      <td style="white-space:nowrap"><strong style="color:var(--g700);font-weight:600">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}</td>
+      <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
+      <td style="font-size:12px;color:var(--g600)">${bits.join('<br>') || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `<div class="dash-section"><div class="table-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
+      <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);white-space:nowrap">Contacts <span style="color:var(--g400);font-weight:400">· ${rows.length}</span></h3>
+    </div>
+    ${rows.length ? `<table class="data-table">
+      <thead><tr>
+        <th style="cursor:pointer;user-select:none${sActive('name')}" onclick="contactSort('name')">Name${sIcon('name')}</th>
+        <th style="cursor:pointer;user-select:none${sActive('company')}" onclick="contactSort('company')">Company${sIcon('company')}</th>
+        <th style="cursor:pointer;user-select:none${sActive('role')}" onclick="contactSort('role')">Role${sIcon('role')}</th>
+        <th style="white-space:nowrap">Email / Phone</th>
+      </tr></thead>
+      <tbody>${body}</tbody>
+    </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">${q ? 'No contacts match your search.' : 'No contacts yet — add people from any company to see them here.'}</div>`}
+  </div></div>`;
+}
+
+function contactSort(col) {
+  if ((state.contactSortCol || 'name') === col) state.contactSortDir = state.contactSortDir === 'desc' ? 'asc' : 'desc';
+  else { state.contactSortCol = col; state.contactSortDir = 'asc'; }
+  renderDashboardContacts();
+}
+
+// Jump straight to a person: open their company detail, switch to the Contacts tab,
+// and auto-expand + scroll to their card (via state._expandContactId, honoured in renderContacts).
+function openContactFromDirectory(accountId, contactId) {
+  showAccountDetail(accountId);
+  state._expandContactId = contactId || null;
+  state.detailTab = 'contacts';
+  renderAccountDetail();
+}
+
+// Actions / Next Steps — playbook-driven to-do cockpit. For every account (honouring the
+// dashboard filters) it shows the next incomplete checklist step, most-stalled first, so you
+// can see and clear "what's next" across all accounts without opening each one.
+function renderDashboardActions() {
+  const el = document.getElementById('dash-content');
+  const accounts = getDashFilteredAccounts();
+  const stageColors = ['', '#94A3B8', '#38BDF8', '#34D399', '#FBBF24', '#F58220'];
+  const repName = (uid) => (state.profiles.find(p => p.id === uid)?.full_name) || '—';
+
+  const rows = [];
+  accounts.forEach(a => {
+    const stage = recalcCurrentStage(a.id);
+    const items = (STAGES[stage] && STAGES[stage].items) || [];
+    const cl = (state.checklist[a.id] || []).filter(c => c.stage === stage);
+    const nextItem = items.find(it => !cl.find(c => c.item_key === it.key && c.completed));
+    if (!nextItem) return; // nothing outstanding for this account
+    const comp = getStageCompletion(a.id, stage);
+    const lastProgress = (state.checklist[a.id] || []).reduce((m, c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
+    const lastAct = (state.activities[a.id] || []).reduce((m, x) => x.created_at && x.created_at > m ? x.created_at : m, '');
+    const lastTouched = [lastProgress, lastAct].filter(Boolean).sort().pop() || '';
+    rows.push({ a, stage, nextItem, comp, lastTouched });
+  });
+
+  rows.sort((x, y) => (x.lastTouched || '').localeCompare(y.lastTouched || ''));
+
+  const now = Date.now();
+  const daysSince = (iso) => iso ? Math.floor((now - new Date(iso).getTime()) / 86400000) : null;
+
+  const body = rows.map(({ a, stage, nextItem, comp, lastTouched }) => {
+    const d = daysSince(lastTouched);
+    const lastTxt = lastTouched
+      ? `<span style="color:${d > state.stalledDays ? '#ef4444' : 'var(--g600)'}">${new Date(lastTouched).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span><div style="font-size:11px;color:var(--g400)">${d}d ago</div>`
+      : '<span style="color:#ef4444;font-weight:600">Never</span>';
+    return `<tr onclick="openAccountChecklist('${a.id}')" style="cursor:pointer">
+      <td style="white-space:nowrap;vertical-align:top"><strong style="color:var(--g800)">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}<div style="font-size:11px;color:var(--g400);margin-top:2px">${esc(repName(a.assigned_to))}</div></td>
+      <td style="white-space:nowrap;vertical-align:top"><span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:${stageColors[stage]};padding:2px 8px;border-radius:10px">${esc(STAGES[stage].name)}</span><div style="font-size:11px;color:var(--g400);margin-top:3px">${comp.done}/${comp.total} steps</div></td>
+      <td style="vertical-align:top;font-size:13px;color:var(--g700);max-width:440px">${esc(nextItem.label)}</td>
+      <td style="white-space:nowrap;vertical-align:top;text-align:center;font-size:12px">${lastTxt}</td>
+      <td style="vertical-align:top;text-align:center"><button onclick="completeNextStep(event,'${a.id}',${stage},'${nextItem.key}')" title="Mark this step done" style="padding:6px 10px;border:1px solid var(--success);background:var(--success-bg);color:var(--success);border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">&#10003; Done</button></td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `<div class="dash-section"><div class="table-wrap">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
+      <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);white-space:nowrap">Next Steps <span style="color:var(--g400);font-weight:400">· ${rows.length} open</span></h3>
+      <span style="font-size:11px;color:var(--g400);white-space:nowrap">Most stalled first</span>
+    </div>
+    ${rows.length ? `<table class="data-table">
+      <thead><tr>
+        <th>Account</th><th>Stage</th><th>Next Step</th><th style="text-align:center;white-space:nowrap">Last Touched</th><th></th>
+      </tr></thead>
+      <tbody>${body}</tbody>
+    </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">Nothing outstanding — every account has completed its current playbook step. &#127881;</div>`}
+  </div></div>`;
+}
+
+async function completeNextStep(event, accountId, stage, itemKey) {
+  if (event) event.stopPropagation();
+  await toggleChecklistItem(accountId, stage, itemKey, true);
+  toast('Step marked done');
+  renderDashboardActions();
+}
+
+function openAccountChecklist(accountId) {
+  showAccountDetail(accountId);
+  state.detailTab = 'checklist';
+  renderAccountDetail();
 }
 
 function renderDashboardStalled() {
@@ -6851,8 +7012,9 @@ async function handleSaveAccount(e, existingId) {
 
   await saveAccount(data);
   closeModal();
-  renderAccountsList();
-  if (existingId) renderAccountDetail();
+  // Re-render whichever view is active so the new/updated account shows immediately (no page refresh needed)
+  if (state.currentView === 'detail') renderAccountDetail();
+  else _rerenderCurrentFilterView();
   toast(existingId ? 'Account updated' : 'Account added');
 }
 
