@@ -1131,7 +1131,7 @@ function pageSearchBox() {
   const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E";
   return `<div style="position:relative;flex:1 1 200px;min-width:130px">
     <input type="text" id="page-search-input" value="${esc(state.dashSearch||'')}" placeholder="Search" oninput="onPageSearch(this.value)" autocomplete="off"
-      style="width:100%;padding:11px 12px 11px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:12px;background:var(--white);box-sizing:border-box;background-image:url(&quot;${icon}&quot;);background-repeat:no-repeat;background-position:9px center;height:40px">
+      style="width:100%;padding:9px 12px 9px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:12px;background:var(--white);box-sizing:border-box;background-image:url(&quot;${icon}&quot;);background-repeat:no-repeat;background-position:9px center;height:36px">
   </div>`;
 }
 let _pageSearchTimer = null;
@@ -3282,16 +3282,16 @@ function renderDashboard() {
       <div style="display:flex;gap:8px;align-items:center;flex:0 0 74%">
         ${pageSearchBox()}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
-          <div class="fd-btn" style="padding:11px 12px;height:40px;box-sizing:border-box;background:#59667814;border:1px solid #59667833;color:#596678;width:120px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
+          <div class="fd-btn" style="padding:9px 12px;height:36px;box-sizing:border-box;background:#59667814;border:1px solid #59667833;color:#596678;width:120px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
           <div class="fd-menu" style="min-width:90px">
             <div class="fd-item${state.dashCurrency==='AUD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='AUD';localStorage.setItem('kac_currency_'+state.user?.id,'AUD');renderDashboard()">AUD$</div>
             <div class="fd-item${state.dashCurrency==='NZD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='NZD';localStorage.setItem('kac_currency_'+state.user?.id,'NZD');renderDashboard()">NZD$</div>
             <div class="fd-item${state.dashCurrency==='USD'?' active':''}" onclick="event.stopPropagation();state.dashCurrency='USD';localStorage.setItem('kac_currency_'+state.user?.id,'USD');renderDashboard()">USD$</div>
           </div>
         </div>
-        <button onclick="showAddAccount()" style="padding:11px 12px;width:120px;justify-content:center;background:#05966914;color:#059669;border:1px solid #05966933;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Account</button>
-        <button onclick="showAddContactGlobal()" style="padding:11px 12px;width:120px;justify-content:center;background:#2563eb14;color:#2563eb;border:1px solid #2563eb33;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Contact</button>
-        <button onclick="generatePageReport()" style="padding:11px 12px;width:120px;justify-content:center;background:#DC262614;color:#DC2626;border:1px solid #DC262633;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+        <button onclick="showAddAccount()" style="padding:11px 12px;width:120px;justify-content:center;background:#05966914;color:#059669;border:1px solid #05966933;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:36px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Account</button>
+        <button onclick="showAddContactGlobal()" style="padding:11px 12px;width:120px;justify-content:center;background:#2563eb14;color:#2563eb;border:1px solid #2563eb33;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:36px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Contact</button>
+        <button onclick="generatePageReport()" style="padding:11px 12px;width:120px;justify-content:center;background:#DC262614;color:#DC2626;border:1px solid #DC262633;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;height:36px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
       </div>
     </div>
     <div class="dash-toggle">
@@ -6975,7 +6975,7 @@ function showAddAccount() {
       <div class="form-row">
         <div class="form-group">
           <label>Country</label>
-          <select id="acc-country"><option value="AU">Australia</option><option value="NZ">New Zealand</option></select>
+          <select id="acc-country"><option value="AU" ${getDefaultCountry()==='AU'?'selected':''}>Australia</option><option value="NZ" ${getDefaultCountry()==='NZ'?'selected':''}>New Zealand</option></select>
         </div>
         <div class="form-group">
           <label>Stakeholder</label>
@@ -7089,6 +7089,7 @@ async function handleSaveAccount(e, existingId) {
   const data = existingId ? { ...state.accounts.find(a => a.id === existingId) } : {};
   data.company_name = document.getElementById('acc-name').value.trim();
   data.country = document.getElementById('acc-country').value;
+  rememberCountry(data.country);
   data.tier = parseInt(document.getElementById('acc-tier').value);
   data.hq_city = document.getElementById('acc-city').value.trim();
   data.key_sectors = getChipValues('acc-sectors-wrap');
@@ -7153,35 +7154,66 @@ async function handleDeleteAccount(id) {
   toast('Account deleted');
 }
 
-// Top-level "+ Contact" — add a person and attach to an existing company, or create
-// the company on the fly if the typed name isn't already an account.
+// Default country for new accounts/contacts: the rep's own profile country,
+// else the last country they entered, else AU — so it's pre-filled each time.
+function getDefaultCountry() {
+  const uid = state.user && state.user.id;
+  const stored = uid ? localStorage.getItem('kac_last_country_' + uid) : null;
+  return (state.profile && state.profile.country) || stored || 'AU';
+}
+function rememberCountry(country) {
+  const uid = state.user && state.user.id;
+  if (uid && country) localStorage.setItem('kac_last_country_' + uid, country);
+}
+
+// Top-level "+ Contact" — attach a person to an existing company (each shown with its
+// location so same-named branches in different regions are distinguishable), or create
+// a new company on the fly.
 function showAddContactGlobal() {
   const modal = document.getElementById('modal-content');
+  const dc = getDefaultCountry();
   const accounts = [...state.accounts].sort((a, b) => a.company_name.localeCompare(b.company_name));
   const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager','Operations Manager','Facilities Manager','Mechanical Lead'];
+  const acctOpt = a => {
+    const nm = a.company_name.replace(/^\[TEST\]\s*/, '');
+    const loc = [a.hq_city, a.regions].filter(Boolean).join(' · ');
+    return `<option value="${a.id}">${esc(nm)}${loc ? ' — ' + esc(loc) : ''}</option>`;
+  };
   modal.innerHTML = `
     <h2>Add Contact</h2>
     <form onsubmit="handleAddContactGlobal(event)">
       <div class="form-group">
         <label>Company *</label>
-        <input type="text" id="gc-company" list="gc-company-list" required autocomplete="off" placeholder="Find an existing company or type a new one">
-        <datalist id="gc-company-list">${accounts.map(a => `<option value="${esc(a.company_name.replace(/^\[TEST\]\s*/, ''))}">`).join('')}</datalist>
-        <div style="font-size:11px;color:var(--g400);margin-top:4px">If the company isn't already on your list, a new account is created for it.</div>
+        <select id="gc-account" onchange="gcToggleNewCompany()">
+          <option value="" disabled selected>Select a company…</option>
+          <option value="__new__">＋ Create a new company…</option>
+          ${accounts.map(acctOpt).join('')}
+        </select>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Each company shows its location — pick the right branch if a name appears more than once.</div>
+      </div>
+      <div id="gc-new-wrap" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>New company name *</label>
+            <input type="text" id="gc-company-new" placeholder="e.g. AE Smith">
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <select id="gc-country">
+              <option value="AU" ${dc === 'AU' ? 'selected' : ''}>Australia</option>
+              <option value="NZ" ${dc === 'NZ' ? 'selected' : ''}>New Zealand</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <label>Name *</label>
         <input type="text" id="gc-name" required placeholder="Full name">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Role</label>
-          <input type="text" id="gc-role" list="gc-role-list" placeholder="Type or pick a role">
-          <datalist id="gc-role-list">${roles.map(r => `<option value="${r}">`).join('')}</datalist>
-        </div>
-        <div class="form-group">
-          <label>Country <span style="color:var(--g400);font-weight:400">(new company)</span></label>
-          <select id="gc-country"><option value="AU">Australia</option><option value="NZ">New Zealand</option></select>
-        </div>
+      <div class="form-group">
+        <label>Role</label>
+        <input type="text" id="gc-role" list="gc-role-list" placeholder="Type or pick a role">
+        <datalist id="gc-role-list">${roles.map(r => `<option value="${r}">`).join('')}</datalist>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Email</label><input type="email" id="gc-email" placeholder="email@company.com"></div>
@@ -7199,18 +7231,33 @@ function showAddContactGlobal() {
   document.getElementById('modal-overlay').classList.add('active');
 }
 
+function gcToggleNewCompany() {
+  const sel = document.getElementById('gc-account');
+  const wrap = document.getElementById('gc-new-wrap');
+  if (!sel || !wrap) return;
+  const isNew = sel.value === '__new__';
+  wrap.style.display = isNew ? '' : 'none';
+  const nc = document.getElementById('gc-company-new');
+  if (nc) nc.required = isNew;
+}
+
 async function handleAddContactGlobal(e) {
   e.preventDefault();
-  const companyInput = document.getElementById('gc-company').value.trim();
+  const sel = document.getElementById('gc-account').value;
   const name = document.getElementById('gc-name').value.trim();
-  if (!companyInput || !name) return;
-  const norm = s => (s || '').replace(/^\[TEST\]\s*/, '').trim().toLowerCase();
-  let acct = state.accounts.find(a => norm(a.company_name) === norm(companyInput));
-  const created = !acct;
-  if (!acct) {
+  if (!name) return;
+  let acct, created = false;
+  if (sel === '__new__') {
+    const companyName = document.getElementById('gc-company-new').value.trim();
+    if (!companyName) { toast('Enter the new company name'); return; }
     const country = document.getElementById('gc-country').value;
-    acct = await saveAccount({ company_name: companyInput, country, tier: 2, currency: country === 'NZ' ? 'NZD' : 'AUD' });
+    rememberCountry(country);
+    acct = await saveAccount({ company_name: companyName, country, tier: 2, currency: country === 'NZ' ? 'NZD' : 'AUD' });
+    created = true;
+  } else if (sel) {
+    acct = state.accounts.find(a => a.id === sel);
   }
+  if (!acct) { toast('Please choose a company'); return; }
   await saveContact({
     account_id: acct.id,
     contact_name: name,
@@ -7222,7 +7269,8 @@ async function handleAddContactGlobal(e) {
   closeModal();
   if (state.currentView === 'detail') renderAccountDetail();
   else _rerenderCurrentFilterView();
-  toast(created ? `Created ${companyInput} and added ${name}` : `Added ${name} to ${companyInput}`);
+  const cleanNm = acct.company_name.replace(/^\[TEST\]\s*/, '');
+  toast(created ? `Created ${cleanNm} and added ${name}` : `Added ${name} to ${cleanNm}`);
 }
 
 function showAddContact(accountId) {
