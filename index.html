@@ -2444,6 +2444,8 @@ function renderAccountDetail() {
         <div style="display:flex;align-items:flex-start;gap:8px">
           <button onclick="showEditAccount('${a.id}')" style="padding:8px 14px;background:#3b82f6;color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
           <button onclick="generateAccountReport()" style="padding:8px 14px;background:#d23b36;color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+          <button onclick="showReassignAccount('${a.id}')" style="padding:8px 14px;background:var(--white);color:var(--g700);border:1px solid var(--g300);border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>Reassign</button>
+          <button onclick="handleDeleteAccount('${a.id}')" style="padding:8px 14px;background:var(--white);color:var(--danger);border:1px solid var(--danger);border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Delete</button>
         </div>
       </div>
     </div>
@@ -5350,7 +5352,7 @@ function renderAdminPanel() {
     <div class="dash-section">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px">
         <h3 style="margin:0">User Management</h3>
-        <button onclick="showCreateUser()" class="btn-primary" style="padding:8px 14px;font-size:13px;white-space:nowrap">+ Create User</button>
+        <button onclick="showCreateUser()" class="btn-primary" style="width:calc(50% - 6px);padding:8px 16px;font-size:13px;white-space:nowrap">+ Create User</button>
       </div>
       <div class="table-wrap"><table class="data-table">
         <thead><tr>
@@ -7103,8 +7105,47 @@ async function handleSaveAccount(e, existingId) {
   toast(existingId ? 'Account updated' : 'Account added');
 }
 
+function showReassignAccount(id) {
+  const a = state.accounts.find(x => x.id === id);
+  if (!a) return;
+  const clean = a.company_name.replace(/^\[TEST\]\s*/, '');
+  const reps = [...(state.profiles || [])].filter(p => p.role !== 'director').sort((x, y) => (x.full_name || '').localeCompare(y.full_name || ''));
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <h2>Reassign Account</h2>
+    <p style="color:var(--g600);font-size:14px;margin:0 0 14px">Move <strong>${esc(clean)}</strong> to a different rep.</p>
+    <form onsubmit="handleReassignAccount(event, '${id}')">
+      <div class="form-group">
+        <label>Assigned Rep</label>
+        <select id="ra-rep">${reps.map(p => `<option value="${p.id}" ${a.assigned_to === p.id ? 'selected' : ''}>${esc(p.full_name || '—')}</option>`).join('')}</select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn-save">Reassign</button>
+      </div>
+    </form>`;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+async function handleReassignAccount(e, id) {
+  e.preventDefault();
+  const newRep = document.getElementById('ra-rep').value;
+  const a = { ...state.accounts.find(x => x.id === id) };
+  a.assigned_to = newRep;
+  await saveAccount(a);
+  closeModal();
+  renderAccountDetail();
+  toast('Reassigned to ' + (getRepName(newRep) || 'rep'));
+}
+
+// Delete requires a double confirmation: an initial prompt, then typing the company name.
 async function handleDeleteAccount(id) {
-  if (!confirm('Delete this account and all its data? This cannot be undone.')) return;
+  const a = state.accounts.find(x => x.id === id);
+  const clean = (a ? a.company_name : '').replace(/^\[TEST\]\s*/, '').trim();
+  if (!confirm(`Delete "${clean}" and ALL of its data — contacts, checklist, notes, activities and acceptance matrix? This cannot be undone.`)) return;
+  const typed = prompt(`This is permanent. Type the company name to confirm deletion:\n\n${clean}`);
+  if (typed === null) return;
+  if (typed.trim().toLowerCase() !== clean.toLowerCase()) { toast('Name did not match — deletion cancelled'); return; }
   await deleteAccount(id);
   closeModal();
   showView('accounts');
