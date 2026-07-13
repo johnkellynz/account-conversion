@@ -3279,7 +3279,7 @@ function renderDashboard() {
   el.innerHTML = `
     <div class="view-header">
       <h1>Dashboard</h1>
-      <div style="display:flex;gap:8px;align-items:center;flex:0 0 66.5%">
+      <div style="display:flex;gap:8px;align-items:center;flex:0 0 74%">
         ${pageSearchBox()}
         <div class="fd-wrap" id="fd-currency" onclick="toggleFilterDrop('fd-currency',event)" style="flex:none;min-width:auto">
           <div class="fd-btn" style="padding:11px 12px;height:40px;box-sizing:border-box;background:#59667814;border:1px solid #59667833;color:#596678;width:120px">${state.dashCurrency}$ <span style="font-size:10px;opacity:.5">▼</span></div>
@@ -3290,6 +3290,7 @@ function renderDashboard() {
           </div>
         </div>
         <button onclick="showAddAccount()" style="padding:11px 12px;width:120px;justify-content:center;background:#05966914;color:#059669;border:1px solid #05966933;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Account</button>
+        <button onclick="showAddContactGlobal()" style="padding:11px 12px;width:120px;justify-content:center;background:#2563eb14;color:#2563eb;border:1px solid #2563eb33;border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Contact</button>
         <button onclick="generatePageReport()" style="padding:11px 12px;width:120px;justify-content:center;background:#DC262614;color:#DC2626;border:1px solid #DC262633;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;height:40px;box-sizing:border-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
       </div>
     </div>
@@ -7150,6 +7151,78 @@ async function handleDeleteAccount(id) {
   closeModal();
   showView('accounts');
   toast('Account deleted');
+}
+
+// Top-level "+ Contact" — add a person and attach to an existing company, or create
+// the company on the fly if the typed name isn't already an account.
+function showAddContactGlobal() {
+  const modal = document.getElementById('modal-content');
+  const accounts = [...state.accounts].sort((a, b) => a.company_name.localeCompare(b.company_name));
+  const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager','Operations Manager','Facilities Manager','Mechanical Lead'];
+  modal.innerHTML = `
+    <h2>Add Contact</h2>
+    <form onsubmit="handleAddContactGlobal(event)">
+      <div class="form-group">
+        <label>Company *</label>
+        <input type="text" id="gc-company" list="gc-company-list" required autocomplete="off" placeholder="Find an existing company or type a new one">
+        <datalist id="gc-company-list">${accounts.map(a => `<option value="${esc(a.company_name.replace(/^\[TEST\]\s*/, ''))}">`).join('')}</datalist>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">If the company isn't already on your list, a new account is created for it.</div>
+      </div>
+      <div class="form-group">
+        <label>Name *</label>
+        <input type="text" id="gc-name" required placeholder="Full name">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role</label>
+          <input type="text" id="gc-role" list="gc-role-list" placeholder="Type or pick a role">
+          <datalist id="gc-role-list">${roles.map(r => `<option value="${r}">`).join('')}</datalist>
+        </div>
+        <div class="form-group">
+          <label>Country <span style="color:var(--g400);font-weight:400">(new company)</span></label>
+          <select id="gc-country"><option value="AU">Australia</option><option value="NZ">New Zealand</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email</label><input type="email" id="gc-email" placeholder="email@company.com"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="gc-phone" placeholder="+61 ..."></div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="gc-influencer" style="width:22px;height:22px;accent-color:var(--vic-orange)">
+        <label for="gc-influencer" style="margin:0">Key buying influencer</label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn-save">Add Contact</button>
+      </div>
+    </form>`;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+async function handleAddContactGlobal(e) {
+  e.preventDefault();
+  const companyInput = document.getElementById('gc-company').value.trim();
+  const name = document.getElementById('gc-name').value.trim();
+  if (!companyInput || !name) return;
+  const norm = s => (s || '').replace(/^\[TEST\]\s*/, '').trim().toLowerCase();
+  let acct = state.accounts.find(a => norm(a.company_name) === norm(companyInput));
+  const created = !acct;
+  if (!acct) {
+    const country = document.getElementById('gc-country').value;
+    acct = await saveAccount({ company_name: companyInput, country, tier: 2, currency: country === 'NZ' ? 'NZD' : 'AUD' });
+  }
+  await saveContact({
+    account_id: acct.id,
+    contact_name: name,
+    role: document.getElementById('gc-role').value.trim(),
+    email: document.getElementById('gc-email').value.trim(),
+    phone: document.getElementById('gc-phone').value.trim(),
+    is_key_influencer: document.getElementById('gc-influencer').checked
+  });
+  closeModal();
+  if (state.currentView === 'detail') renderAccountDetail();
+  else _rerenderCurrentFilterView();
+  toast(created ? `Created ${companyInput} and added ${name}` : `Added ${name} to ${companyInput}`);
 }
 
 function showAddContact(accountId) {
