@@ -7037,17 +7037,8 @@ function showAddContact(accountId) {
       </div>
       <div class="form-group">
         <label>Role</label>
-        <select id="ct-role">
-          <option value="">Select role...</option>
-          <option>Estimating Manager</option>
-          <option>Project Engineer</option>
-          <option>Procurement Manager</option>
-          <option>BIM / Technical Lead</option>
-          <option>Site Foreman / Supervisor</option>
-          <option>MD / Director / Owner</option>
-          <option>HSE Manager</option>
-          <option>Other</option>
-        </select>
+        <input type="text" id="ct-role" list="ct-role-list" placeholder="Type or pick a role">
+        <datalist id="ct-role-list">${['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager'].map(r=>`<option value="${r}">`).join('')}</datalist>
       </div>
       <div class="form-group">
         <label>Division</label>
@@ -7103,10 +7094,8 @@ function showEditContact(contactId, accountId) {
       </div>
       <div class="form-group">
         <label>Role</label>
-        <select id="ct-role">
-          <option value="">Select role...</option>
-          ${roles.map(r => `<option ${c.role===r?'selected':''}>${r}</option>`).join('')}
-        </select>
+        <input type="text" id="ct-role" list="ct-role-list" value="${esc(c.role)}" placeholder="Type or pick a role">
+        <datalist id="ct-role-list">${roles.filter(r=>r!=='Other').map(r=>`<option value="${r}">`).join('')}</datalist>
       </div>
       <div class="form-group">
         <label>Division</label>
