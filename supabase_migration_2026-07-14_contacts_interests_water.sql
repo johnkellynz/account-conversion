@@ -16,6 +16,10 @@ where not exists (select 1 from kac_sectors where label = 'Water');
 --    the insert/update is rejected and falls into the offline sync queue.
 alter table kac_contacts add column if not exists interests text;
 
+-- 3) Add "sector" column to contacts (HVAC, Water, Mining, etc.) ---------------
+--    The discipline a contact works in — distinct from the account key sectors.
+alter table kac_contacts add column if not exists sector text;
+
 commit;
 
 -- Verify ----------------------------------------------------------------------

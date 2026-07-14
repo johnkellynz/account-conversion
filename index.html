@@ -812,6 +812,8 @@ const STAGES = {
 
 // ======================== SECTOR OPTIONS ========================
 const SECTORS = ['Commercial', 'Health', 'Industrial', 'Mining', 'Data Centres', 'Education', 'Government', 'Retail', 'Water'];
+// Sector/discipline a contact works in (distinct from account key sectors — includes HVAC)
+const CONTACT_SECTORS = ['HVAC', 'Fire Protection', 'Water', 'Plumbing', 'Mechanical Services', 'Mining', 'Industrial', 'Data Centres', 'Oil & Gas', 'Power', 'Marine'];
 const AU_REGIONS = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 const NZ_REGIONS = ['NTL', 'AKL', 'WKO', 'BOP', 'GIS', 'HKB', 'TKI', 'MWT', 'WGN', 'TSM', 'NSN', 'MBH', 'WTC', 'CAN', 'OTA', 'STL'];
 const ALL_REGIONS = [...AU_REGIONS, ...NZ_REGIONS, 'National'];
@@ -7210,10 +7212,17 @@ function showAddContactGlobal() {
         <label>Name *</label>
         <input type="text" id="gc-name" required placeholder="Full name">
       </div>
-      <div class="form-group">
-        <label>Role</label>
-        <input type="text" id="gc-role" list="gc-role-list" placeholder="Type or pick a role">
-        <datalist id="gc-role-list">${roles.map(r => `<option value="${r}">`).join('')}</datalist>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role</label>
+          <input type="text" id="gc-role" list="gc-role-list" placeholder="Type or pick a role">
+          <datalist id="gc-role-list">${roles.map(r => `<option value="${r}">`).join('')}</datalist>
+        </div>
+        <div class="form-group">
+          <label>Sector</label>
+          <input type="text" id="gc-sector" list="gc-sector-list" placeholder="Type or pick a sector">
+          <datalist id="gc-sector-list">${CONTACT_SECTORS.map(s => `<option value="${s}">`).join('')}</datalist>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Email</label><input type="email" id="gc-email" placeholder="email@company.com"></div>
@@ -7262,6 +7271,7 @@ async function handleAddContactGlobal(e) {
     account_id: acct.id,
     contact_name: name,
     role: document.getElementById('gc-role').value.trim(),
+    sector: document.getElementById('gc-sector').value.trim(),
     email: document.getElementById('gc-email').value.trim(),
     phone: document.getElementById('gc-phone').value.trim(),
     is_key_influencer: document.getElementById('gc-influencer').checked
@@ -7296,10 +7306,17 @@ function showAddContact(accountId) {
           <input type="text" id="ct-last-name" placeholder="Last name">
         </div>
       </div>
-      <div class="form-group">
-        <label>Role</label>
-        <input type="text" id="ct-role" list="ct-role-list" placeholder="Type or pick a role">
-        <datalist id="ct-role-list">${['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager'].map(r=>`<option value="${r}">`).join('')}</datalist>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role</label>
+          <input type="text" id="ct-role" list="ct-role-list" placeholder="Type or pick a role">
+          <datalist id="ct-role-list">${['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager'].map(r=>`<option value="${r}">`).join('')}</datalist>
+        </div>
+        <div class="form-group">
+          <label>Sector</label>
+          <input type="text" id="ct-sector" list="ct-sector-list" placeholder="Type or pick a sector">
+          <datalist id="ct-sector-list">${CONTACT_SECTORS.map(s=>`<option value="${s}">`).join('')}</datalist>
+        </div>
       </div>
       <div class="form-group">
         <label>Division</label>
@@ -7362,10 +7379,17 @@ function showEditContact(contactId, accountId) {
           <input type="text" id="ct-last-name" value="${esc(_last)}">
         </div>
       </div>
-      <div class="form-group">
-        <label>Role</label>
-        <input type="text" id="ct-role" list="ct-role-list" value="${esc(c.role)}" placeholder="Type or pick a role">
-        <datalist id="ct-role-list">${roles.filter(r=>r!=='Other').map(r=>`<option value="${r}">`).join('')}</datalist>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role</label>
+          <input type="text" id="ct-role" list="ct-role-list" value="${esc(c.role)}" placeholder="Type or pick a role">
+          <datalist id="ct-role-list">${roles.filter(r=>r!=='Other').map(r=>`<option value="${r}">`).join('')}</datalist>
+        </div>
+        <div class="form-group">
+          <label>Sector</label>
+          <input type="text" id="ct-sector" list="ct-sector-list" value="${esc(c.sector || '')}" placeholder="Type or pick a sector">
+          <datalist id="ct-sector-list">${CONTACT_SECTORS.map(s=>`<option value="${s}">`).join('')}</datalist>
+        </div>
       </div>
       <div class="form-group">
         <label>Division</label>
@@ -7418,6 +7442,7 @@ async function handleSaveContact(e, existingId, accountId) {
   data.email = document.getElementById('ct-email').value.trim();
   data.phone = document.getElementById('ct-phone').value.trim();
   data.is_key_influencer = document.getElementById('ct-influencer').checked;
+  data.sector = document.getElementById('ct-sector').value.trim();
   data.interests = document.getElementById('ct-interests').value.trim();
   await saveContact(data);
   closeModal();
