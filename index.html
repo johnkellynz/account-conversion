@@ -3019,16 +3019,17 @@ function renderContacts(container) {
           <button onclick="showActivityMenu(event,'${accountId}','${c.id}')" title="Log activity" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;border:1px solid var(--g200);background:var(--white);color:var(--vic-orange);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
           <svg id="chev-${c.id}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2" style="flex-shrink:0;transition:transform .2s${_open ? ';transform:rotate(180deg)' : ''}"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};margin-top:12px;padding-top:12px;border-top:1px solid var(--g150)">
-          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--g700)">
-            ${c.is_key_influencer ? `<div><span style="color:var(--vic-orange)">&#9733;</span> Key influencer</div>` : ''}
-            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Role</span><br>${esc(c.role || '—')}</div>
-            ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Division</span><br>${esc(c.division)}</div>` : ''}
-            ${c.reports_to ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Reports To</span><br>${esc((contacts.find(x=>x.id===c.reports_to)||{}).contact_name||'—')}</div>` : ''}
+        <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};margin-top:10px;padding-top:10px;border-top:1px solid var(--g150)">
+          ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600;margin-bottom:8px"><span>&#9733;</span> Key influencer</div>` : ''}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:13px;color:var(--g700)">
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Email</span><br>${c.email ? `<a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a>` : '—'}</div>
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Phone</span><br>${c.phone ? `<a href="tel:${esc(c.phone)}" onclick="event.stopPropagation()">${esc(c.phone)}</a>` : '—'}</div>
-            ${cActs.length ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Recent Activity (${cActs.length})</span>${cActs.slice(0,5).map(x=>`<div style="font-size:12px;color:var(--g600);margin-top:3px"><strong style="color:var(--g700)">${esc(x.activity_type)}</strong> · ${new Date(x.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${x.note?` — ${esc(x.note)}`:''}</div>`).join('')}</div>` : ''}
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Role</span><br>${esc(c.role || '—')}</div>
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Division</span><br>${esc(c.division || '—')}</div>
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Interests</span><br>${c.interests ? esc(c.interests) : '—'}</div>
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Reports To</span><br>${c.reports_to ? esc((contacts.find(x=>x.id===c.reports_to)||{}).contact_name||'—') : '—'}</div>
           </div>
+          ${cActs.length ? `<div style="margin-top:10px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Recent Activity (${cActs.length})</span>${cActs.slice(0,5).map(x=>`<div style="font-size:12px;color:var(--g600);margin-top:3px"><strong style="color:var(--g700)">${esc(x.activity_type)}</strong> · ${new Date(x.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${x.note?` — ${esc(x.note)}`:''}</div>`).join('')}</div>` : ''}
           <div style="display:flex;gap:8px;margin-top:14px">
             <button onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="flex:1;padding:9px;border:1px solid var(--g200);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
             <button onclick="event.stopPropagation();confirmDeleteContact('${c.id}','${accountId}',event)" style="flex:1;padding:9px;border:1px solid var(--danger);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Delete</button>
@@ -3815,6 +3816,10 @@ function renderDashboardKeyAccounts() {
 // Respects the dashboard dropdown filters; the header Search box filters people directly.
 function renderDashboardContacts() {
   const el = document.getElementById('dash-content');
+  // Ensure the global activity list is loaded so the Last Contacted column is populated
+  if (!state._activitiesLoaded) {
+    loadAllActivities().then(() => { state._activitiesLoaded = true; if (state.dashMode === 'contacts') renderDashboardContacts(); });
+  }
   // Apply the dropdown filters but run search at the contact level ourselves
   const _savedSearch = state.dashSearch;
   state.dashSearch = '';
@@ -3832,12 +3837,19 @@ function renderDashboardContacts() {
     (c.phone || '').toLowerCase().includes(q) ||
     (a.company_name || '').toLowerCase().includes(q));
 
+  const lastActTs = (c) => {
+    let t = 0;
+    (state.allActivities || []).forEach(x => { if (x.contact_id === c.id && x.created_at) { const ms = new Date(x.created_at).getTime(); if (ms > t) t = ms; } });
+    return t;
+  };
   const col = state.contactSortCol || 'name';
   const dir = state.contactSortDir === 'desc' ? -1 : 1;
   rows.sort((x, y) => {
+    if (col === 'lastcontacted') return dir * (lastActTs(x.c) - lastActTs(y.c));
     let av, bv;
     if (col === 'company') { av = x.a.company_name || ''; bv = y.a.company_name || ''; }
     else if (col === 'role') { av = x.c.role || ''; bv = y.c.role || ''; }
+    else if (col === 'interests') { av = x.c.interests || ''; bv = y.c.interests || ''; }
     else { av = x.c.contact_name || ''; bv = y.c.contact_name || ''; }
     return dir * av.localeCompare(bv);
   });
@@ -3851,11 +3863,16 @@ function renderDashboardContacts() {
     const bits = [];
     if (c.email) bits.push(`<a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()" style="color:var(--info);text-decoration:none">${esc(c.email)}</a>`);
     if (c.phone) bits.push(`<a href="tel:${esc(c.phone)}" onclick="event.stopPropagation()" style="color:var(--g600);text-decoration:none">${esc(c.phone)}</a>`);
+    const _lc = lastActTs(c);
+    const lastContacted = _lc ? new Date(_lc).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' }) : '—';
+    const interests = c.interests ? esc(c.interests) : '—';
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="white-space:nowrap"><div style="display:flex;align-items:center;gap:10px"><div class="contact-avatar" style="width:30px;height:30px;font-size:11px;flex:none">${initials}</div><span><strong style="color:var(--g800)">${esc(c.contact_name)}</strong>${star}</span></div></td>
       <td style="white-space:nowrap"><strong style="color:var(--g700);font-weight:600">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
+      <td style="font-size:12px;color:var(--g600)">${interests}</td>
       <td style="font-size:12px;color:var(--g600)">${bits.join('<br>') || '—'}</td>
+      <td style="font-size:12px;color:var(--g600);white-space:nowrap">${lastContacted}</td>
     </tr>`;
   }).join('');
 
@@ -3868,7 +3885,9 @@ function renderDashboardContacts() {
         <th style="cursor:pointer;user-select:none${sActive('name')}" onclick="contactSort('name')">Name${sIcon('name')}</th>
         <th style="cursor:pointer;user-select:none${sActive('company')}" onclick="contactSort('company')">Company${sIcon('company')}</th>
         <th style="cursor:pointer;user-select:none${sActive('role')}" onclick="contactSort('role')">Role${sIcon('role')}</th>
+        <th style="cursor:pointer;user-select:none${sActive('interests')}" onclick="contactSort('interests')">Interests${sIcon('interests')}</th>
         <th style="white-space:nowrap">Email / Phone</th>
+        <th style="cursor:pointer;user-select:none;white-space:nowrap${sActive('lastcontacted')}" onclick="contactSort('lastcontacted')">Last Contacted${sIcon('lastcontacted')}</th>
       </tr></thead>
       <tbody>${body}</tbody>
     </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">${q ? 'No contacts match your search.' : 'No contacts yet — add people from any company to see them here.'}</div>`}
@@ -7297,7 +7316,7 @@ async function handleAddContactGlobal(e) {
 }
 
 function collectInterests() {
-  const set = new Set();
+  const set = new Set(['BBQ', 'Cricket', 'Fishing', 'Golf', 'Rugby', 'Soccer']);
   Object.values(state.contacts || {}).forEach(list => (list || []).forEach(ct => {
     (ct.interests || '').split(',').forEach(t => { const v = t.trim(); if (v) set.add(v); });
   }));
@@ -7332,7 +7351,7 @@ function showAddContact(accountId) {
       <div class="form-group">
         <label>Division</label>
         <input type="text" id="ct-division" list="ct-division-list" placeholder="e.g. Estimating, Engineering">
-        <datalist id="ct-division-list">${['Estimating','Engineering','Procurement','Projects','Operations','Management','HSE','Design','Commercial','Finance'].map(d=>`<option value="${d}">`).join('')}</datalist>
+        <datalist id="ct-division-list">${['Estimating','Engineering','Drafting','Procurement','Projects','Operations','Management','HSE','Design','Commercial','Finance'].map(d=>`<option value="${d}">`).join('')}</datalist>
       </div>
       <div class="form-group">
         <label>Reports To</label>
@@ -7404,7 +7423,7 @@ function showEditContact(contactId, accountId) {
       <div class="form-group">
         <label>Division</label>
         <input type="text" id="ct-division" list="ct-division-list" value="${esc(c.division)}" placeholder="e.g. Estimating, Engineering">
-        <datalist id="ct-division-list">${['Estimating','Engineering','Procurement','Projects','Operations','Management','HSE','Design','Commercial','Finance'].map(d=>`<option value="${d}">`).join('')}</datalist>
+        <datalist id="ct-division-list">${['Estimating','Engineering','Drafting','Procurement','Projects','Operations','Management','HSE','Design','Commercial','Finance'].map(d=>`<option value="${d}">`).join('')}</datalist>
       </div>
       <div class="form-group">
         <label>Reports To</label>
