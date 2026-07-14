@@ -3045,8 +3045,8 @@ function renderContacts(container) {
     contacts.forEach(c => { const key = (c.reports_to && byId[c.reports_to]) ? c.reports_to : '__root__'; (childrenMap[key] = childrenMap[key] || []).push(c); });
     const orgNode = (c) => `<div class="org-node" onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="cursor:pointer">
         <div style="font-weight:700;font-size:13px;color:var(--g900)">${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</div>
-        ${c.role ? `<div style="font-size:11px;color:var(--g500)">${esc(c.role)}</div>` : ''}
-        ${c.division ? `<div style="font-size:11px;color:var(--vic-orange);font-weight:600;margin-top:1px">${esc(c.division)}</div>` : ''}
+        <div style="font-size:11px;color:var(--g500)">${c.role ? esc(c.role) : '&nbsp;'}</div>
+        <div style="font-size:11px;color:var(--vic-orange);font-weight:600;margin-top:1px">${c.division ? esc(c.division) : '&nbsp;'}</div>
       </div>`;
     const buildTree = (key, seen) => {
       seen = seen || new Set();
@@ -7171,58 +7171,70 @@ function rememberCountry(country) {
 // Top-level "+ Contact" — attach a person to an existing company (each shown with its
 // location so same-named branches in different regions are distinguishable), or create
 // a new company on the fly.
-function showAddContactGlobal() {
-  const modal = document.getElementById('modal-content');
-  const dc = getDefaultCountry();
-  const accounts = [...state.accounts].sort((a, b) => a.company_name.localeCompare(b.company_name));
-  const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager','Operations Manager','Facilities Manager','Mechanical Lead'];
+// Company <option>s for the global Add-Contact picker, limited to one country.
+function gcCompanyOptions(country) {
+  const list = [...state.accounts]
+    .filter(a => (a.country || 'AU') === country)
+    .sort((a, b) => a.company_name.localeCompare(b.company_name));
   const acctOpt = a => {
     const nm = a.company_name.replace(/^\[TEST\]\s*/, '');
     const loc = [a.hq_city, a.regions].filter(Boolean).join(' · ');
     return `<option value="${a.id}">${esc(nm)}${loc ? ' — ' + esc(loc) : ''}</option>`;
   };
+  return `<option value="" disabled selected>Select a company…</option>
+          <option value="__new__">＋ Create a new company…</option>
+          ${list.map(acctOpt).join('')}`;
+}
+
+// Re-filter the company list when the country picker changes.
+function gcFilterCountry() {
+  const country = document.getElementById('gc-filter-country').value;
+  const sel = document.getElementById('gc-account');
+  if (sel) sel.innerHTML = gcCompanyOptions(country);
+  gcToggleNewCompany();
+}
+
+function showAddContactGlobal() {
+  const modal = document.getElementById('modal-content');
+  const dc = getDefaultCountry();
+  const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','Mechanical Engineer','Operations Manager','Facilities Manager','Mechanical Lead'];
   modal.innerHTML = `
     <h2>Add Contact</h2>
     <form onsubmit="handleAddContactGlobal(event)">
       <div class="form-group">
+        <label>Country</label>
+        <select id="gc-filter-country" onchange="gcFilterCountry()">
+          <option value="AU" ${dc === 'AU' ? 'selected' : ''}>Australia</option>
+          <option value="NZ" ${dc === 'NZ' ? 'selected' : ''}>New Zealand</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label>Company *</label>
         <select id="gc-account" onchange="gcToggleNewCompany()">
-          <option value="" disabled selected>Select a company…</option>
-          <option value="__new__">＋ Create a new company…</option>
-          ${accounts.map(acctOpt).join('')}
+          ${gcCompanyOptions(dc)}
         </select>
-        <div style="font-size:11px;color:var(--g400);margin-top:4px">Each company shows its location — pick the right branch if a name appears more than once.</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Showing companies in the selected country — switch country above to see others. Each shows its location, so you can pick the right branch.</div>
       </div>
       <div id="gc-new-wrap" style="display:none">
-        <div class="form-row">
-          <div class="form-group">
-            <label>New company name *</label>
-            <input type="text" id="gc-company-new" placeholder="e.g. AE Smith">
-          </div>
-          <div class="form-group">
-            <label>Country</label>
-            <select id="gc-country">
-              <option value="AU" ${dc === 'AU' ? 'selected' : ''}>Australia</option>
-              <option value="NZ" ${dc === 'NZ' ? 'selected' : ''}>New Zealand</option>
-            </select>
-          </div>
+        <div class="form-group">
+          <label>New company name *</label>
+          <input type="text" id="gc-company-new" placeholder="e.g. AE Smith">
+          <div style="font-size:11px;color:var(--g400);margin-top:4px">Created in the country selected above.</div>
         </div>
       </div>
       <div class="form-group">
         <label>Name *</label>
         <input type="text" id="gc-name" required placeholder="Full name">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Role</label>
-          <input type="text" id="gc-role" list="gc-role-list" placeholder="Type or pick a role">
-          <datalist id="gc-role-list">${roles.map(r => `<option value="${r}">`).join('')}</datalist>
-        </div>
-        <div class="form-group">
-          <label>Sector</label>
-          <input type="text" id="gc-sector" list="gc-sector-list" placeholder="Type or pick a sector">
-          <datalist id="gc-sector-list">${CONTACT_SECTORS.map(s => `<option value="${s}">`).join('')}</datalist>
-        </div>
+      <div class="form-group">
+        <label>Role</label>
+        <input type="text" id="gc-role" list="gc-role-list" placeholder="Type or pick a role">
+        <datalist id="gc-role-list">${roles.map(r => `<option value="${r}">`).join('')}</datalist>
+      </div>
+      <div class="form-group">
+        <label>Sector</label>
+        <div id="gc-sectors-wrap" class="sector-chips"></div>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Tap to select one or more sectors</div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>Email</label><input type="email" id="gc-email" placeholder="email@company.com"></div>
@@ -7238,6 +7250,7 @@ function showAddContactGlobal() {
       </div>
     </form>`;
   document.getElementById('modal-overlay').classList.add('active');
+  renderChips('gc-sectors-wrap', CONTACT_SECTORS, '');
 }
 
 function gcToggleNewCompany() {
@@ -7259,7 +7272,7 @@ async function handleAddContactGlobal(e) {
   if (sel === '__new__') {
     const companyName = document.getElementById('gc-company-new').value.trim();
     if (!companyName) { toast('Enter the new company name'); return; }
-    const country = document.getElementById('gc-country').value;
+    const country = document.getElementById('gc-filter-country').value;
     rememberCountry(country);
     acct = await saveAccount({ company_name: companyName, country, tier: 2, currency: country === 'NZ' ? 'NZD' : 'AUD' });
     created = true;
@@ -7271,7 +7284,7 @@ async function handleAddContactGlobal(e) {
     account_id: acct.id,
     contact_name: name,
     role: document.getElementById('gc-role').value.trim(),
-    sector: document.getElementById('gc-sector').value.trim(),
+    sector: getChipValues('gc-sectors-wrap'),
     email: document.getElementById('gc-email').value.trim(),
     phone: document.getElementById('gc-phone').value.trim(),
     is_key_influencer: document.getElementById('gc-influencer').checked
@@ -7306,17 +7319,15 @@ function showAddContact(accountId) {
           <input type="text" id="ct-last-name" placeholder="Last name">
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Role</label>
-          <input type="text" id="ct-role" list="ct-role-list" placeholder="Type or pick a role">
-          <datalist id="ct-role-list">${['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager'].map(r=>`<option value="${r}">`).join('')}</datalist>
-        </div>
-        <div class="form-group">
-          <label>Sector</label>
-          <input type="text" id="ct-sector" list="ct-sector-list" placeholder="Type or pick a sector">
-          <datalist id="ct-sector-list">${CONTACT_SECTORS.map(s=>`<option value="${s}">`).join('')}</datalist>
-        </div>
+      <div class="form-group">
+        <label>Role</label>
+        <input type="text" id="ct-role" list="ct-role-list" placeholder="Type or pick a role">
+        <datalist id="ct-role-list">${['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','Mechanical Engineer'].map(r=>`<option value="${r}">`).join('')}</datalist>
+      </div>
+      <div class="form-group">
+        <label>Sector</label>
+        <div id="ct-sectors-wrap" class="sector-chips"></div>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Tap to select one or more sectors</div>
       </div>
       <div class="form-group">
         <label>Division</label>
@@ -7331,18 +7342,18 @@ function showAddContact(accountId) {
         </select>
       </div>
       <div class="form-group">
-        <label>Interests</label>
-        <input type="text" id="ct-interests" list="ct-interests-list" placeholder="e.g. Golf, Rugby, Boating">
-        <datalist id="ct-interests-list">${collectInterests().map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
-        <div style="font-size:11px;color:var(--g400);margin-top:4px">Type a new interest or pick a saved one — separate multiple with commas</div>
-      </div>
-      <div class="form-group">
         <label>Email</label>
         <input type="email" id="ct-email" placeholder="email@company.com">
       </div>
       <div class="form-group">
         <label>Phone</label>
         <input type="tel" id="ct-phone" placeholder="+61 ...">
+      </div>
+      <div class="form-group">
+        <label>Interests</label>
+        <input type="text" id="ct-interests" list="ct-interests-list" placeholder="e.g. Golf, Rugby, Boating">
+        <datalist id="ct-interests-list">${collectInterests().map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Type a new interest or pick a saved one — separate multiple with commas</div>
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="ct-influencer" style="width:22px;height:22px;accent-color:var(--vic-orange)">
@@ -7355,13 +7366,14 @@ function showAddContact(accountId) {
     </form>
   `;
   document.getElementById('modal-overlay').classList.add('active');
+  renderChips('ct-sectors-wrap', CONTACT_SECTORS, '');
 }
 
 function showEditContact(contactId, accountId) {
   const c = (state.contacts[accountId] || []).find(ct => ct.id === contactId);
   if (!c) return;
   const modal = document.getElementById('modal-content');
-  const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager','Other'];
+  const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','Mechanical Engineer','Other'];
   const _nm = (c.contact_name || '').trim();
   const _sp = _nm.indexOf(' ');
   const _first = _sp === -1 ? _nm : _nm.slice(0, _sp);
@@ -7379,17 +7391,15 @@ function showEditContact(contactId, accountId) {
           <input type="text" id="ct-last-name" value="${esc(_last)}">
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Role</label>
-          <input type="text" id="ct-role" list="ct-role-list" value="${esc(c.role)}" placeholder="Type or pick a role">
-          <datalist id="ct-role-list">${roles.filter(r=>r!=='Other').map(r=>`<option value="${r}">`).join('')}</datalist>
-        </div>
-        <div class="form-group">
-          <label>Sector</label>
-          <input type="text" id="ct-sector" list="ct-sector-list" value="${esc(c.sector || '')}" placeholder="Type or pick a sector">
-          <datalist id="ct-sector-list">${CONTACT_SECTORS.map(s=>`<option value="${s}">`).join('')}</datalist>
-        </div>
+      <div class="form-group">
+        <label>Role</label>
+        <input type="text" id="ct-role" list="ct-role-list" value="${esc(c.role)}" placeholder="Type or pick a role">
+        <datalist id="ct-role-list">${roles.filter(r=>r!=='Other').map(r=>`<option value="${r}">`).join('')}</datalist>
+      </div>
+      <div class="form-group">
+        <label>Sector</label>
+        <div id="ct-sectors-wrap" class="sector-chips"></div>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Tap to select one or more sectors</div>
       </div>
       <div class="form-group">
         <label>Division</label>
@@ -7404,18 +7414,18 @@ function showEditContact(contactId, accountId) {
         </select>
       </div>
       <div class="form-group">
-        <label>Interests</label>
-        <input type="text" id="ct-interests" list="ct-interests-list" value="${esc(c.interests || '')}" placeholder="e.g. Golf, Rugby, Boating">
-        <datalist id="ct-interests-list">${collectInterests().map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
-        <div style="font-size:11px;color:var(--g400);margin-top:4px">Type a new interest or pick a saved one — separate multiple with commas</div>
-      </div>
-      <div class="form-group">
         <label>Email</label>
         <input type="email" id="ct-email" value="${esc(c.email)}">
       </div>
       <div class="form-group">
         <label>Phone</label>
         <input type="tel" id="ct-phone" value="${esc(c.phone)}">
+      </div>
+      <div class="form-group">
+        <label>Interests</label>
+        <input type="text" id="ct-interests" list="ct-interests-list" value="${esc(c.interests || '')}" placeholder="e.g. Golf, Rugby, Boating">
+        <datalist id="ct-interests-list">${collectInterests().map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Type a new interest or pick a saved one — separate multiple with commas</div>
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="ct-influencer" ${c.is_key_influencer?'checked':''} style="width:22px;height:22px;accent-color:var(--vic-orange)">
@@ -7428,6 +7438,7 @@ function showEditContact(contactId, accountId) {
     </form>
   `;
   document.getElementById('modal-overlay').classList.add('active');
+  renderChips('ct-sectors-wrap', CONTACT_SECTORS, c.sector || '');
 }
 
 async function handleSaveContact(e, existingId, accountId) {
@@ -7442,7 +7453,7 @@ async function handleSaveContact(e, existingId, accountId) {
   data.email = document.getElementById('ct-email').value.trim();
   data.phone = document.getElementById('ct-phone').value.trim();
   data.is_key_influencer = document.getElementById('ct-influencer').checked;
-  data.sector = document.getElementById('ct-sector').value.trim();
+  data.sector = getChipValues('ct-sectors-wrap');
   data.interests = document.getElementById('ct-interests').value.trim();
   await saveContact(data);
   closeModal();
