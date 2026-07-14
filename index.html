@@ -811,7 +811,7 @@ const STAGES = {
 };
 
 // ======================== SECTOR OPTIONS ========================
-const SECTORS = ['Commercial', 'Health', 'Industrial', 'Mining', 'Data Centres', 'Education', 'Government', 'Retail'];
+const SECTORS = ['Commercial', 'Health', 'Industrial', 'Mining', 'Data Centres', 'Education', 'Government', 'Retail', 'Water'];
 const AU_REGIONS = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 const NZ_REGIONS = ['NTL', 'AKL', 'WKO', 'BOP', 'GIS', 'HKB', 'TKI', 'MWT', 'WGN', 'TSM', 'NSN', 'MBH', 'WTC', 'CAN', 'OTA', 'STL'];
 const ALL_REGIONS = [...AU_REGIONS, ...NZ_REGIONS, 'National'];
@@ -7273,14 +7273,28 @@ async function handleAddContactGlobal(e) {
   toast(created ? `Created ${cleanNm} and added ${name}` : `Added ${name} to ${cleanNm}`);
 }
 
+function collectInterests() {
+  const set = new Set();
+  Object.values(state.contacts || {}).forEach(list => (list || []).forEach(ct => {
+    (ct.interests || '').split(',').forEach(t => { const v = t.trim(); if (v) set.add(v); });
+  }));
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
 function showAddContact(accountId) {
   const modal = document.getElementById('modal-content');
   modal.innerHTML = `
     <h2>Add Contact</h2>
     <form onsubmit="handleSaveContact(event, null, '${accountId}')">
-      <div class="form-group">
-        <label>Name *</label>
-        <input type="text" id="ct-name" required placeholder="Full name">
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="ct-first-name" required placeholder="First name">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="ct-last-name" placeholder="Last name">
+        </div>
       </div>
       <div class="form-group">
         <label>Role</label>
@@ -7300,11 +7314,10 @@ function showAddContact(accountId) {
         </select>
       </div>
       <div class="form-group">
-        <label>Manages</label>
-        <select id="ct-manages" multiple size="4" style="height:auto">
-          ${(state.contacts[accountId]||[]).map(ct=>`<option value="${ct.id}">${esc(ct.contact_name)}</option>`).join('')}
-        </select>
-        <div style="font-size:11px;color:var(--g400);margin-top:4px">Direct reports — hold Ctrl/Cmd to pick several</div>
+        <label>Interests</label>
+        <input type="text" id="ct-interests" list="ct-interests-list" placeholder="e.g. Golf, Rugby, Boating">
+        <datalist id="ct-interests-list">${collectInterests().map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Type a new interest or pick a saved one — separate multiple with commas</div>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -7332,12 +7345,22 @@ function showEditContact(contactId, accountId) {
   if (!c) return;
   const modal = document.getElementById('modal-content');
   const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','HSE Manager','Other'];
+  const _nm = (c.contact_name || '').trim();
+  const _sp = _nm.indexOf(' ');
+  const _first = _sp === -1 ? _nm : _nm.slice(0, _sp);
+  const _last = _sp === -1 ? '' : _nm.slice(_sp + 1);
   modal.innerHTML = `
     <h2>Edit Contact</h2>
     <form onsubmit="handleSaveContact(event, '${contactId}', '${accountId}')">
-      <div class="form-group">
-        <label>Name *</label>
-        <input type="text" id="ct-name" required value="${esc(c.contact_name)}">
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="ct-first-name" required value="${esc(_first)}">
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="ct-last-name" value="${esc(_last)}">
+        </div>
       </div>
       <div class="form-group">
         <label>Role</label>
@@ -7357,11 +7380,10 @@ function showEditContact(contactId, accountId) {
         </select>
       </div>
       <div class="form-group">
-        <label>Manages</label>
-        <select id="ct-manages" multiple size="4" style="height:auto">
-          ${(state.contacts[accountId]||[]).filter(ct=>ct.id!==contactId).map(ct=>`<option value="${ct.id}" ${ct.reports_to===contactId?'selected':''}>${esc(ct.contact_name)}</option>`).join('')}
-        </select>
-        <div style="font-size:11px;color:var(--g400);margin-top:4px">Direct reports — hold Ctrl/Cmd to pick several</div>
+        <label>Interests</label>
+        <input type="text" id="ct-interests" list="ct-interests-list" value="${esc(c.interests || '')}" placeholder="e.g. Golf, Rugby, Boating">
+        <datalist id="ct-interests-list">${collectInterests().map(i=>`<option value="${esc(i)}">`).join('')}</datalist>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Type a new interest or pick a saved one — separate multiple with commas</div>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -7387,24 +7409,17 @@ function showEditContact(contactId, accountId) {
 async function handleSaveContact(e, existingId, accountId) {
   e.preventDefault();
   const data = existingId ? { ...(state.contacts[accountId] || []).find(c => c.id === existingId) } : { account_id: accountId };
-  data.contact_name = document.getElementById('ct-name').value.trim();
+  const _first = document.getElementById('ct-first-name').value.trim();
+  const _last = document.getElementById('ct-last-name').value.trim();
+  data.contact_name = (_first + ' ' + _last).trim();
   data.role = document.getElementById('ct-role').value;
   data.division = document.getElementById('ct-division').value.trim();
   data.reports_to = document.getElementById('ct-reports-to').value || null;
   data.email = document.getElementById('ct-email').value.trim();
   data.phone = document.getElementById('ct-phone').value.trim();
   data.is_key_influencer = document.getElementById('ct-influencer').checked;
+  data.interests = document.getElementById('ct-interests').value.trim();
   await saveContact(data);
-  // Apply "Manages": set/clear reports_to on the selected direct reports
-  const managesSel = Array.from(document.getElementById('ct-manages')?.selectedOptions || []).map(o => o.value);
-  const acctContacts = [...(state.contacts[accountId] || [])];
-  for (const ct of acctContacts) {
-    if (ct.id === data.id) continue;
-    const shouldManage = managesSel.includes(ct.id);
-    const currentlyManaged = ct.reports_to === data.id;
-    if (shouldManage && !currentlyManaged) await saveContact({ ...ct, reports_to: data.id });
-    else if (!shouldManage && currentlyManaged) await saveContact({ ...ct, reports_to: null });
-  }
   closeModal();
   renderDetailTab();
   toast(existingId ? 'Contact updated' : 'Contact added');
