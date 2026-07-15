@@ -3881,8 +3881,13 @@ function renderDashboardContacts() {
     if (c.email) bits.push(`<a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()" style="color:var(--info);text-decoration:none">${esc(c.email)}</a>`);
     if (c.phone) bits.push(`<a href="tel:${esc(c.phone)}" onclick="event.stopPropagation()" style="color:var(--g600);text-decoration:none">${esc(c.phone)}</a>`);
     const _lc = lastActTs(c);
-    const lastContacted = _lc ? new Date(_lc).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' }) : '—';
-    const interests = c.interests ? esc(c.interests) : '—';
+    let lastContacted = '—';
+    if (_lc) {
+      const _d = Math.floor((Date.now() - _lc) / 86400000);
+      const _label = _d <= 0 ? 'Today' : _d === 1 ? '1 day' : _d + ' days';
+      lastContacted = `<span title="${new Date(_lc).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' })}">${_label}</span>`;
+    }
+    const interests = interestPills(c.interests);
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="text-align:center;width:34px">${c.is_key_influencer ? '<span style="color:var(--vic-orange);font-size:16px" title="Key influencer">&#9733;</span>' : '<span style="color:var(--g300);font-size:16px">&#9734;</span>'}</td>
       <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
@@ -3890,7 +3895,7 @@ function renderDashboardContacts() {
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td style="font-size:12px;color:var(--g600)">${interests}</td>
       <td style="font-size:12px;color:var(--g600)">${bits.join('<br>') || '—'}</td>
-      <td style="font-size:12px;color:var(--g600);white-space:nowrap">${lastContacted}</td>
+      <td style="font-size:12px;color:var(--g600);white-space:nowrap;text-align:center">${lastContacted}</td>
     </tr>`;
   }).join('');
 
@@ -3907,7 +3912,7 @@ function renderDashboardContacts() {
         <th style="cursor:pointer;user-select:none${sActive('role')}" onclick="contactSort('role')">Role${sIcon('role')}</th>
         <th style="cursor:pointer;user-select:none${sActive('interests')}" onclick="contactSort('interests')">Interests${sIcon('interests')}</th>
         <th style="white-space:nowrap">Email / Phone</th>
-        <th style="cursor:pointer;user-select:none;white-space:nowrap${sActive('lastcontacted')}" onclick="contactSort('lastcontacted')">Last Contacted${sIcon('lastcontacted')}</th>
+        <th style="cursor:pointer;user-select:none;white-space:nowrap;text-align:center${sActive('lastcontacted')}" onclick="contactSort('lastcontacted')">Last Contacted${sIcon('lastcontacted')}</th>
       </tr></thead>
       <tbody>${body}</tbody>
     </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">${q ? 'No contacts match your search.' : 'No contacts yet — add people from any company to see them here.'}</div>`}
