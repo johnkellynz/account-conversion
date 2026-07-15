@@ -3005,14 +3005,23 @@ const INTEREST_COLORS = [
   ['#FEF3C7', '#92400E'], ['#E1F5EE', '#085041'], ['#FEE2E2', '#991B1B'],
   ['#E0E7FF', '#3730A3'], ['#FCE7F3', '#9D174D']
 ];
-function interestPills(str) {
+function interestPills(str, clickable) {
   const items = (str || '').split(',').map(s => s.trim()).filter(Boolean);
   if (!items.length) return '—';
   return `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">${items.map(it => {
     let h = 0; for (let i = 0; i < it.length; i++) h = (h * 31 + it.charCodeAt(i)) >>> 0;
     const c = INTEREST_COLORS[h % INTEREST_COLORS.length];
-    return `<span class="badge" style="background:${c[0]};color:${c[1]}">${esc(it)}</span>`;
+    const active = clickable && state.contactInterestFilter && state.contactInterestFilter.toLowerCase() === it.toLowerCase();
+    const extra = clickable ? ` data-int="${esc(it)}" onclick="filterByInterest(this.dataset.int,event)" title="Filter by ${esc(it)}"` : '';
+    const style = `background:${c[0]};color:${c[1]}${clickable ? ';cursor:pointer' : ''}${active ? ';outline:2px solid var(--vic-orange);outline-offset:1px' : ''}`;
+    return `<span class="badge"${extra} style="${style}">${esc(it)}</span>`;
   }).join('')}</div>`;
+}
+function filterByInterest(interest, event) {
+  if (event) event.stopPropagation();
+  const cur = state.contactInterestFilter;
+  state.contactInterestFilter = (cur && cur.toLowerCase() === (interest || '').toLowerCase()) ? null : interest;
+  renderDashboardContacts();
 }
 function renderContacts(container) {
   const accountId = state.currentAccountId;
@@ -3046,7 +3055,7 @@ function renderContacts(container) {
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Interests</span><br>${interestPills(c.interests)}</div>
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Reports To</span><br>${c.reports_to ? esc((contacts.find(x=>x.id===c.reports_to)||{}).contact_name||'—') : '—'}</div>
           </div>
-          ${cActs.length ? `<div style="margin-top:10px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Recent Activity (${cActs.length})</span>${cActs.slice(0,5).map(x=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600);margin-top:3px"><span style="flex:1;min-width:0"><strong style="color:var(--g700)">${esc(x.activity_type)}</strong> · ${new Date(x.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${x.note?` — ${esc(x.note)}`:''}</span><button onclick="editActivity('${x.id}',event)" title="Edit activity" style="flex-shrink:0;width:24px;height:24px;border:1px solid var(--g200);background:var(--white);color:var(--g400);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div>`).join('')}</div>` : ''}
+          ${cActs.length ? `<div style="margin-top:10px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Recent Activity (${cActs.length})</span>${cActs.slice(0,5).map(x=>`<div onclick="editActivity('${x.id}',event)" title="Click to edit" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600);margin-top:3px;cursor:pointer;border-radius:5px;padding:2px 4px;margin-left:-4px"><span style="flex:1;min-width:0"><strong style="color:var(--g700)">${esc(x.activity_type)}</strong> · ${new Date(x.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${x.note?` — ${esc(x.note)}`:''}</span><button onclick="editActivity('${x.id}',event)" title="Edit activity" style="flex-shrink:0;width:24px;height:24px;border:1px solid var(--g200);background:var(--white);color:var(--g400);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div>`).join('')}</div>` : ''}
           <div style="display:flex;gap:8px;margin-top:14px">
             <button onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="flex:1;padding:9px;border:1px solid var(--g200);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
             <button onclick="event.stopPropagation();confirmDeleteContact('${c.id}','${accountId}',event)" style="flex:1;padding:9px;border:1px solid var(--danger);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Delete</button>
@@ -3855,6 +3864,10 @@ function renderDashboardContacts() {
     (a.company_name || '').toLowerCase().includes(q));
 
   if (state.contactKeyOnly) rows = rows.filter(({ c }) => c.is_key_influencer);
+  if (state.contactInterestFilter) {
+    const _if = state.contactInterestFilter.toLowerCase();
+    rows = rows.filter(({ c }) => (c.interests || '').split(',').some(s => s.trim().toLowerCase() === _if));
+  }
   const lastActTs = (c) => {
     let t = 0;
     (state.allActivities || []).forEach(x => { if (x.contact_id === c.id && x.created_at) { const ms = new Date(x.created_at).getTime(); if (ms > t) t = ms; } });
@@ -3887,7 +3900,7 @@ function renderDashboardContacts() {
       const _label = _d <= 0 ? 'Today' : _d === 1 ? '1 day' : _d + ' days';
       lastContacted = `<span title="${new Date(_lc).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' })}">${_label}</span>`;
     }
-    const interests = interestPills(c.interests);
+    const interests = interestPills(c.interests, true);
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="text-align:center;width:34px">${c.is_key_influencer ? '<span style="color:var(--vic-orange);font-size:16px" title="Key influencer">&#9733;</span>' : '<span style="color:var(--g300);font-size:16px">&#9734;</span>'}</td>
       <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
@@ -3900,9 +3913,12 @@ function renderDashboardContacts() {
   }).join('');
 
   el.innerHTML = `<div class="dash-section"><div class="table-wrap">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px;flex-wrap:wrap">
       <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);white-space:nowrap">Contacts <span style="color:var(--g400);font-weight:400">· ${rows.length}</span></h3>
-      <button onclick="state.contactKeyOnly=!state.contactKeyOnly;renderDashboardContacts()" title="Show only key influencers" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--g200)'};background:${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--white)'};color:${state.contactKeyOnly ? '#fff' : 'var(--g600)'}"><span style="font-size:14px">&#9733;</span> Key influencers only</button>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        ${state.contactInterestFilter ? `<button onclick="state.contactInterestFilter=null;renderDashboardContacts()" title="Clear interest filter" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--vic-orange);background:var(--vic-orange);color:#fff">${esc(state.contactInterestFilter)} <span style="font-size:13px">&times;</span></button>` : ''}
+        <button onclick="state.contactKeyOnly=!state.contactKeyOnly;renderDashboardContacts()" title="Show only key influencers" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--g200)'};background:${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--white)'};color:${state.contactKeyOnly ? '#fff' : 'var(--g600)'}"><span style="font-size:14px">&#9733;</span> Key influencers only</button>
+      </div>
     </div>
     ${rows.length ? `<table class="data-table">
       <thead><tr>
