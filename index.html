@@ -766,7 +766,7 @@ const STAGES = {
     items: [
       { key: 's1_intel_pack', label: 'Build Account Intelligence Pack (org chart, pipeline, suppliers, decision-making process, pain points)' },
       { key: 's1_map_registers', label: 'Map active contractors via AIBS, AMCA, CIDB registers' },
-      { key: 's1_distributor_intel', label: 'Leverage distributor network (Reece, Actrol, Plumbtec) for ground-level purchasing intelligence' },
+      { key: 's1_distributor_intel', label: 'Leverage distributor network for ground-level purchasing intelligence' },
       { key: 's1_buying_influencers', label: 'Map all buying influencers: Estimating Manager, Project Engineer, Procurement Manager, Technical/BIM Lead, Director/Owner' }
     ]
   },
@@ -1327,8 +1327,11 @@ function getDashFilteredAccounts() {
 function getStageCompletion(accountId, stageNum) {
   const items = STAGES[stageNum].items;
   const cl = (state.checklist[accountId] || []).filter(c => c.stage === stageNum);
-  const done = items.filter(it => cl.find(c => c.item_key === it.key && c.completed));
-  return { done: done.length, total: items.length, pct: items.length ? Math.round(done.length / items.length * 100) : 0 };
+  // N/A items are excluded from the stage's requirements entirely
+  const naSet = new Set(cl.filter(c => c.na).map(c => c.item_key));
+  const req = items.filter(it => !naSet.has(it.key));
+  const done = req.filter(it => cl.find(c => c.item_key === it.key && c.completed));
+  return { done: done.length, total: req.length, na: items.length - req.length, pct: req.length ? Math.round(done.length / req.length * 100) : 0 };
 }
 
 function isStageComplete(accountId, stageNum) {
@@ -1922,6 +1925,38 @@ async function deleteAccount(id) {
   delete state.notes[id];
 }
 
+// Mark a checklist item Not Applicable (or applicable again). N/A items drop out
+// of the stage's progress count and can't be checked while N/A.
+async function toggleChecklistNA(accountId, stage, itemKey, na) {
+  const existing = (state.checklist[accountId] || []).find(c => c.stage === stage && c.item_key === itemKey);
+  const record = existing ? { ...existing } : { id: uuid(), account_id: accountId, stage, item_key: itemKey, created_at: new Date().toISOString() };
+  record.na = na;
+  if (na) { record.completed = false; record.completed_at = null; record.completed_by = null; }
+  record.updated_at = new Date().toISOString();
+
+  await db.checklist.put(record);
+  try {
+    const { error } = await supa.from('kac_checklist').upsert(record, { onConflict: 'account_id,stage,item_key' });
+    if (error) throw error;
+    setSyncStatus('synced');
+  } catch (e) {
+    await db.sync_queue.add({ table_name: 'kac_checklist', operation: 'upsert', record_id: record.id, data: JSON.stringify(record), created_at: new Date().toISOString() });
+    setSyncStatus('offline');
+  }
+  if (!state.checklist[accountId]) state.checklist[accountId] = [];
+  const idx = state.checklist[accountId].findIndex(c => c.stage === stage && c.item_key === itemKey);
+  if (idx >= 0) state.checklist[accountId][idx] = record;
+  else state.checklist[accountId].push(record);
+
+  const newStage = recalcCurrentStage(accountId);
+  const account = state.accounts.find(a => a.id === accountId);
+  if (account && account.current_stage !== newStage) {
+    account.current_stage = newStage;
+    account.updated_at = new Date().toISOString();
+    await db.accounts.put(account);
+    try { await supa.from('kac_accounts').update({ current_stage: newStage, updated_at: account.updated_at }).eq('id', accountId); } catch(e) {}
+  }
+}
 async function toggleChecklistItem(accountId, stage, itemKey, completed) {
   const existing = (state.checklist[accountId] || []).find(c => c.stage === stage && c.item_key === itemKey);
   const record = existing ? { ...existing } : { id: uuid(), account_id: accountId, stage, item_key: itemKey, created_at: new Date().toISOString() };
@@ -2859,13 +2894,15 @@ function renderChecklist(container) {
     stage.items.forEach(item => {
       const cl = (state.checklist[accountId] || []).find(c => c.stage === s && c.item_key === item.key);
       const checked = cl && cl.completed;
+      const isNA = cl && cl.na;
       const disabled = !accessible;
       const doneDate = checked && cl.completed_at ? new Date(cl.completed_at).toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) : '';
-      html += `<div class="check-item ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}">
-        <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+      html += `<div class="check-item ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}"${isNA ? ' style="opacity:.55"' : ''}>
+        <input type="checkbox" ${checked ? 'checked' : ''} ${(disabled || isNA) ? 'disabled' : ''}
           onchange="handleChecklistToggle('${accountId}', ${s}, '${item.key}', this.checked)">
-        <label style="flex:1">${esc(item.label)}</label>
+        <label style="flex:1${isNA ? ';text-decoration:line-through;color:var(--g400)' : ''}">${esc(item.label)}</label>
         ${doneDate ? `<span onclick="event.stopPropagation();editCompletionDate('${accountId}',${s},'${item.key}')" style="font-size:11px;color:var(--g400);white-space:nowrap;margin-left:8px;cursor:pointer;border-bottom:1px dashed var(--g300)" title="Click to edit date">${doneDate}</span>` : ''}
+        ${!disabled ? `<button onclick="event.stopPropagation();handleChecklistNA('${accountId}',${s},'${item.key}',${!isNA})" title="${isNA ? 'Mark as applicable again' : 'Mark as not applicable'}" style="flex-shrink:0;margin-left:8px;padding:2px 8px;font-size:11px;font-weight:600;border-radius:10px;cursor:pointer;border:1px solid ${isNA ? 'var(--vic-orange);background:var(--vic-orange);color:#fff' : 'var(--g200);background:var(--white);color:var(--g400)'}">N/A</button>` : ''}
       </div>`;
     });
 
@@ -2887,8 +2924,15 @@ async function handleChecklistToggle(accountId, stage, itemKey, completed) {
   renderAccountDetail();
   toast(completed ? 'Task completed' : 'Task unchecked');
 }
+async function handleChecklistNA(accountId, stage, itemKey, na) {
+  await toggleChecklistNA(accountId, stage, itemKey, na);
+  renderAccountDetail();
+  toast(na ? 'Marked N/A — excluded from progress' : 'Marked applicable again');
+}
 async function handleSelectAllStage(accountId, stage, checkAll) {
   for (const item of STAGES[stage].items) {
+    const cl = (state.checklist[accountId] || []).find(c => c.stage === stage && c.item_key === item.key);
+    if (cl && cl.na) continue; // leave N/A items alone
     await toggleChecklistItem(accountId, stage, item.key, checkAll);
   }
   renderAccountDetail();
