@@ -2057,7 +2057,7 @@ async function addNote(accountId, text) {
 }
 
 // ======================== CONTACT ACTIVITY ========================
-const ACTIVITY_TYPES = ['Call', 'Email', 'Meeting', 'Site visit', 'Presentation', 'Sample/Demo'];
+const ACTIVITY_TYPES = ['Call', 'Teams Call', 'Email', 'Meeting', 'Site Visit', 'Presentation', 'Sample/Demo', 'Social'];
 async function logActivity(accountId, contactId, type, note, createdAt) {
   const act = { id: uuid(), account_id: accountId, contact_id: contactId || null, user_id: state.user.id, activity_type: type, note: (note || '').trim() || null, created_at: createdAt || new Date().toISOString() };
   await db.activities.put(act);
