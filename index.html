@@ -3168,33 +3168,27 @@ function renderContacts(container) {
     contacts.forEach(c => {
       const initials = (c.contact_name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       const cActs = (state.activities[accountId] || []).filter(x => x.contact_id === c.id);
-      const _open = (c.id === state._expandContactId);
-      html += `<div class="contact-card" style="display:block;cursor:pointer" onclick="toggleContactCard('${c.id}')">
-        <div style="display:flex;align-items:center;gap:12px">
+      html += `<div class="contact-card" style="display:block">
+        <div style="display:flex;align-items:flex-start;gap:12px">
           <div class="contact-avatar">${initials}</div>
           <div class="contact-info" style="flex:1;min-width:0">
             <h4>${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</h4>
             <p>${esc(c.role || 'No role specified')}</p>
           </div>
-          <button onclick="showActivityMenu(event,'${accountId}','${c.id}')" title="Log activity" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;border:1px solid var(--g200);background:var(--white);color:var(--vic-orange);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
-          <svg id="chev-${c.id}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2" style="flex-shrink:0;transition:transform .2s${_open ? ';transform:rotate(180deg)' : ''}"><polyline points="6 9 12 15 18 9"/></svg>
+          <div id="cdet-${c.id}" style="text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
+            ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600"><span>&#9733;</span> Key influencer</div>` : ''}
+            ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></div>` : ''}
+            ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">${esc(formatPhone(c.phone))}</a></div>` : ''}
+            ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
+            ${c.reports_to ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc((contacts.find(x=>x.id===c.reports_to)||{}).contact_name||'—')}</div>` : ''}
+            ${(c.interests || '').trim() ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Interests</span>${interestPills(c.interests)}</div>` : ''}
+          </div>
         </div>
-        <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};margin-top:6px;padding-top:6px;border-top:1px solid var(--g150)">
-          <div style="display:flex;justify-content:flex-end">
-            <div style="text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
-              ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600"><span>&#9733;</span> Key influencer</div>` : ''}
-              ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a></div>` : ''}
-              ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a></div>` : ''}
-              ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
-              ${c.reports_to ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc((contacts.find(x=>x.id===c.reports_to)||{}).contact_name||'—')}</div>` : ''}
-              ${(c.interests || '').trim() ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Interests</span>${interestPills(c.interests)}</div>` : ''}
-            </div>
-          </div>
-          ${cActs.length ? (a => `<div onclick="editActivity('${a.id}',event)" title="Click to edit" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600);margin-top:6px;cursor:pointer;border-radius:5px;padding:2px 4px;margin-left:-4px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Latest Activity</span><span style="flex:1;min-width:0"><strong style="color:var(--g700)">${esc(a.activity_type)}</strong> · ${new Date(a.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${a.note?` — ${esc(a.note)}`:''}</span><button onclick="editActivity('${a.id}',event)" title="Edit activity" style="flex-shrink:0;width:24px;height:24px;border:1px solid var(--g200);background:var(--white);color:var(--g400);border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button></div>`)(cActs[0]) : ''}
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="flex:1;padding:6px;border:1px solid var(--g200);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--g700);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
-            <button onclick="event.stopPropagation();confirmDeleteContact('${c.id}','${accountId}',event)" style="flex:1;padding:6px;border:1px solid var(--danger);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Delete</button>
-          </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g150)">
+          <button onclick="showActivityMenu(event,'${accountId}','${c.id}')" title="Log activity" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;border:1px solid var(--g200);background:var(--white);color:var(--vic-orange);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
+          ${cActs.length ? (a => `<div onclick="editActivity('${a.id}',event)" title="Click to edit" style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600);cursor:pointer;border-radius:5px;padding:2px 4px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);flex-shrink:0">Latest Activity</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong style="color:var(--g700)">${esc(a.activity_type)}</strong> · ${new Date(a.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${a.note?` — ${esc(a.note)}`:''}</span></div>`)(cActs[0]) : '<div style="flex:1"></div>'}
+          <button onclick="showEditContact('${c.id}','${accountId}')" style="flex-shrink:0;padding:6px 14px;border:1px solid var(--g200);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
+          <button onclick="confirmDeleteContact('${c.id}','${accountId}',event)" style="flex-shrink:0;padding:6px 14px;border:1px solid var(--danger);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Delete</button>
         </div>
       </div>`;
     });
@@ -3211,15 +3205,6 @@ function renderContacts(container) {
   }
 }
 
-function toggleContactCard(id) {
-  const el = document.getElementById('cdet-' + id);
-  const chev = document.getElementById('chev-' + id);
-  if (!el) return;
-  if (state._expandContactId === id) state._expandContactId = null;
-  const open = el.style.display !== 'none';
-  el.style.display = open ? 'none' : 'block';
-  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
-}
 // Styled confirmation popover anchored near the cursor. Returns a promise<boolean>.
 function confirmNear(event, message, okLabel = 'Delete') {
   return new Promise(resolve => {
