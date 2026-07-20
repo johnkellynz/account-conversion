@@ -2690,6 +2690,16 @@ function renderDetailTab() {
 }
 
 // ======================== RENDER: ACCEPTANCE MATRIX ========================
+// Partial-credit scoring for matrix cells: each milestone step towards Accepted
+// earns a third — Presented 33.3%, In Progress 66.7%, Accepted 100%. Everything
+// else (Not Started, Not Allowed) earns 0; N/A is excluded from the denominator.
+function statusWeight(label) {
+  const l = (label || '').toLowerCase();
+  if (l === 'accepted') return 1;
+  if (l === 'in progress') return 2 / 3;
+  if (l === 'presented') return 1 / 3;
+  return 0;
+}
 function renderAcceptanceTab(container) {
   const accountId = state.currentAccountId;
   const rows = state.matrixConfig.rows;
@@ -2782,10 +2792,10 @@ function renderAcceptanceTab(container) {
     <div style="display:grid;grid-template-columns:repeat(5,1fr)">`;
   rows.forEach((row, i) => {
     const rowData = data.filter(d => d.row_id === row.id);
-    const rowApproved = rowData.filter(d => approvedStatus && d.status_id === approvedStatus.id).length;
     const rowNA = rowData.filter(d => naStatus && d.status_id === naStatus.id).length;
     const rowEligible = cols.length - rowNA;
-    const rowPct = rowEligible > 0 ? Math.round(rowApproved / rowEligible * 100) : 0;
+    const rowScore = rowData.reduce((sum, d) => { const st = getStatus(d.status_id); return sum + statusWeight(st ? st.label : ''); }, 0);
+    const rowPct = rowEligible > 0 ? Math.round(rowScore / rowEligible * 100) : 0;
     const _inMon = d => d.updated_at && d.updated_at >= _mStart && d.updated_at < _mEnd;
     const apprGain = rowData.filter(d => approvedStatus && d.status_id === approvedStatus.id && _inMon(d)).length;
     const rejGain = rowData.filter(d => rejectedStatus && d.status_id === rejectedStatus.id && _inMon(d)).length;
@@ -3955,13 +3965,14 @@ function renderDashboardMatrix() {
   const totalCells = rows.length * cols.length;
   const acceptancePct = (a) => {
     const data = state.matrixData[a.id] || [];
-    let approved = 0, na = 0;
+    let score = 0, na = 0;
     data.forEach(d => {
-      if (approvedStatus && d.status_id === approvedStatus.id) approved++;
-      else if (naStatus && d.status_id === naStatus.id) na++;
+      if (naStatus && d.status_id === naStatus.id) { na++; return; }
+      const st = statuses.find(x => x.id === d.status_id);
+      score += statusWeight(st ? st.label : '');
     });
     const eligible = totalCells - na;
-    return eligible > 0 ? Math.round(approved / eligible * 100) : 0;
+    return eligible > 0 ? Math.round(score / eligible * 100) : 0;
   };
   const accounts = getDashFilteredAccounts().slice().sort((a,b) => a.company_name.localeCompare(b.company_name));
 
@@ -3970,13 +3981,17 @@ function renderDashboardMatrix() {
   const _ppStart = state.dashStageMonth + '-01T00:00:00.000Z';
   const _ppEnd = new Date(Date.UTC(_ppMp[0], _ppMp[1], 1)).toISOString();
   const perProduct = {};
-  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0, apprGain: 0, rejGain: 0 });
+  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0, apprGain: 0, rejGain: 0, score: 0 });
   accounts.forEach(a => {
     const data = state.matrixData[a.id] || [];
     rows.forEach(row => cols.forEach(col => {
       perProduct[row.id].total++;
       const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
       if (cell) {
+        if (!naStatus || cell.status_id !== naStatus.id) {
+          const _stObj = statuses.find(s => s.id === cell.status_id);
+          perProduct[row.id].score += statusWeight(_stObj ? _stObj.label : '');
+        }
         const inMonth = cell.updated_at && cell.updated_at >= _ppStart && cell.updated_at < _ppEnd;
         if (approvedStatus && cell.status_id === approvedStatus.id) { perProduct[row.id].approved++; if (inMonth) perProduct[row.id].apprGain++; }
         else if (rejectedStatus && cell.status_id === rejectedStatus.id) { perProduct[row.id].rejected++; if (inMonth) perProduct[row.id].rejGain++; }
@@ -4035,9 +4050,9 @@ function renderDashboardMatrix() {
         <div style="${cell};justify-content:flex-end;font-size:13px;font-weight:700;color:var(--g700)">${pct}%</div>
       </div>`;
     }).join('') + `</div>`;
-  let totApproved = 0, totEligible = 0;
-  rows.forEach(r => { totApproved += perProduct[r.id].approved; totEligible += perProduct[r.id].eligible; });
-  const overallPct = totEligible > 0 ? Math.round(totApproved / totEligible * 100) : 0;
+  let totScore = 0, totEligible = 0;
+  rows.forEach(r => { totScore += perProduct[r.id].score; totEligible += perProduct[r.id].eligible; });
+  const overallPct = totEligible > 0 ? Math.round(totScore / totEligible * 100) : 0;
   const overallColor = overallPct > 0 ? '#F58220' : '#94A3B8';
   // Aggregate status composition across all filtered accounts (for the top bar)
   const totCounts = {}; const statusGain = {}; statuses.forEach(s => { totCounts[s.id] = 0; statusGain[s.id] = 0; });
@@ -7071,10 +7086,10 @@ function generateAccountReport() {
   const data = state.matrixData[a.id] || [];
   const approvedStatus = statuses.find(st => st.label === 'Accepted');
   const naStatus = statuses.find(st => st.label === 'N/A');
-  let approved = 0, na = 0;
-  data.forEach(d => { if (approvedStatus && d.status_id === approvedStatus.id) approved++; else if (naStatus && d.status_id === naStatus.id) na++; });
+  let score = 0, na = 0;
+  data.forEach(d => { if (naStatus && d.status_id === naStatus.id) { na++; return; } const st = statuses.find(x => x.id === d.status_id); score += statusWeight(st ? st.label : ''); });
   const eligible = rows.length * cols.length - na;
-  const accPct = eligible > 0 ? Math.round(approved / eligible * 100) : 0;
+  const accPct = eligible > 0 ? Math.round(score / eligible * 100) : 0;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(...VIC_ORANGE);
   doc.text('Acceptance: ' + accPct + '%', margin, y);
   doc.setTextColor(0, 0, 0); doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
