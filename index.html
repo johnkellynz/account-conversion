@@ -4068,7 +4068,7 @@ function renderDashboardContacts() {
     let av, bv;
     if (col === 'company') { av = x.a.company_name || ''; bv = y.a.company_name || ''; }
     else if (col === 'role') { av = x.c.role || ''; bv = y.c.role || ''; }
-    else if (col === 'interests') { av = x.c.interests || ''; bv = y.c.interests || ''; }
+    else if (col === 'linkedin') return dir * ((y.c.linkedin_connected ? 1 : 0) - (x.c.linkedin_connected ? 1 : 0)) || (x.c.contact_name || '').localeCompare(y.c.contact_name || '');
     else { av = x.c.contact_name || ''; bv = y.c.contact_name || ''; }
     return dir * av.localeCompare(bv);
   });
@@ -4087,14 +4087,13 @@ function renderDashboardContacts() {
       const _label = _d <= 0 ? 'Today' : _d === 1 ? '1 day' : _d + ' days';
       lastContacted = `<span title="${new Date(_lc).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' })}">${_label}</span>`;
     }
-    const interests = interestPills(c.interests, true);
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="text-align:center;width:34px">${c.is_key_influencer ? '<span style="color:var(--vic-orange);font-size:16px" title="Key influencer">&#9733;</span>' : '<span style="color:var(--g300);font-size:16px">&#9734;</span>'}</td>
-      <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong>${c.linkedin_connected ? `<span title="Connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:#0A66C2;color:#fff;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle">in</span>` : ''}</td>
+      <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
       <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px;margin-top:6px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.map(b => `<div style="margin:3px 0;overflow:hidden;text-overflow:ellipsis">${b}</div>`).join('') || '—'}</td>
-      <td style="font-size:12px;color:var(--g600)">${interests}</td>
+      <td style="text-align:center">${c.linkedin_connected ? `<span title="Connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#0A66C2;color:#fff;font-size:11px;font-weight:700">in</span>` : `<span title="Not connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:var(--g200);color:var(--g400);font-size:11px;font-weight:700">in</span>`}</td>
       <td style="font-size:12px;color:var(--g600);white-space:nowrap;text-align:center">${lastContacted}</td>
     </tr>`;
   }).join('');
@@ -4116,7 +4115,7 @@ function renderDashboardContacts() {
         <th style="cursor:pointer;user-select:none${sActive('company')}" onclick="contactSort('company')">Company${sIcon('company')}</th>
         <th style="cursor:pointer;user-select:none${sActive('role')}" onclick="contactSort('role')">Role${sIcon('role')}</th>
         <th style="white-space:nowrap">Contact Info</th>
-        <th style="cursor:pointer;user-select:none${sActive('interests')}" onclick="contactSort('interests')">Interests${sIcon('interests')}</th>
+        <th style="cursor:pointer;user-select:none;text-align:center${sActive('linkedin')}" onclick="contactSort('linkedin')">LinkedIn${sIcon('linkedin')}</th>
         <th style="cursor:pointer;user-select:none;text-align:center${sActive('lastcontacted')}" onclick="contactSort('lastcontacted')">Last Contacted${sIcon('lastcontacted')}</th>
       </tr></thead>
       <tbody>${body}</tbody>
