@@ -965,6 +965,7 @@ let state = {
   sectorConfig: [],
   matrixData: {},  // { accountId: [{ id, account_id, row_id, col_id, status_id }] }
   profiles: [],    // all user profiles (for manager view)
+  branches: {},    // accountId -> [branch] (multi-region accounts)
   currentView: 'accounts',
   currentAccountId: null,
   detailTab: 'checklist',
@@ -1024,6 +1025,9 @@ db.version(1).stores({
 });
 db.version(2).stores({
   activities: 'id, account_id, contact_id, user_id, created_at'
+});
+db.version(3).stores({
+  branches: 'id, account_id, updated_at'
 });
 
 // ======================== HELPERS ========================
@@ -1331,7 +1335,7 @@ function accountMatchesSearch(a, q) {
 }
 function getDashFilteredAccounts() {
   let accts = getVisibleAccounts();
-  if (state.dashFilterRep.length > 0) accts = accts.filter(a => state.dashFilterRep.includes(a.assigned_to));
+  if (state.dashFilterRep.length > 0) accts = accts.filter(a => state.dashFilterRep.includes(a.assigned_to) || (state.branches[a.id] || []).some(b => b.rep_id && state.dashFilterRep.includes(b.rep_id)));
   if (state.dashFilterRegion.length > 0) {
     const selected = new Set(state.dashFilterRegion);
     accts = accts.filter(a => {
@@ -1684,6 +1688,8 @@ async function initialSync() {
       }
     }
 
+    // Load branches (multi-region accounts)
+    await loadBranches();
     // Load profiles for manager views
     const { data: profiles } = await supa.from('profiles').select('*');
     state.profiles = profiles || [];
@@ -2746,6 +2752,7 @@ function renderAcceptanceTab(container) {
     const boxPct = Math.round(cnt / totalCells * 100);
     let gPts = Math.round((statusGain[s.id]||0) / totalCells * 1000) / 10;
     if (s.label === 'Not Allowed') gPts = -gPts;
+    if (s.label === 'N/A') gPts = 0; // N/A is neutral — never earns or loses points
     const gColor = gPts > 0 ? 'var(--success)' : gPts < 0 ? '#ef4444' : 'var(--g400)';
     const gArrow = gPts > 0 ? '▲' : gPts < 0 ? '▼' : '–';
     const bc = s.label === 'Not Started' ? '#1f2937' : (s.label === 'N/A') ? '#94A3B8' : s.color;
@@ -3360,14 +3367,131 @@ function filterByInterest(interest, event) {
   state.contactInterestFilter = (cur && cur.toLowerCase() === (interest || '').toLowerCase()) ? null : interest;
   renderDashboardContacts();
 }
+// ======================== BRANCHES ========================
+// A branch is an extra location of the SAME account (e.g. Aquaheat Wellington under
+// the Aquaheat account) with its own rep. Checklist / acceptance / opportunity stay
+// at the account level; contacts can be tagged to a branch.
+async function loadBranches() {
+  try {
+    const { data, error } = await supa.from('kac_branches').select('*').order('city');
+    if (error) throw error;
+    state.branches = {};
+    (data || []).forEach(b => { (state.branches[b.account_id] = state.branches[b.account_id] || []).push(b); });
+    if (data) await db.branches.bulkPut(data);
+  } catch (e) {
+    try {
+      const cached = await db.branches.toArray();
+      state.branches = {};
+      cached.forEach(b => { (state.branches[b.account_id] = state.branches[b.account_id] || []).push(b); });
+    } catch (_) { state.branches = state.branches || {}; }
+  }
+}
+function branchOf(accountId, branchId) { return (state.branches[accountId] || []).find(b => b.id === branchId) || null; }
+function branchLabel(accountId, branchId) { const b = branchOf(accountId, branchId); return b ? b.city : ''; }
+function showBranchForm(accountId, branchId) {
+  const b = branchId ? branchOf(accountId, branchId) : null;
+  const reps = [...(state.profiles || [])].filter(p => p.role !== 'director').sort((x, y) => (x.full_name || '').localeCompare(y.full_name || ''));
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <h2>${b ? 'Edit Branch' : 'Add Branch'}</h2>
+    <div class="form-group">
+      <label>City *</label>
+      <input type="text" id="br-city" value="${b ? esc(b.city) : ''}" placeholder="e.g. Wellington">
+    </div>
+    <div class="form-group">
+      <label>Region</label>
+      <select id="br-region"><option value="">—</option>${getUserRegions().map(r => `<option value="${r}" ${b && b.region === r ? 'selected' : ''}>${r}${REGION_NAMES[r] ? ' — ' + REGION_NAMES[r] : ''}</option>`).join('')}</select>
+    </div>
+    <div class="form-group">
+      <label>Branch Rep</label>
+      <select id="br-rep"><option value="">— Same as account rep —</option>${reps.map(p => `<option value="${p.id}" ${b && b.rep_id === p.id ? 'selected' : ''}>${esc(p.full_name || '—')}</option>`).join('')}</select>
+    </div>
+    <div class="modal-actions">
+      ${b ? `<button type="button" id="br-delete" style="padding:0 16px;border:1px solid var(--danger);background:var(--white);color:var(--danger);border-radius:var(--radius-xs);font-size:14px;font-weight:600;cursor:pointer">Delete</button>` : ''}
+      <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button type="button" class="btn-save" id="br-save">${b ? 'Save' : 'Add Branch'}</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('active');
+  // Auto-pick the region from a recognised city
+  document.getElementById('br-city').addEventListener('input', function () {
+    const code = CITY_REGION[this.value.trim().toLowerCase().replace(/^mt\.?\s+/, 'mount ')];
+    const sel = document.getElementById('br-region');
+    if (code && sel && [...sel.options].some(o => o.value === code)) sel.value = code;
+  });
+  document.getElementById('br-save').onclick = async () => {
+    const city = document.getElementById('br-city').value.trim();
+    if (!city) { toast('Enter the branch city'); return; }
+    const rec = {
+      id: b ? b.id : uuid(),
+      account_id: accountId,
+      city,
+      region: document.getElementById('br-region').value || null,
+      rep_id: document.getElementById('br-rep').value || null,
+      updated_at: new Date().toISOString()
+    };
+    if (!b) rec.created_at = rec.updated_at;
+    try {
+      const { error } = await supa.from('kac_branches').upsert(rec);
+      if (error) throw error;
+      await db.branches.put(rec);
+      const list = state.branches[accountId] = state.branches[accountId] || [];
+      const idx = list.findIndex(x => x.id === rec.id);
+      if (idx >= 0) list[idx] = rec; else list.push(rec);
+      list.sort((x, y) => (x.city || '').localeCompare(y.city || ''));
+      closeModal();
+      renderDetailTab();
+      toast(b ? 'Branch updated' : 'Branch added');
+    } catch (e) { console.error(e); toast('Could not save branch — check the kac_branches migration has run'); }
+  };
+  const del = document.getElementById('br-delete');
+  if (del) del.onclick = async () => {
+    if (!confirm(`Delete the ${b.city} branch? Contacts tagged to it keep their details but lose the branch tag.`)) return;
+    try {
+      await supa.from('kac_contacts').update({ branch_id: null }).eq('branch_id', b.id);
+      const { error } = await supa.from('kac_branches').delete().eq('id', b.id);
+      if (error) throw error;
+      try { await db.branches.delete(b.id); } catch (_) {}
+      state.branches[accountId] = (state.branches[accountId] || []).filter(x => x.id !== b.id);
+      (state.contacts[accountId] || []).forEach(c => { if (c.branch_id === b.id) c.branch_id = null; });
+      closeModal();
+      renderDetailTab();
+      toast('Branch deleted');
+    } catch (e) { console.error(e); toast('Could not delete branch'); }
+  };
+}
+// Branch panel shown at the top of the account Contacts tab
+function branchesSection(accountId) {
+  const account = state.accounts.find(a => a.id === accountId);
+  const branches = state.branches[accountId] || [];
+  const repN = (id) => (state.profiles || []).find(p => p.id === id)?.full_name || null;
+  const chip = (title, sub, onclick) => `<div ${onclick ? `onclick="${onclick}"` : ''} style="display:inline-flex;flex-direction:column;gap:1px;padding:7px 12px;border:1px solid var(--g200);border-radius:8px;background:var(--white);${onclick ? 'cursor:pointer' : ''}">
+      <span style="font-size:13px;font-weight:700;color:var(--g800)">${title}</span>
+      <span style="font-size:11px;color:var(--g500)">${sub}</span>
+    </div>`;
+  return `<div class="dash-section" style="margin:0 0 12px;padding:12px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Branches</h3>
+      <button onclick="showBranchForm('${accountId}')" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--g200);background:var(--white);color:var(--vic-orange);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">+ Add Branch</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      ${chip(`${esc(account && account.hq_city ? account.hq_city : 'Head Office')} · HQ`, `Rep: ${esc(repN(account ? account.assigned_to : null) || '—')}`, null)}
+      ${branches.map(b => chip(`${esc(b.city)}${b.region ? ' · ' + esc(b.region) : ''}`, `Rep: ${esc(repN(b.rep_id) || repN(account ? account.assigned_to : null) || '—')} — click to edit`, `showBranchForm('${accountId}','${b.id}')`)).join('')}
+    </div>
+  </div>`;
+}
 // Reports-to org chart for one account — used on the account Contacts tab and the
 // dashboard Contacts view when filtered to a single company
 function orgChartSection(accountId, flush) {
   const contacts = state.contacts[accountId] || [];
   if (!contacts.length) return '';
   const byId = {}; contacts.forEach(c => byId[c.id] = c);
-  const childrenMap = {};
-  contacts.forEach(c => { const key = (c.reports_to && byId[c.reports_to]) ? c.reports_to : '__root__'; (childrenMap[key] = childrenMap[key] || []).push(c); });
+  const account = state.accounts.find(a => a.id === accountId);
+  const branches = state.branches[accountId] || [];
+  // Group contacts by branch (null = HQ); each group gets its own tree so the
+  // local structure stays intact per location.
+  const groups = [{ id: null, title: `${account && account.hq_city ? account.hq_city : 'Head Office'} · HQ`, contacts: contacts.filter(c => !c.branch_id || !branches.find(b => b.id === c.branch_id)) }];
+  branches.forEach(b => { const list = contacts.filter(c => c.branch_id === b.id); if (list.length) groups.push({ id: b.id, title: `${b.city}${b.region ? ' · ' + b.region : ''}`, contacts: list }); });
+  const multi = groups.filter(g => g.contacts.length).length > 1;
   const orgNode = (c) => {
     // Manager in another branch: keep this person at the top of the local tree,
     // but show a dashed link line to their external manager.
@@ -3386,24 +3510,35 @@ function orgChartSection(accountId, flush) {
       <div style="font-size:12px;color:var(--vic-orange);font-weight:600;margin-top:2px">${c.division ? esc(c.division) : '&nbsp;'}</div>
     </div>`;
   };
-  const buildTree = (key, seen) => {
-    seen = seen || new Set();
-    const kids = (childrenMap[key] || []).filter(c => !seen.has(c.id));
-    if (!kids.length) return '';
-    return `<ul>${kids.map(c => { seen.add(c.id); return `<li>${orgNode(c)}${buildTree(c.id, seen)}</li>`; }).join('')}</ul>`;
-  };
+  const groupHtml = groups.filter(g => g.contacts.length).map(g => {
+    const gIds = new Set(g.contacts.map(c => c.id));
+    const childrenMap = {};
+    g.contacts.forEach(c => { const key = (c.reports_to && gIds.has(c.reports_to)) ? c.reports_to : '__root__'; (childrenMap[key] = childrenMap[key] || []).push(c); });
+    const buildTree = (key, seen) => {
+      seen = seen || new Set();
+      const kids = (childrenMap[key] || []).filter(c => !seen.has(c.id));
+      if (!kids.length) return '';
+      return `<ul>${kids.map(c => { seen.add(c.id); return `<li>${orgNode(c)}${buildTree(c.id, seen)}</li>`; }).join('')}</ul>`;
+    };
+    const branch = g.id ? branchOf(accountId, g.id) : null;
+    const repId = branch && branch.rep_id ? branch.rep_id : (account ? account.assigned_to : null);
+    const repNm = (state.profiles || []).find(p => p.id === repId)?.full_name;
+    return `${multi ? `<div style="display:flex;align-items:center;gap:8px;margin:10px 0 4px"><span style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--vic-orange)">${esc(g.title)}</span>${repNm ? `<span style="font-size:11px;color:var(--g400)">Rep: ${esc(repNm)}</span>` : ''}<span style="flex:1;height:1px;background:var(--g150)"></span></div>` : ''}
+      <div style="overflow-x:auto;padding:4px 0"><div class="org-tree">${buildTree('__root__')}</div></div>`;
+  }).join('');
   return `<div class="dash-section" style="${flush ? 'margin:16px 0 10px' : 'margin-top:16px'};padding:14px 16px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 8px">
       <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Org Chart</h3>
       <button onclick="event.stopPropagation();generateOrgChartPDF('${accountId}')" title="Download org chart report — all branches of this company" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--g200);background:var(--white);color:var(--g600);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
     </div>
-    <div style="overflow-x:auto;padding:4px 0"><div class="org-tree">${buildTree('__root__')}</div></div>
+    ${groupHtml}
   </div>`;
 }
 function renderContacts(container) {
   const accountId = state.currentAccountId;
   const contacts = state.contacts[accountId] || [];
-  let html = `<button class="btn-add" onclick="showAddContact('${accountId}')" style="margin-bottom:16px;width:100%;justify-content:center">+ Add Contact</button>`;
+  let html = branchesSection(accountId);
+  html += `<button class="btn-add" onclick="showAddContact('${accountId}')" style="margin-bottom:16px;width:100%;justify-content:center">+ Add Contact</button>`;
 
   if (!contacts.length) {
     html += '<div class="empty-state"><p>No contacts added yet</p></div>';
@@ -3417,13 +3552,14 @@ function renderContacts(container) {
           <div class="contact-avatar">${initials}</div>
           <div class="contact-info" style="flex:1;min-width:0">
             <h4>${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</h4>
-            <p>${esc(c.role || 'No role specified')}</p>
+            <p>${esc(c.role || 'No role specified')}${c.branch_id && branchOf(accountId, c.branch_id) ? ` <span style="display:inline-block;font-size:10px;font-weight:700;color:var(--vic-orange);background:var(--vic-orange-light);padding:1px 7px;border-radius:8px;margin-left:4px;vertical-align:middle">${esc(branchOf(accountId, c.branch_id).city)}</span>` : ''}</p>
           </div>
           <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
             ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600"><span>&#9733;</span> Key influencer</div>` : ''}
             ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a></div>` : ''}
             ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a></div>` : ''}
             ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
+            ${c.branch_id && branchOf(accountId, c.branch_id) ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Branch</span>${esc(branchOf(accountId, c.branch_id).city)}</div>` : ''}
             <div><span onclick="toggleLinkedInConnected('${accountId}','${c.id}',event)" title="${c.linkedin_connected ? 'Connected on LinkedIn — click to mark not connected' : 'Not connected on LinkedIn — click to mark connected'}" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:${c.linkedin_connected ? '#0A66C2' : 'var(--g300)'};color:#fff;font-size:11px;font-weight:700">in</span><span style="font-size:12px;font-weight:600;color:${c.linkedin_connected ? '#0A66C2' : 'var(--g400)'}">${c.linkedin_connected ? 'Connected' : 'Not Connected'}</span></span></div>
             ${c.reports_to ? (() => { const loc = contacts.find(x => x.id === c.reports_to); if (loc) return `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc(loc.contact_name)}</div>`; const ext = findContactGlobal(c.reports_to); return ext ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc(ext.c.contact_name)} <span style="color:var(--g500);font-size:12px">(${esc(ext.account ? ext.account.company_name.replace(/^\[TEST\]\s*/, '') + (ext.account.hq_city ? ' · ' + ext.account.hq_city : '') : 'other branch')})</span></div>` : ''; })() : ''}
             ${(c.interests || '').trim() ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Interests</span>${interestPills(c.interests)}</div>` : ''}
@@ -4065,6 +4201,7 @@ function renderDashboardMatrix() {
     const boxPct = Math.round(cnt / grandCells * 100);
     let gPts = Math.round((statusGain[s.id] || 0) / grandCells * 1000) / 10;
     if (s.label === 'Not Allowed') gPts = -gPts;
+    if (s.label === 'N/A') gPts = 0; // N/A is neutral — never earns or loses points
     const gColor = gPts > 0 ? 'var(--success)' : gPts < 0 ? '#ef4444' : 'var(--g400)';
     const gArrow = gPts > 0 ? '▲' : gPts < 0 ? '▼' : '–';
     const bc = s.label === 'Not Started' ? '#1f2937' : (s.label === 'N/A') ? '#94A3B8' : s.color;
@@ -4241,7 +4378,7 @@ function renderDashboardContacts() {
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="text-align:center;width:34px">${c.is_key_influencer ? `<span onclick="toggleKeyInfluencer('${a.id}','${c.id}',event)" style="color:var(--vic-orange);font-size:16px;cursor:pointer" title="Key influencer — click to unmark">&#9733;</span>` : `<span onclick="toggleKeyInfluencer('${a.id}','${c.id}',event)" style="color:var(--g300);font-size:16px;cursor:pointer" title="Click to mark as key influencer">&#9734;</span>`}</td>
       <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
-      <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px;margin-top:6px">${esc(a.hq_city)}</div>` : ''}</td>
+      <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer">${acctLabel(a.company_name)}</strong>${(() => { const br = c.branch_id ? branchOf(a.id, c.branch_id) : null; const city = br ? br.city : a.hq_city; return city ? `<div style="color:var(--g500);font-weight:400;font-size:12px;margin-top:6px">${esc(city)}${br ? ' <span style="font-size:10px;color:var(--vic-orange);font-weight:700">BRANCH</span>' : ''}</div>` : ''; })()}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.map(b => `<div style="margin:3px 0;overflow:hidden;text-overflow:ellipsis">${b}</div>`).join('') || '—'}</td>
       <td style="text-align:center">${c.linkedin_connected ? `<span onclick="toggleLinkedInConnected('${a.id}','${c.id}',event)" title="Connected on LinkedIn — click to mark not connected" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#0A66C2;color:#fff;font-size:11px;font-weight:700;cursor:pointer">in</span>` : `<span onclick="toggleLinkedInConnected('${a.id}','${c.id}',event)" title="Not connected on LinkedIn — click to mark connected" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:var(--g200);color:var(--g400);font-size:11px;font-weight:700;cursor:pointer">in</span>`}</td>
@@ -7771,6 +7908,13 @@ function showAddContact(accountId) {
         <datalist id="ct-division-list">${['Estimating','Engineering','Drafting','Procurement','Projects','Operations','Management','HSE','Design','Commercial','Finance'].map(d=>`<option value="${d}">`).join('')}</datalist>
       </div>
       <div class="form-group">
+        <label>Branch</label>
+        <select id="ct-branch">
+          <option value="">${esc((state.accounts.find(a => a.id === accountId) || {}).hq_city || 'Head Office')} (HQ)</option>
+          ${(state.branches[accountId] || []).map(b => `<option value="${b.id}">${esc(b.city)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
         <label>Reports To</label>
         <select id="ct-reports-to">${reportsToOptions(accountId, null, null)}</select>
       </div>
@@ -7849,6 +7993,13 @@ function showEditContact(contactId, accountId) {
         <datalist id="ct-division-list">${['Estimating','Engineering','Drafting','Procurement','Projects','Operations','Management','HSE','Design','Commercial','Finance'].map(d=>`<option value="${d}">`).join('')}</datalist>
       </div>
       <div class="form-group">
+        <label>Branch</label>
+        <select id="ct-branch">
+          <option value="">${esc((state.accounts.find(a => a.id === accountId) || {}).hq_city || 'Head Office')} (HQ)</option>
+          ${(state.branches[accountId] || []).map(b => `<option value="${b.id}" ${c.branch_id === b.id ? 'selected' : ''}>${esc(b.city)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
         <label>Reports To</label>
         <select id="ct-reports-to">${reportsToOptions(accountId, c.reports_to, contactId)}</select>
       </div>
@@ -7901,6 +8052,8 @@ async function handleSaveContact(e, existingId, accountId) {
   rememberCustomRole(data.role);
   data.division = document.getElementById('ct-division').value.trim();
   data.reports_to = document.getElementById('ct-reports-to').value || null;
+  const _brSel = document.getElementById('ct-branch');
+  data.branch_id = movedFrom ? null : (_brSel && _brSel.value ? _brSel.value : null);
   data.email = document.getElementById('ct-email').value.trim();
   data.phone = formatPhone(document.getElementById('ct-phone').value);
   data.is_key_influencer = document.getElementById('ct-influencer').checked;
