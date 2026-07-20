@@ -1241,9 +1241,10 @@ function _rerenderCurrentFilterView() {
 // Shared search box shown in Dashboard / Matrix / Heatmap headers (filters via getDashFilteredAccounts)
 function pageSearchBox() {
   const icon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E";
-  return `<div style="position:relative;flex:1 1 200px;min-width:130px">
-    <input type="text" id="page-search-input" value="${esc(state.dashSearch||'')}" placeholder="Search" oninput="onPageSearch(this.value)" autocomplete="off"
+  return `<div id="page-search-wrap" style="position:relative;flex:1 1 200px;min-width:130px">
+    <input type="text" id="page-search-input" value="${esc(state.dashSearch||'')}" placeholder="Search" oninput="onPageSearch(this.value)" onfocus="renderPageSearchResults()" autocomplete="off"
       style="width:100%;padding:7px 12px 7px 32px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:12px;background:var(--white);box-sizing:border-box;background-image:url(&quot;${icon}&quot;);background-repeat:no-repeat;background-position:9px center;height:32px">
+    <div id="page-search-results" style="display:none;position:absolute;top:36px;left:0;right:0;min-width:260px;background:var(--white);border:1px solid var(--g200);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);z-index:600;max-height:320px;overflow-y:auto"></div>
   </div>`;
 }
 let _pageSearchTimer = null;
@@ -1254,8 +1255,31 @@ function onPageSearch(val) {
     _rerenderCurrentFilterView();
     const inp = document.getElementById('page-search-input');
     if (inp) { inp.focus(); const v = inp.value; inp.value = ''; inp.value = v; }
+    renderPageSearchResults();
   }, 220);
 }
+// Results dropdown under the dashboard search — shows matching accounts and contacts to jump to
+function renderPageSearchResults() {
+  const box = document.getElementById('page-search-results');
+  if (!box) return;
+  const q = (state.dashSearch || '').trim().toLowerCase();
+  if (!q) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  const accts = (state.accounts || []).filter(a => accountMatchesSearch(a, q)).slice(0, 6);
+  const people = [];
+  (state.accounts || []).forEach(a => (state.contacts[a.id] || []).forEach(c => {
+    if ((c.contact_name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.role || '').toLowerCase().includes(q)) people.push({ c, a });
+  }));
+  const header = (t) => `<div style="padding:7px 14px 3px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g400)">${t}</div>`;
+  const row = (onclick, main, sub) => `<div onclick="hidePageSearchResults();${onclick}" style="padding:8px 14px;cursor:pointer;font-size:13px;color:var(--g700);border-bottom:1px solid var(--g100)" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''"><strong style="color:var(--g800)">${main}</strong>${sub ? `<span style="color:var(--g500);font-size:12px"> — ${sub}</span>` : ''}</div>`;
+  let h = '';
+  if (accts.length) h += header('Accounts') + accts.map(a => row(`showAccountDetail('${a.id}')`, acctLabel(a.company_name), esc(a.hq_city || ''))).join('');
+  if (people.length) h += header('Contacts') + people.slice(0, 6).map(({ c, a }) => row(`openContactFromDirectory('${a.id}','${c.id}')`, esc(c.contact_name), `${acctLabel(a.company_name)}${c.role ? ' · ' + esc(c.role) : ''}`)).join('');
+  if (!h) h = '<div style="padding:10px 14px;font-size:13px;color:var(--g400)">No matches</div>';
+  box.innerHTML = h;
+  box.style.display = 'block';
+}
+function hidePageSearchResults() { const b = document.getElementById('page-search-results'); if (b) b.style.display = 'none'; }
+document.addEventListener('click', e => { if (!e.target.closest || !e.target.closest('#page-search-wrap')) hidePageSearchResults(); });
 // PDF button for page headers — generates a report tailored to the current page
 function pagePdfButton() {
   return `<button onclick="generatePageReport()" title="Download PDF report of this page" style="padding:11px 24px;background:var(--vic-orange);color:#fff;border-radius:var(--radius-xs);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;border:none;cursor:pointer;flex:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>`;
