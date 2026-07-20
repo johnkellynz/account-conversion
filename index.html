@@ -3168,23 +3168,25 @@ function renderContacts(container) {
     contacts.forEach(c => {
       const initials = (c.contact_name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       const cActs = (state.activities[accountId] || []).filter(x => x.contact_id === c.id);
-      html += `<div class="contact-card" style="display:block">
+      const _open = (c.id === state._expandContactId);
+      html += `<div class="contact-card" style="display:block;cursor:pointer" onclick="toggleContactCard('${c.id}')">
         <div style="display:flex;align-items:flex-start;gap:12px">
           <div class="contact-avatar">${initials}</div>
           <div class="contact-info" style="flex:1;min-width:0">
             <h4>${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</h4>
             <p>${esc(c.role || 'No role specified')}</p>
           </div>
-          <div id="cdet-${c.id}" style="text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
+          <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
             ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600"><span>&#9733;</span> Key influencer</div>` : ''}
-            ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></div>` : ''}
-            ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}">${esc(formatPhone(c.phone))}</a></div>` : ''}
+            ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a></div>` : ''}
+            ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a></div>` : ''}
             ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
             ${c.reports_to ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc((contacts.find(x=>x.id===c.reports_to)||{}).contact_name||'—')}</div>` : ''}
             ${(c.interests || '').trim() ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Interests</span>${interestPills(c.interests)}</div>` : ''}
           </div>
+          <svg id="chev-${c.id}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2" style="flex-shrink:0;margin-top:2px;transition:transform .2s${_open ? ';transform:rotate(180deg)' : ''}"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g150)">
+        <div id="cbot-${c.id}" onclick="event.stopPropagation()" style="display:${_open ? 'flex' : 'none'};align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g150);cursor:default">
           <button onclick="showActivityMenu(event,'${accountId}','${c.id}')" title="Log activity" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;border:1px solid var(--g200);background:var(--white);color:var(--vic-orange);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
           ${cActs.length ? (a => `<div onclick="editActivity('${a.id}',event)" title="Click to edit" style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600);cursor:pointer;border-radius:5px;padding:2px 4px"><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);flex-shrink:0">Latest Activity</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong style="color:var(--g700)">${esc(a.activity_type)}</strong> · ${new Date(a.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${a.note?` — ${esc(a.note)}`:''}</span></div>`)(cActs[0]) : '<div style="flex:1"></div>'}
           <button onclick="showEditContact('${c.id}','${accountId}')" style="flex-shrink:0;padding:6px 14px;border:1px solid var(--g200);background:var(--white);border-radius:var(--radius-xs);font-size:13px;font-weight:600;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
@@ -3205,6 +3207,17 @@ function renderContacts(container) {
   }
 }
 
+function toggleContactCard(id) {
+  const det = document.getElementById('cdet-' + id);
+  const bot = document.getElementById('cbot-' + id);
+  const chev = document.getElementById('chev-' + id);
+  if (!det) return;
+  if (state._expandContactId === id) state._expandContactId = null;
+  const open = det.style.display !== 'none';
+  det.style.display = open ? 'none' : 'block';
+  if (bot) bot.style.display = open ? 'none' : 'flex';
+  if (chev) chev.style.transform = open ? '' : 'rotate(180deg)';
+}
 // Styled confirmation popover anchored near the cursor. Returns a promise<boolean>.
 function confirmNear(event, message, okLabel = 'Delete') {
   return new Promise(resolve => {
