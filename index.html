@@ -3224,6 +3224,41 @@ function interestPills(str, clickable) {
     return `<span class="badge"${extra} style="${style}">${esc(it)}</span>`;
   }).join('')}</div>`;
 }
+// Find a contact by id across every loaded account (for cross-branch reporting lines)
+function findContactGlobal(contactId) {
+  if (!contactId) return null;
+  for (const [accId, list] of Object.entries(state.contacts || {})) {
+    const c = (list || []).find(x => x.id === contactId);
+    if (c) return { c, accountId: accId, account: state.accounts.find(a => a.id === accId) };
+  }
+  return null;
+}
+// Options for a Reports To select: this account's people first, then everyone else grouped as "Other branches"
+function reportsToOptions(accountId, selectedId, excludeId) {
+  const opt = (ct, label) => `<option value="${ct.id}" ${selectedId === ct.id ? 'selected' : ''}>${label}</option>`;
+  const local = (state.contacts[accountId] || []).filter(ct => ct.id !== excludeId)
+    .map(ct => opt(ct, esc(ct.contact_name))).join('');
+  const others = [];
+  (state.accounts || []).filter(a => a.id !== accountId).forEach(a => {
+    (state.contacts[a.id] || []).forEach(ct => {
+      if (ct.id === excludeId) return;
+      const branch = `${a.company_name.replace(/^\[TEST\]\s*/, '')}${a.hq_city ? ' · ' + a.hq_city : ''}`;
+      others.push({ sort: branch + ct.contact_name, html: opt(ct, `${esc(ct.contact_name)} — ${esc(branch)}`) });
+    });
+  });
+  others.sort((x, y) => x.sort.localeCompare(y.sort));
+  return `<option value="">— None (top of org) —</option>${local}${others.length ? `<optgroup label="Other branches">${others.map(o => o.html).join('')}</optgroup>` : ''}`;
+}
+// Click the star to flip a contact's key-influencer flag in place
+async function toggleKeyInfluencer(accountId, contactId, event) {
+  if (event) event.stopPropagation();
+  const c = (state.contacts[accountId] || []).find(x => x.id === contactId);
+  if (!c) return;
+  await saveContact({ ...c, is_key_influencer: !c.is_key_influencer });
+  if (state.currentView === 'dashboard' && state.dashMode === 'contacts') renderDashboardContacts();
+  else if (state.currentView === 'detail') renderDetailTab();
+  toast(!c.is_key_influencer ? 'Marked as key influencer' : 'Key influencer removed');
+}
 // Click the "in" badge to flip a contact's LinkedIn-connected flag in place
 async function toggleLinkedInConnected(accountId, contactId, event) {
   if (event) event.stopPropagation();
@@ -3248,11 +3283,24 @@ function orgChartSection(accountId, flush) {
   const byId = {}; contacts.forEach(c => byId[c.id] = c);
   const childrenMap = {};
   contacts.forEach(c => { const key = (c.reports_to && byId[c.reports_to]) ? c.reports_to : '__root__'; (childrenMap[key] = childrenMap[key] || []).push(c); });
-  const orgNode = (c) => `<div class="org-node" onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="cursor:pointer">
+  const orgNode = (c) => {
+    // Manager in another branch: keep this person at the top of the local tree,
+    // but show a dashed link line to their external manager.
+    let extLine = '';
+    if (c.reports_to && !byId[c.reports_to]) {
+      const ext = findContactGlobal(c.reports_to);
+      if (ext) {
+        const branch = ext.account ? `${ext.account.company_name.replace(/^\[TEST\]\s*/, '')}${ext.account.hq_city ? ' · ' + ext.account.hq_city : ''}` : 'other branch';
+        extLine = `<div onclick="event.stopPropagation();openContactFromDirectory('${ext.accountId}','${ext.c.id}')" title="Open ${esc(ext.c.contact_name)}" style="font-size:11px;color:var(--g500);border:1px dashed var(--g300);border-radius:6px;padding:2px 6px;margin-bottom:4px;cursor:pointer">&#8599; Reports to <strong style="color:var(--g700)">${esc(ext.c.contact_name)}</strong><br>${esc(branch)}</div>`;
+      }
+    }
+    return `<div class="org-node" onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="cursor:pointer">
+      ${extLine}
       <div style="font-weight:700;font-size:14px;color:var(--g800)">${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</div>
       <div style="font-size:12px;color:var(--g500);margin-top:2px">${c.role ? esc(c.role) : '&nbsp;'}</div>
       <div style="font-size:12px;color:var(--vic-orange);font-weight:600;margin-top:2px">${c.division ? esc(c.division) : '&nbsp;'}</div>
     </div>`;
+  };
   const buildTree = (key, seen) => {
     seen = seen || new Set();
     const kids = (childrenMap[key] || []).filter(c => !seen.has(c.id));
@@ -3285,18 +3333,18 @@ function renderContacts(container) {
           </div>
           <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
             ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600"><span>&#9733;</span> Key influencer</div>` : ''}
-            <div style="font-size:12px;font-weight:600;color:${c.linkedin_connected ? '#0A66C2' : 'var(--g400)'}"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:${c.linkedin_connected ? '#0A66C2' : 'var(--g300)'};color:#fff;font-size:10px;font-weight:700;margin-right:6px;vertical-align:middle">in</span>${c.linkedin_connected ? 'Connected on LinkedIn' : 'Not connected on LinkedIn'}</div>
             ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a></div>` : ''}
             ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a></div>` : ''}
             ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
-            ${c.reports_to ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc((contacts.find(x=>x.id===c.reports_to)||{}).contact_name||'—')}</div>` : ''}
+            <div><span onclick="toggleLinkedInConnected('${accountId}','${c.id}',event)" title="${c.linkedin_connected ? 'Connected on LinkedIn — click to mark not connected' : 'Not connected on LinkedIn — click to mark connected'}" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:${c.linkedin_connected ? '#0A66C2' : 'var(--g300)'};color:#fff;font-size:11px;font-weight:700;cursor:pointer">in</span></div>
+            ${c.reports_to ? (() => { const loc = contacts.find(x => x.id === c.reports_to); if (loc) return `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc(loc.contact_name)}</div>`; const ext = findContactGlobal(c.reports_to); return ext ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc(ext.c.contact_name)} <span style="color:var(--g500);font-size:12px">(${esc(ext.account ? ext.account.company_name.replace(/^\[TEST\]\s*/, '') + (ext.account.hq_city ? ' · ' + ext.account.hq_city : '') : 'other branch')})</span></div>` : ''; })() : ''}
             ${(c.interests || '').trim() ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Interests</span>${interestPills(c.interests)}</div>` : ''}
           </div>
           <svg id="chev-${c.id}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--g400)" stroke-width="2" style="flex-shrink:0;margin-top:2px;transition:transform .2s${_open ? ';transform:rotate(180deg)' : ''}"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div id="cbot-${c.id}" onclick="event.stopPropagation()" style="display:${_open ? 'flex' : 'none'};align-items:center;gap:8px;margin-top:8px;padding-top:8px;padding-right:30px;border-top:1px solid var(--g150);cursor:default">
           <button onclick="showActivityMenu(event,'${accountId}','${c.id}')" title="Log activity" style="flex-shrink:0;width:32px;height:32px;border-radius:8px;border:1px solid var(--g200);background:var(--white);color:var(--vic-orange);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></button>
-          ${cActs.length ? (a => `<div onclick="editActivity('${a.id}',event)" title="Click to edit" style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600);cursor:pointer;border-radius:5px;padding:2px 4px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong style="color:var(--g700)">${esc(a.activity_type)}</strong> · ${new Date(a.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${a.note?` — ${esc(a.note)}`:''}</span></div>`)(cActs[0]) : '<div style="flex:1"></div>'}
+          ${cActs.length ? (a => `<div onclick="editActivity('${a.id}',event)" title="Click to edit" style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--g600);cursor:pointer;border-radius:5px;padding:2px 4px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><strong style="color:var(--vic-orange)">${esc(a.activity_type)}</strong> · ${new Date(a.created_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'})}${a.note?` — ${esc(a.note)}`:''}</span></div>`)(cActs[0]) : '<div style="flex:1"></div>'}
           <button onclick="showEditContact('${c.id}','${accountId}')" style="flex-shrink:0;padding:5px 11px;border:1px solid var(--g200);background:var(--white);border-radius:var(--radius-xs);font-size:12px;font-weight:600;color:var(--g700);cursor:pointer;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit</button>
           <button onclick="confirmDeleteContact('${c.id}','${accountId}',event)" style="flex-shrink:0;padding:5px 11px;border:1px solid var(--danger);background:var(--white);border-radius:var(--radius-xs);font-size:12px;font-weight:600;color:var(--danger);cursor:pointer;display:flex;align-items:center;gap:5px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Delete</button>
         </div>
@@ -4098,7 +4146,7 @@ function renderDashboardContacts() {
       lastContacted = `<span title="${new Date(_lc).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: '2-digit' })}">${_label}</span>`;
     }
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
-      <td style="text-align:center;width:34px">${c.is_key_influencer ? '<span style="color:var(--vic-orange);font-size:16px" title="Key influencer">&#9733;</span>' : '<span style="color:var(--g300);font-size:16px">&#9734;</span>'}</td>
+      <td style="text-align:center;width:34px">${c.is_key_influencer ? `<span onclick="toggleKeyInfluencer('${a.id}','${c.id}',event)" style="color:var(--vic-orange);font-size:16px;cursor:pointer" title="Key influencer — click to unmark">&#9733;</span>` : `<span onclick="toggleKeyInfluencer('${a.id}','${c.id}',event)" style="color:var(--g300);font-size:16px;cursor:pointer" title="Click to mark as key influencer">&#9734;</span>`}</td>
       <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
       <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px;margin-top:6px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
@@ -4114,7 +4162,7 @@ function renderDashboardContacts() {
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         ${state.contactCompanyFilter ? `<button onclick="state.contactCompanyFilter=null;renderDashboardContacts()" title="Clear company filter" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--vic-orange);background:var(--vic-orange);color:#fff">${esc((state.accounts.find(a => a.id === state.contactCompanyFilter) || {}).company_name || 'Company')} <span style="font-size:13px">&times;</span></button>` : ''}
         ${state.contactInterestFilter ? `<button onclick="state.contactInterestFilter=null;renderDashboardContacts()" title="Clear interest filter" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--vic-orange);background:var(--vic-orange);color:#fff">${esc(state.contactInterestFilter)} <span style="font-size:13px">&times;</span></button>` : ''}
-        <button onclick="state.contactKeyOnly=!state.contactKeyOnly;renderDashboardContacts()" title="Show only key influencers" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--g200)'};background:${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--white)'};color:${state.contactKeyOnly ? '#fff' : 'var(--g600)'}"><span style="font-size:14px">&#9733;</span> Key influencers only</button>
+        <button onclick="state.contactKeyOnly=!state.contactKeyOnly;renderDashboardContacts()" title="Show only key influencers" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--g200)'};background:${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--white)'};color:${state.contactKeyOnly ? '#fff' : 'var(--g600)'}"><span style="font-size:14px">&#9733;</span> Key Influencers</button>
       </div>
     </div>
     ${state.contactCompanyFilter ? `<button class="btn-add" onclick="showAddContact('${state.contactCompanyFilter}')" style="margin:4px 0 12px;width:100%;justify-content:center">+ Add Contact</button>` : ''}
@@ -7508,7 +7556,7 @@ function showAddContactGlobal() {
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="gc-influencer" style="width:22px;height:22px;accent-color:var(--vic-orange)">
-        <label for="gc-influencer" style="margin:0">Key buying influencer</label>
+        <label for="gc-influencer" style="margin:0">Key influencer</label>
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="gc-linkedin" style="width:22px;height:22px;accent-color:#0A66C2">
@@ -7614,10 +7662,7 @@ function showAddContact(accountId) {
       </div>
       <div class="form-group">
         <label>Reports To</label>
-        <select id="ct-reports-to">
-          <option value="">— None (top of org) —</option>
-          ${(state.contacts[accountId]||[]).map(ct=>`<option value="${ct.id}">${esc(ct.contact_name)}</option>`).join('')}
-        </select>
+        <select id="ct-reports-to">${reportsToOptions(accountId, null, null)}</select>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -7635,7 +7680,7 @@ function showAddContact(accountId) {
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="ct-influencer" style="width:22px;height:22px;accent-color:var(--vic-orange)">
-        <label for="ct-influencer" style="margin:0">Key buying influencer</label>
+        <label for="ct-influencer" style="margin:0">Key influencer</label>
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="ct-linkedin" style="width:22px;height:22px;accent-color:#0A66C2">
@@ -7690,10 +7735,7 @@ function showEditContact(contactId, accountId) {
       </div>
       <div class="form-group">
         <label>Reports To</label>
-        <select id="ct-reports-to">
-          <option value="">— None (top of org) —</option>
-          ${(state.contacts[accountId]||[]).filter(ct=>ct.id!==contactId).map(ct=>`<option value="${ct.id}" ${c.reports_to===ct.id?'selected':''}>${esc(ct.contact_name)}</option>`).join('')}
-        </select>
+        <select id="ct-reports-to">${reportsToOptions(accountId, c.reports_to, contactId)}</select>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -7711,7 +7753,7 @@ function showEditContact(contactId, accountId) {
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="ct-influencer" ${c.is_key_influencer?'checked':''} style="width:22px;height:22px;accent-color:var(--vic-orange)">
-        <label for="ct-influencer" style="margin:0">Key buying influencer</label>
+        <label for="ct-influencer" style="margin:0">Key influencer</label>
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="ct-linkedin" ${c.linkedin_connected?'checked':''} style="width:22px;height:22px;accent-color:#0A66C2">
