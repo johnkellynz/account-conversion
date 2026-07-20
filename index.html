@@ -7041,7 +7041,7 @@ function showAddAccount() {
         </div>
         <div class="form-group">
           <label>Stakeholder</label>
-          <select id="acc-tier">${stakeholderList().map(s => `<option value="${s.tier_value}" ${s.tier_value===2?'selected':''}>${esc(s.label)}</option>`).join('')}</select>
+          <select id="acc-tier">${stakeholderList().map(s => `<option value="${s.tier_value}" ${s.tier_value===1?'selected':''}>${esc(s.label)}</option>`).join('')}</select>
         </div>
       </div>
       <div class="form-group">
@@ -7366,9 +7366,15 @@ function collectInterests() {
 
 function showAddContact(accountId) {
   const modal = document.getElementById('modal-content');
+  const acct = state.accounts.find(a => a.id === accountId);
+  const companyName = acct ? acct.company_name : '';
   modal.innerHTML = `
     <h2>Add Contact</h2>
     <form onsubmit="handleSaveContact(event, null, '${accountId}')">
+      <div class="form-group">
+        <label>Company</label>
+        <input type="text" value="${esc(companyName)}" readonly style="background:var(--g100);color:var(--g500);cursor:default">
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label>First Name *</label>
