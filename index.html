@@ -3414,7 +3414,7 @@ function renderContacts(container) {
             ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a></div>` : ''}
             ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a></div>` : ''}
             ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
-            <div><span onclick="toggleLinkedInConnected('${accountId}','${c.id}',event)" title="${c.linkedin_connected ? 'Connected on LinkedIn — click to mark not connected' : 'Not connected on LinkedIn — click to mark connected'}" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:${c.linkedin_connected ? '#0A66C2' : 'var(--g300)'};color:#fff;font-size:11px;font-weight:700;cursor:pointer">in</span></div>
+            <div><span onclick="toggleLinkedInConnected('${accountId}','${c.id}',event)" title="${c.linkedin_connected ? 'Connected on LinkedIn — click to mark not connected' : 'Not connected on LinkedIn — click to mark connected'}" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:${c.linkedin_connected ? '#0A66C2' : 'var(--g300)'};color:#fff;font-size:11px;font-weight:700">in</span><span style="font-size:12px;font-weight:600;color:${c.linkedin_connected ? '#0A66C2' : 'var(--g400)'}">${c.linkedin_connected ? 'Connected' : 'Not Connected'}</span></span></div>
             ${c.reports_to ? (() => { const loc = contacts.find(x => x.id === c.reports_to); if (loc) return `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc(loc.contact_name)}</div>`; const ext = findContactGlobal(c.reports_to); return ext ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Reports To</span>${esc(ext.c.contact_name)} <span style="color:var(--g500);font-size:12px">(${esc(ext.account ? ext.account.company_name.replace(/^\[TEST\]\s*/, '') + (ext.account.hq_city ? ' · ' + ext.account.hq_city : '') : 'other branch')})</span></div>` : ''; })() : ''}
             ${(c.interests || '').trim() ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Interests</span>${interestPills(c.interests)}</div>` : ''}
           </div>
@@ -4133,7 +4133,7 @@ function keyAccountsTableSection() {
       statusBar += '</div>';
     }
     statusBar += '</div>';
-    return `<tr onclick="dashCompanyContacts('${a.id}')" style="cursor:pointer">
+    return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
       <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);cursor:pointer">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g600);font-weight:400;font-size:12px;margin-top:1px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
       <td>${statusBar}</td>
@@ -4294,7 +4294,7 @@ function renderDashboardActions() {
     const stage = recalcCurrentStage(a.id);
     const items = (STAGES[stage] && STAGES[stage].items) || [];
     const cl = (state.checklist[a.id] || []).filter(c => c.stage === stage);
-    const nextItem = items.find(it => !cl.find(c => c.item_key === it.key && c.completed));
+    const nextItem = items.find(it => !cl.find(c => c.item_key === it.key && (c.completed || c.na)));
     if (!nextItem) return; // nothing outstanding for this account
     const comp = getStageCompletion(a.id, stage);
     const lastProgress = (state.checklist[a.id] || []).reduce((m, c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
@@ -4316,7 +4316,7 @@ function renderDashboardActions() {
     return `<tr onclick="openAccountChecklist('${a.id}')" style="cursor:pointer">
       <td style="white-space:nowrap;vertical-align:top"><strong style="color:var(--g800)">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}<div style="font-size:11px;color:var(--g400);margin-top:2px">${esc(repName(a.assigned_to))}</div></td>
       <td style="white-space:nowrap;vertical-align:top"><span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:${stageColors[stage]};padding:2px 8px;border-radius:10px">${esc(STAGES[stage].name)}</span><div style="font-size:11px;color:var(--g400);margin-top:3px">${comp.done}/${comp.total} steps</div></td>
-      <td style="vertical-align:top;font-size:13px;color:var(--g700);max-width:440px">${esc(nextItem.label)}</td>
+      <td style="vertical-align:top;font-size:13px;max-width:440px"><span onclick="event.stopPropagation();openAccountChecklist('${a.id}')" title="Open this account's checklist" style="color:var(--g700);cursor:pointer;border-bottom:1px dashed var(--g300)" onmouseover="this.style.color='var(--vic-orange)'" onmouseout="this.style.color='var(--g700)'">${esc(nextItem.label)}</span></td>
       <td style="white-space:nowrap;vertical-align:top;text-align:center;font-size:12px">${lastTxt}</td>
       <td style="vertical-align:top;text-align:center"><button onclick="completeNextStep(event,'${a.id}',${stage},'${nextItem.key}')" title="Mark this step done" style="padding:6px 10px;border:1px solid var(--success);background:var(--success-bg);color:var(--success);border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">&#10003; Done</button></td>
     </tr>`;
@@ -4369,6 +4369,7 @@ function renderDashboardStalled() {
       const rb = (state.profiles.find(p=>p.id===b.assigned_to)?.full_name)||'';
       return stDir * ra.localeCompare(rb);
     }
+    if (state.stalledSortCol === 'contacts') return stDir * (((state.contacts[a.id]||[]).length) - ((state.contacts[b.id]||[]).length)) || a.company_name.localeCompare(b.company_name);
     const aD = (state.checklist[a.id]||[]).reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
     const bD = (state.checklist[b.id]||[]).reduce((m,c) => c.completed_at && c.completed_at > m ? c.completed_at : m, '');
     return stDir * aD.localeCompare(bD);
@@ -4394,11 +4395,11 @@ function renderDashboardStalled() {
     }
     statusBar += '</div>';
     return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
-      <td style="white-space:nowrap"><strong style="color:var(--g700)">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g600);font-weight:400;font-size:12px;margin-top:1px">${esc(a.hq_city)}</div>` : ''}</td>
-      <td>${statusBar}</td>
+      <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);cursor:pointer">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g600);font-weight:400;font-size:12px;margin-top:1px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
+      <td>${statusBar}</td>
       <td style="font-size:13px;color:var(--g700);white-space:nowrap">${esc(repName(a.assigned_to))}</td>
-      <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
+      <td style="text-align:center;font-size:13px">${(state.contacts[a.id]||[]).length ? `<span style="color:var(--g700);font-weight:600">${(state.contacts[a.id]||[]).length}</span>` : '<span style="color:#ef4444">0</span>'}</td>
     </tr>`;
   }).join('');
   el.innerHTML = `<div id="stalled-section" class="dash-section"><div class="table-wrap">
@@ -4411,10 +4412,10 @@ function renderDashboardStalled() {
     ${stalledAccounts.length ? `<table class="data-table">
       <thead><tr>
         <th style="cursor:pointer;user-select:none${stActive('name')}" onclick="stalledSort('name')">Company${stIcon('name')}</th>
-        <th style="width:24%;min-width:150px;cursor:pointer;user-select:none${stActive('progress')}" onclick="stalledSort('progress')">Progress${stIcon('progress')}</th>
         <th style="white-space:nowrap">Opportunity</th>
+        <th style="width:24%;min-width:150px;cursor:pointer;user-select:none${stActive('progress')}" onclick="stalledSort('progress')">Progress${stIcon('progress')}</th>
         <th style="cursor:pointer;user-select:none${stActive('rep')}" onclick="stalledSort('rep')">Rep${stIcon('rep')}</th>
-        <th style="text-align:center;cursor:pointer;user-select:none${stActive('activity')}" onclick="stalledSort('activity')">Last Activity${stIcon('activity')}</th>
+        <th style="text-align:center;cursor:pointer;user-select:none${stActive('contacts')}" onclick="stalledSort('contacts')">Contacts${stIcon('contacts')}</th>
       </tr></thead>
       <tbody>${stalledRows}</tbody>
     </table>` : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No stalled accounts.</div>'}
@@ -4989,6 +4990,11 @@ function renderDashboardHeatmap(targetId) {
     'Nelson':[-41.27,173.28],'Rotorua':[-38.14,176.25],'New Plymouth':[-39.07,174.08],'Whangarei':[-35.73,174.32],
     'Invercargill':[-46.41,168.35],'Hastings':[-39.64,176.84],'Blenheim':[-41.51,173.95],'Greymouth':[-42.45,171.21],
     'Timaru':[-44.40,171.25],'Ashburton':[-43.90,171.73],'Levin':[-40.63,175.27],'Manukau':[-36.99,174.88],
+    'Mount Maunganui':[-37.64,176.19],'Te Puke':[-37.98,176.32],'Waihi':[-37.39,175.84],'Taupo':[-38.69,176.07],
+    'Whakatane':[-37.96,176.98],'Gisborne':[-38.66,178.02],'Cambridge':[-37.89,175.47],'Porirua':[-41.13,174.84],
+    'Lower Hutt':[-41.21,174.91],'Upper Hutt':[-41.12,175.07],'Queenstown':[-45.03,168.66],'Wanaka':[-44.70,169.13],
+    'Oamaru':[-45.10,170.97],'Gore':[-46.10,168.94],'Whanganui':[-39.93,175.05],'Richmond':[-41.34,173.18],
+    'Motueka':[-41.11,173.01],'Hokitika':[-42.72,170.96],'Rangiora':[-43.30,172.59],'Kerikeri':[-35.22,173.95],
     'Pakuranga':[-36.89,174.90],'Mt Albert':[-36.88,174.72],'Ryde':[-33.82,151.11],'Concord':[-33.86,151.10],
     'Mona Vale':[-33.68,151.30],'Manly':[-33.80,151.29],'Castle Hill':[-33.73,151.00],'Blacktown':[-33.77,150.91],
     'Bankstown':[-33.92,151.03],'Chatswood':[-33.80,151.18],'Auburn':[-33.85,151.03],'Armadale':[-32.15,116.01],
@@ -5147,6 +5153,12 @@ function renderDashboardHeatmap(targetId) {
       filteredAccounts.forEach(a => {
         const city = a.hq_city ? a.hq_city.trim() : '';
         let coord = CITY_COORDS[city];
+        if (!coord && city) {
+          // Case-insensitive + "Mt"/"Mount" tolerant lookup
+          const norm = city.toLowerCase().replace(/^mt\.?\s+/, 'mount ');
+          const key = Object.keys(CITY_COORDS).find(k => k.toLowerCase() === norm);
+          if (key) coord = CITY_COORDS[key];
+        }
         if (!coord) {
           // Fall back to region centroid with jitter
           const regs = (a.regions||'').split(',').map(s=>s.trim()).filter(Boolean);
