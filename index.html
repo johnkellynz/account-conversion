@@ -361,6 +361,10 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .stat-tile { cursor: pointer; transition: background .12s; }
 .stat-tile:hover { background: var(--g50); }
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* Contacts directory — tighter cells so all columns (incl. Last Contacted) fit without cropping */
+.contacts-table th { padding: 10px 8px; }
+.contacts-table td { padding: 12px 8px; }
+.contacts-table td.cell-clip { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------- MODAL ---------- */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: flex-end; justify-content: center; }
@@ -957,7 +961,7 @@ let state = {
   sbSortDir: 'asc',
   pipeSortCol: 'stage',
   pipeSortDir: 'asc',
-  kaSortCol: 'activity',
+  kaSortCol: 'name',
   kaSortDir: 'desc',
   accSortCol: 'step',
   accSortDir: 'desc',
@@ -3873,7 +3877,7 @@ function keyAccountsTableSection() {
     if (state.kaSortCol === 'progress') return kDir * (a.current_stage - b.current_stage) || a.company_name.localeCompare(b.company_name);
     if (state.kaSortCol === 'opp') return kDir * (oppVal(a) - oppVal(b)) || a.company_name.localeCompare(b.company_name);
     if (state.kaSortCol === 'rep') return kDir * repName(a.assigned_to).localeCompare(repName(b.assigned_to)) || a.company_name.localeCompare(b.company_name);
-    if (state.kaSortCol === 'activity') return kDir * lastAct(a).localeCompare(lastAct(b)) || a.company_name.localeCompare(b.company_name);
+    if (state.kaSortCol === 'contacts') return kDir * ((state.contacts[a.id]||[]).length - (state.contacts[b.id]||[]).length) || a.company_name.localeCompare(b.company_name);
     return kDir * a.company_name.localeCompare(b.company_name);
   });
   const stageColors = ['','#94A3B8','#38BDF8','#34D399','#FBBF24','#F58220'];
@@ -3899,7 +3903,7 @@ function keyAccountsTableSection() {
       <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
       <td>${statusBar}</td>
       <td style="font-size:13px;color:var(--g700);white-space:nowrap">${esc(repName(a.assigned_to))}</td>
-      <td style="font-size:12px;color:var(--g400);white-space:nowrap;text-align:center">${lastTxt}</td>
+      <td style="text-align:center;font-size:13px">${(state.contacts[a.id]||[]).length ? `<span style="color:var(--g700);font-weight:600">${(state.contacts[a.id]||[]).length}</span>` : '<span style="color:#ef4444">0</span>'}</td>
     </tr>`;
   }).join('');
   return `<div class="dash-section"><div class="table-wrap">
@@ -3909,7 +3913,7 @@ function keyAccountsTableSection() {
         <th style="white-space:nowrap;cursor:pointer;user-select:none${kActive('opp')}" onclick="kaSort('opp')">Opportunity${kIcon('opp')}</th>
         <th style="width:24%;min-width:150px;cursor:pointer;user-select:none${kActive('progress')}" onclick="kaSort('progress')">Progress${kIcon('progress')}</th>
         <th style="cursor:pointer;user-select:none${kActive('rep')}" onclick="kaSort('rep')">Rep${kIcon('rep')}</th>
-        <th style="text-align:center;cursor:pointer;user-select:none${kActive('activity')}" onclick="kaSort('activity')">Last Activity${kIcon('activity')}</th>
+        <th style="text-align:center;cursor:pointer;user-select:none${kActive('contacts')}" onclick="kaSort('contacts')">Contacts${kIcon('contacts')}</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>` : '<div style="color:var(--g400);font-size:13px;padding:12px 0">No accounts match the current filters.</div>'}
@@ -3990,7 +3994,7 @@ function renderDashboardContacts() {
       <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--g300);text-underline-offset:3px">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td style="font-size:12px;color:var(--g600)">${interests}</td>
-      <td style="font-size:12px;color:var(--g600)">${bits.join('<br>') || '—'}</td>
+      <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.join('<br>') || '—'}</td>
       <td style="font-size:12px;color:var(--g600);white-space:nowrap;text-align:center">${lastContacted}</td>
     </tr>`;
   }).join('');
@@ -4005,7 +4009,7 @@ function renderDashboardContacts() {
       </div>
     </div>
     ${state.contactCompanyFilter ? `<button class="btn-add" onclick="showAddContact('${state.contactCompanyFilter}')" style="margin:4px 0 12px;width:100%;justify-content:center">+ Add Contact</button>` : ''}
-    ${rows.length ? `<table class="data-table">
+    ${rows.length ? `<table class="data-table contacts-table">
       <thead><tr>
         <th style="cursor:pointer;user-select:none;text-align:center;width:34px${sActive('keyinfluencer')}" onclick="contactSort('keyinfluencer')" title="Sort by key influencer">&#9733;${sIcon('keyinfluencer')}</th>
         <th style="cursor:pointer;user-select:none${sActive('name')}" onclick="contactSort('name')">Name${sIcon('name')}</th>
@@ -4013,7 +4017,7 @@ function renderDashboardContacts() {
         <th style="cursor:pointer;user-select:none${sActive('role')}" onclick="contactSort('role')">Role${sIcon('role')}</th>
         <th style="cursor:pointer;user-select:none${sActive('interests')}" onclick="contactSort('interests')">Interests${sIcon('interests')}</th>
         <th style="white-space:nowrap">Email / Phone</th>
-        <th style="cursor:pointer;user-select:none;white-space:nowrap;text-align:center${sActive('lastcontacted')}" onclick="contactSort('lastcontacted')">Last Contacted${sIcon('lastcontacted')}</th>
+        <th style="cursor:pointer;user-select:none;text-align:center${sActive('lastcontacted')}" onclick="contactSort('lastcontacted')">Last Contacted${sIcon('lastcontacted')}</th>
       </tr></thead>
       <tbody>${body}</tbody>
     </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">${q ? 'No contacts match your search.' : 'No contacts yet — add people from any company to see them here.'}</div>`}
