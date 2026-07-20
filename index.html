@@ -3215,7 +3215,7 @@ const INTEREST_COLORS = [
 function interestPills(str, clickable) {
   const items = (str || '').split(',').map(s => s.trim()).filter(Boolean);
   if (!items.length) return '—';
-  return `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">${items.map(it => {
+  return `<div style="display:inline-flex;flex-wrap:wrap;gap:5px;vertical-align:middle">${items.map(it => {
     let h = 0; for (let i = 0; i < it.length; i++) h = (h * 31 + it.charCodeAt(i)) >>> 0;
     const c = INTEREST_COLORS[h % INTEREST_COLORS.length];
     const active = clickable && state.contactInterestFilter && state.contactInterestFilter.toLowerCase() === it.toLowerCase();
