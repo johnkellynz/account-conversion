@@ -813,7 +813,37 @@ const STAGES = {
 // ======================== SECTOR OPTIONS ========================
 const SECTORS = ['Commercial', 'Health', 'Industrial', 'Mining', 'Data Centres', 'Education', 'Government', 'Retail', 'Water'];
 // Sector/discipline a contact works in (distinct from account key sectors — includes HVAC)
-const CONTACT_SECTORS = ['HVAC', 'Water', 'Mining', 'Industrial', 'Data Centres', 'Oil & Gas'];
+const CONTACT_SECTORS = ['HVAC', 'Water', 'Mining', 'Infrastructure', 'Data Centres'];
+// Per-user custom contact sectors — stored on the user's profile (falls back to this device only if the column is missing)
+function userCustomSectors() {
+  let raw = state.profile ? state.profile.custom_sectors : null;
+  if (raw == null) { try { raw = localStorage.getItem('kac_custom_sectors_' + (state.user ? state.user.id : '')); } catch (e) {} }
+  return (raw || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+function contactSectorOptions() {
+  const seen = new Set(); const out = [];
+  [...CONTACT_SECTORS, ...userCustomSectors()].forEach(s => { const k = s.toLowerCase(); if (!seen.has(k)) { seen.add(k); out.push(s); } });
+  return out.sort((a, b) => a.localeCompare(b));
+}
+function renderContactSectorChips(wrapId, selectedStr) {
+  renderChips(wrapId, contactSectorOptions(), selectedStr);
+  const wrap = document.getElementById(wrapId);
+  if (wrap) wrap.insertAdjacentHTML('beforeend', `<span class="sector-chip" style="border-style:dashed" onclick="addCustomContactSector('${wrapId}')">+ Other</span>`);
+}
+async function addCustomContactSector(wrapId) {
+  const val = prompt('New sector:');
+  if (!val || !val.trim()) return;
+  const v = val.trim();
+  if (!contactSectorOptions().some(o => o.toLowerCase() === v.toLowerCase())) {
+    const list = userCustomSectors(); list.push(v);
+    const joined = list.join(', ');
+    if (state.profile) state.profile.custom_sectors = joined;
+    try { localStorage.setItem('kac_custom_sectors_' + (state.user ? state.user.id : ''), joined); } catch (e) {}
+    try { await supa.from('profiles').update({ custom_sectors: joined }).eq('id', state.user.id); } catch (e) { console.error('Custom sector save error:', e); }
+  }
+  const selected = getChipValues(wrapId);
+  renderContactSectorChips(wrapId, selected ? selected + ', ' + v : v);
+}
 const AU_REGIONS = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 const NZ_REGIONS = ['NTL', 'AKL', 'WKO', 'BOP', 'GIS', 'HKB', 'TKI', 'MWT', 'WGN', 'TSM', 'NSN', 'MBH', 'WTC', 'CAN', 'OTA', 'STL'];
 const ALL_REGIONS = [...AU_REGIONS, ...NZ_REGIONS, 'National'];
@@ -3329,7 +3359,7 @@ function renderDashboard() {
       <button class="${state.dashMode==='matrix'?'active':''}" onclick="state.dashMode='matrix';renderDashboard()">Acceptance Matrix</button>
       <button class="${state.dashMode==='heatmap'?'active':''}" onclick="state.dashMode='heatmap';renderDashboard()">Heatmap</button>
       <button class="${state.dashMode==='keyaccounts'?'active':''}" onclick="state.dashMode='keyaccounts';renderDashboard()">Accounts</button>
-      <button class="${state.dashMode==='contacts'?'active':''}" onclick="state.dashMode='contacts';renderDashboard()">Contacts</button>
+      <button class="${state.dashMode==='contacts'?'active':''}" onclick="state.dashMode='contacts';state.contactCompanyFilter=null;renderDashboard()">Contacts</button>
       <button class="${state.dashMode==='stalled'?'active':''}" onclick="state.dashMode='stalled';renderDashboard()">Stalled Accounts</button>
       <button class="${state.dashMode==='actions'?'active':''}" onclick="state.dashMode='actions';renderDashboard()">Actions</button>
     </div>
@@ -3812,7 +3842,7 @@ function keyAccountsTableSection() {
       statusBar += '</div>';
     }
     statusBar += '</div>';
-    return `<tr onclick="showAccountDetail('${a.id}')" style="cursor:pointer">
+    return `<tr onclick="dashCompanyContacts('${a.id}')" style="cursor:pointer">
       <td style="white-space:nowrap"><strong style="color:var(--g700)">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g600);font-weight:400;font-size:12px;margin-top:1px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
       <td>${statusBar}</td>
@@ -3863,6 +3893,7 @@ function renderDashboardContacts() {
     (c.phone || '').toLowerCase().includes(q) ||
     (a.company_name || '').toLowerCase().includes(q));
 
+  if (state.contactCompanyFilter) rows = rows.filter(({ a }) => a.id === state.contactCompanyFilter);
   if (state.contactKeyOnly) rows = rows.filter(({ c }) => c.is_key_influencer);
   if (state.contactInterestFilter) {
     const _if = state.contactInterestFilter.toLowerCase();
@@ -3916,6 +3947,7 @@ function renderDashboardContacts() {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px;flex-wrap:wrap">
       <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);white-space:nowrap">Contacts <span style="color:var(--g400);font-weight:400">· ${rows.length}</span></h3>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        ${state.contactCompanyFilter ? `<button onclick="state.contactCompanyFilter=null;renderDashboardContacts()" title="Clear company filter" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--vic-orange);background:var(--vic-orange);color:#fff">${esc((state.accounts.find(a => a.id === state.contactCompanyFilter) || {}).company_name || 'Company')} <span style="font-size:13px">&times;</span></button>` : ''}
         ${state.contactInterestFilter ? `<button onclick="state.contactInterestFilter=null;renderDashboardContacts()" title="Clear interest filter" style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--vic-orange);background:var(--vic-orange);color:#fff">${esc(state.contactInterestFilter)} <span style="font-size:13px">&times;</span></button>` : ''}
         <button onclick="state.contactKeyOnly=!state.contactKeyOnly;renderDashboardContacts()" title="Show only key influencers" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--g200)'};background:${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--white)'};color:${state.contactKeyOnly ? '#fff' : 'var(--g600)'}"><span style="font-size:14px">&#9733;</span> Key influencers only</button>
       </div>
@@ -3935,6 +3967,12 @@ function renderDashboardContacts() {
   </div></div>`;
 }
 
+// From the dashboard Accounts table: jump to the Contacts view filtered to one company
+function dashCompanyContacts(accountId) {
+  state.contactCompanyFilter = accountId;
+  state.dashMode = 'contacts';
+  renderDashboard();
+}
 function contactSort(col) {
   if ((state.contactSortCol || 'name') === col) state.contactSortDir = state.contactSortDir === 'desc' ? 'asc' : 'desc';
   else { state.contactSortCol = col; state.contactSortDir = 'asc'; }
@@ -7311,7 +7349,7 @@ function showAddContactGlobal() {
       </div>
     </form>`;
   document.getElementById('modal-overlay').classList.add('active');
-  renderChips('gc-sectors-wrap', CONTACT_SECTORS, '');
+  renderContactSectorChips('gc-sectors-wrap', '');
 }
 
 function gcToggleNewCompany() {
@@ -7433,7 +7471,7 @@ function showAddContact(accountId) {
     </form>
   `;
   document.getElementById('modal-overlay').classList.add('active');
-  renderChips('ct-sectors-wrap', CONTACT_SECTORS, '');
+  renderContactSectorChips('ct-sectors-wrap', '');
 }
 
 function showEditContact(contactId, accountId) {
@@ -7505,7 +7543,7 @@ function showEditContact(contactId, accountId) {
     </form>
   `;
   document.getElementById('modal-overlay').classList.add('active');
-  renderChips('ct-sectors-wrap', CONTACT_SECTORS, c.sector || '');
+  renderContactSectorChips('ct-sectors-wrap', c.sector || '');
 }
 
 async function handleSaveContact(e, existingId, accountId) {
