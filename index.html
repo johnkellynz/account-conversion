@@ -814,6 +814,30 @@ const STAGES = {
 const SECTORS = ['Health', 'Industrial', 'Mining', 'Data Centres', 'Water'];
 // Sector/discipline a contact works in (distinct from account key sectors — includes HVAC)
 const CONTACT_SECTORS = ['HVAC', 'Water', 'Mining', 'Infrastructure', 'Data Centres'];
+// Shared role suggestions for contact forms — kept alphabetical
+const CONTACT_ROLES = ['BIM / Technical Lead', 'Estimating Manager', 'Facilities Manager', 'MD / Director / Owner', 'Mechanical Engineer', 'Mechanical Lead', 'Operations Manager', 'Procurement Manager', 'Project Engineer', 'Project Manager', 'Site Foreman / Supervisor'];
+// Per-user custom roles — any manually-typed role is remembered on the user's profile
+// (falls back to this device only if the custom_roles column is missing)
+function userCustomRoles() {
+  let raw = state.profile ? state.profile.custom_roles : null;
+  if (raw == null) { try { raw = localStorage.getItem('kac_custom_roles_' + (state.user ? state.user.id : '')); } catch (e) {} }
+  return (raw || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+function contactRoleOptions() {
+  const seen = new Set(); const out = [];
+  [...CONTACT_ROLES, ...userCustomRoles()].forEach(r => { const k = r.toLowerCase(); if (!seen.has(k)) { seen.add(k); out.push(r); } });
+  return out.sort((a, b) => a.localeCompare(b));
+}
+async function rememberCustomRole(role) {
+  const v = (role || '').trim();
+  if (!v || v.toLowerCase() === 'other') return;
+  if (contactRoleOptions().some(r => r.toLowerCase() === v.toLowerCase())) return;
+  const list = userCustomRoles(); list.push(v);
+  const joined = list.join(', ');
+  if (state.profile) state.profile.custom_roles = joined;
+  try { localStorage.setItem('kac_custom_roles_' + (state.user ? state.user.id : ''), joined); } catch (e) {}
+  try { await supa.from('profiles').update({ custom_roles: joined }).eq('id', state.user.id); } catch (e) { console.error('Custom role save error:', e); }
+}
 // Per-user custom contact sectors — stored on the user's profile (falls back to this device only if the column is missing)
 function userCustomSectors() {
   let raw = state.profile ? state.profile.custom_sectors : null;
@@ -7325,7 +7349,7 @@ function gcFilterCountry() {
 function showAddContactGlobal() {
   const modal = document.getElementById('modal-content');
   const dc = getDefaultCountry();
-  const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','Mechanical Engineer','Operations Manager','Facilities Manager','Mechanical Lead'];
+  const roles = contactRoleOptions();
   modal.innerHTML = `
     <h2>Add Contact</h2>
     <form onsubmit="handleAddContactGlobal(event)">
@@ -7408,6 +7432,7 @@ async function handleAddContactGlobal(e) {
     acct = state.accounts.find(a => a.id === sel);
   }
   if (!acct) { toast('Please choose a company'); return; }
+  rememberCustomRole(document.getElementById('gc-role').value);
   await saveContact({
     account_id: acct.id,
     contact_name: name,
@@ -7456,7 +7481,7 @@ function showAddContact(accountId) {
       <div class="form-group">
         <label>Role</label>
         <input type="text" id="ct-role" list="ct-role-list" placeholder="Type or pick a role">
-        <datalist id="ct-role-list">${['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','Mechanical Engineer'].map(r=>`<option value="${r}">`).join('')}</datalist>
+        <datalist id="ct-role-list">${contactRoleOptions().map(r=>`<option value="${r}">`).join('')}</datalist>
       </div>
       <div class="form-group">
         <label>Sector</label>
@@ -7507,7 +7532,7 @@ function showEditContact(contactId, accountId) {
   const c = (state.contacts[accountId] || []).find(ct => ct.id === contactId);
   if (!c) return;
   const modal = document.getElementById('modal-content');
-  const roles = ['Estimating Manager','Project Engineer','Procurement Manager','BIM / Technical Lead','Site Foreman / Supervisor','MD / Director / Owner','Mechanical Engineer','Other'];
+  const roles = [...contactRoleOptions(), 'Other'];
   const _nm = (c.contact_name || '').trim();
   const _sp = _nm.indexOf(' ');
   const _first = _sp === -1 ? _nm : _nm.slice(0, _sp);
@@ -7582,6 +7607,7 @@ async function handleSaveContact(e, existingId, accountId) {
   const _last = document.getElementById('ct-last-name').value.trim();
   data.contact_name = (_first + ' ' + _last).trim();
   data.role = document.getElementById('ct-role').value;
+  rememberCustomRole(data.role);
   data.division = document.getElementById('ct-division').value.trim();
   data.reports_to = document.getElementById('ct-reports-to').value || null;
   data.email = document.getElementById('ct-email').value.trim();
