@@ -3133,6 +3133,30 @@ function filterByInterest(interest, event) {
   state.contactInterestFilter = (cur && cur.toLowerCase() === (interest || '').toLowerCase()) ? null : interest;
   renderDashboardContacts();
 }
+// Reports-to org chart for one account — used on the account Contacts tab and the
+// dashboard Contacts view when filtered to a single company
+function orgChartSection(accountId) {
+  const contacts = state.contacts[accountId] || [];
+  if (!contacts.length) return '';
+  const byId = {}; contacts.forEach(c => byId[c.id] = c);
+  const childrenMap = {};
+  contacts.forEach(c => { const key = (c.reports_to && byId[c.reports_to]) ? c.reports_to : '__root__'; (childrenMap[key] = childrenMap[key] || []).push(c); });
+  const orgNode = (c) => `<div class="org-node" onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="cursor:pointer">
+      <div style="font-weight:700;font-size:13px;color:var(--g900)">${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</div>
+      <div style="font-size:11px;color:var(--g500)">${c.role ? esc(c.role) : '&nbsp;'}</div>
+      <div style="font-size:11px;color:var(--vic-orange);font-weight:600;margin-top:1px">${c.division ? esc(c.division) : '&nbsp;'}</div>
+    </div>`;
+  const buildTree = (key, seen) => {
+    seen = seen || new Set();
+    const kids = (childrenMap[key] || []).filter(c => !seen.has(c.id));
+    if (!kids.length) return '';
+    return `<ul>${kids.map(c => { seen.add(c.id); return `<li>${orgNode(c)}${buildTree(c.id, seen)}</li>`; }).join('')}</ul>`;
+  };
+  return `<div class="dash-section" style="margin-top:16px;padding:14px 16px">
+    <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Org Chart</h3>
+    <div style="overflow-x:auto;padding:4px 0"><div class="org-tree">${buildTree('__root__')}</div></div>
+  </div>`;
+}
 function renderContacts(container) {
   const accountId = state.currentAccountId;
   const contacts = state.contacts[accountId] || [];
@@ -3159,7 +3183,7 @@ function renderContacts(container) {
           ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600;margin-bottom:8px"><span>&#9733;</span> Key influencer</div>` : ''}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font-size:13px;color:var(--g700)">
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Email</span><br>${c.email ? `<a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a>` : '—'}</div>
-            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Phone</span><br>${c.phone ? `<a href="tel:${esc(c.phone)}" onclick="event.stopPropagation()">${esc(c.phone)}</a>` : '—'}</div>
+            <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Phone</span><br>${c.phone ? `<a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a>` : '—'}</div>
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Role</span><br>${esc(c.role || '—')}</div>
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Division</span><br>${esc(c.division || '—')}</div>
             <div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400)">Interests</span><br>${interestPills(c.interests)}</div>
@@ -3176,26 +3200,7 @@ function renderContacts(container) {
   }
 
   // Org chart (reports-to tree) under the contacts list
-  if (contacts.length) {
-    const byId = {}; contacts.forEach(c => byId[c.id] = c);
-    const childrenMap = {};
-    contacts.forEach(c => { const key = (c.reports_to && byId[c.reports_to]) ? c.reports_to : '__root__'; (childrenMap[key] = childrenMap[key] || []).push(c); });
-    const orgNode = (c) => `<div class="org-node" onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="cursor:pointer">
-        <div style="font-weight:700;font-size:13px;color:var(--g900)">${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</div>
-        <div style="font-size:11px;color:var(--g500)">${c.role ? esc(c.role) : '&nbsp;'}</div>
-        <div style="font-size:11px;color:var(--vic-orange);font-weight:600;margin-top:1px">${c.division ? esc(c.division) : '&nbsp;'}</div>
-      </div>`;
-    const buildTree = (key, seen) => {
-      seen = seen || new Set();
-      const kids = (childrenMap[key] || []).filter(c => !seen.has(c.id));
-      if (!kids.length) return '';
-      return `<ul>${kids.map(c => { seen.add(c.id); return `<li>${orgNode(c)}${buildTree(c.id, seen)}</li>`; }).join('')}</ul>`;
-    };
-    html += `<div class="dash-section" style="margin-top:16px;padding:14px 16px">
-      <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Org Chart</h3>
-      <div style="overflow-x:auto;padding:4px 0"><div class="org-tree">${buildTree('__root__')}</div></div>
-    </div>`;
-  }
+  html += orgChartSection(accountId);
 
   container.innerHTML = html;
   // If we arrived here by jumping to a specific person, scroll their (already-expanded) card into view
@@ -4003,7 +4008,7 @@ function renderDashboardContacts() {
   const body = rows.map(({ c, a }) => {
     const bits = [];
     if (c.email) bits.push(`<a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()" style="color:var(--info);text-decoration:none">${esc(c.email)}</a>`);
-    if (c.phone) bits.push(`<a href="tel:${esc(c.phone)}" onclick="event.stopPropagation()" style="color:var(--g600);text-decoration:none">${esc(c.phone)}</a>`);
+    if (c.phone) bits.push(`<a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()" style="color:var(--g600);text-decoration:none">${esc(formatPhone(c.phone))}</a>`);
     const _lc = lastActTs(c);
     let lastContacted = '—';
     if (_lc) {
@@ -4018,7 +4023,7 @@ function renderDashboardContacts() {
       <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--g300);text-underline-offset:3px">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td style="font-size:12px;color:var(--g600)">${interests}</td>
-      <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.join('<br>') || '—'}</td>
+      <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.map(b => `<div style="margin:3px 0;overflow:hidden;text-overflow:ellipsis">${b}</div>`).join('') || '—'}</td>
       <td style="font-size:12px;color:var(--g600);white-space:nowrap;text-align:center">${lastContacted}</td>
     </tr>`;
   }).join('');
@@ -4045,7 +4050,7 @@ function renderDashboardContacts() {
       </tr></thead>
       <tbody>${body}</tbody>
     </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">${q ? 'No contacts match your search.' : 'No contacts yet — add people from any company to see them here.'}</div>`}
-  </div></div>`;
+  </div></div>${state.contactCompanyFilter ? orgChartSection(state.contactCompanyFilter) : ''}`;
 }
 
 // From the dashboard Accounts table: jump to the Contacts view filtered to one company
