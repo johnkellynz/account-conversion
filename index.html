@@ -3239,9 +3239,9 @@ function orgChartSection(accountId, flush) {
   const childrenMap = {};
   contacts.forEach(c => { const key = (c.reports_to && byId[c.reports_to]) ? c.reports_to : '__root__'; (childrenMap[key] = childrenMap[key] || []).push(c); });
   const orgNode = (c) => `<div class="org-node" onclick="event.stopPropagation();showEditContact('${c.id}','${accountId}')" style="cursor:pointer">
-      <div style="font-weight:700;font-size:13px;color:var(--g900)">${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</div>
-      <div style="font-size:11px;color:var(--g500)">${c.role ? esc(c.role) : '&nbsp;'}</div>
-      <div style="font-size:11px;color:var(--vic-orange);font-weight:600;margin-top:1px">${c.division ? esc(c.division) : '&nbsp;'}</div>
+      <div style="font-weight:700;font-size:14px;color:var(--g800)">${esc(c.contact_name)}${c.is_key_influencer ? ' <span style="color:var(--vic-orange)">&#9733;</span>' : ''}</div>
+      <div style="font-size:12px;color:var(--g500);margin-top:2px">${c.role ? esc(c.role) : '&nbsp;'}</div>
+      <div style="font-size:12px;color:var(--vic-orange);font-weight:600;margin-top:2px">${c.division ? esc(c.division) : '&nbsp;'}</div>
     </div>`;
   const buildTree = (key, seen) => {
     seen = seen || new Set();
@@ -3275,7 +3275,7 @@ function renderContacts(container) {
           </div>
           <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
             ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600"><span>&#9733;</span> Key influencer</div>` : ''}
-            ${c.linkedin_connected ? `<div style="font-size:12px;color:#0A66C2;font-weight:600"><span title="Connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:#0A66C2;color:#fff;font-size:10px;font-weight:700;margin-right:6px;vertical-align:middle">in</span> Connected on LinkedIn</div>` : ''}
+            <div style="font-size:12px;font-weight:600;color:${c.linkedin_connected ? '#0A66C2' : 'var(--g400)'}"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:${c.linkedin_connected ? '#0A66C2' : 'var(--g300)'};color:#fff;font-size:10px;font-weight:700;margin-right:6px;vertical-align:middle">in</span>${c.linkedin_connected ? 'Connected on LinkedIn' : 'Not connected on LinkedIn'}</div>
             ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a></div>` : ''}
             ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a></div>` : ''}
             ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
