@@ -1267,7 +1267,7 @@ function renderPageSearchResults() {
   const accts = (state.accounts || []).filter(a => accountMatchesSearch(a, q)).slice(0, 6);
   const people = [];
   (state.accounts || []).forEach(a => (state.contacts[a.id] || []).forEach(c => {
-    if ((c.contact_name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.role || '').toLowerCase().includes(q)) people.push({ c, a });
+    if ((c.contact_name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.role || '').toLowerCase().includes(q) || (c.interests || '').toLowerCase().includes(q)) people.push({ c, a });
   }));
   const header = (t) => `<div style="padding:7px 14px 3px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g400)">${t}</div>`;
   const row = (onclick, main, sub) => `<div onclick="hidePageSearchResults();${onclick}" style="padding:8px 14px;cursor:pointer;font-size:13px;color:var(--g700);border-bottom:1px solid var(--g100)" onmouseover="this.style.background='var(--g50)'" onmouseout="this.style.background=''"><strong style="color:var(--g800)">${main}</strong>${sub ? `<span style="color:var(--g500);font-size:12px"> — ${sub}</span>` : ''}</div>`;
@@ -1324,7 +1324,7 @@ function accountMatchesSearch(a, q) {
   if ((a.key_sectors || '').toLowerCase().includes(q)) return true;
   if (getRepFullName(a.assigned_to).toLowerCase().includes(q)) return true;
   const contacts = state.contacts[a.id] || [];
-  if (contacts.some(c => (c.contact_name || '').toLowerCase().includes(q) || (c.role || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q))) return true;
+  if (contacts.some(c => (c.contact_name || '').toLowerCase().includes(q) || (c.role || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q) || (c.interests || '').toLowerCase().includes(q))) return true;
   const notes = state.notes[a.id] || [];
   if (notes.some(n => (n.note || '').toLowerCase().includes(q))) return true;
   return false;
@@ -3275,6 +3275,7 @@ function renderContacts(container) {
           </div>
           <div id="cdet-${c.id}" style="display:${_open ? 'block' : 'none'};text-align:right;font-size:13px;color:var(--g700);line-height:1.7;min-width:0">
             ${c.is_key_influencer ? `<div style="font-size:12px;color:var(--vic-orange);font-weight:600"><span>&#9733;</span> Key influencer</div>` : ''}
+            ${c.linkedin_connected ? `<div style="font-size:12px;color:#0A66C2;font-weight:600"><span title="Connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:#0A66C2;color:#fff;font-size:10px;font-weight:700;margin-right:6px;vertical-align:middle">in</span> Connected on LinkedIn</div>` : ''}
             ${c.email ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Email</span><a href="mailto:${esc(c.email)}" onclick="event.stopPropagation()">${esc(c.email)}</a></div>` : ''}
             ${c.phone ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Phone</span><a href="tel:${esc(c.phone.replace(/[^\d+]/g, ''))}" onclick="event.stopPropagation()">${esc(formatPhone(c.phone))}</a></div>` : ''}
             ${c.division ? `<div><span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--g400);margin-right:6px">Division</span>${esc(c.division)}</div>` : ''}
@@ -4045,6 +4046,7 @@ function renderDashboardContacts() {
     (c.role || '').toLowerCase().includes(q) ||
     (c.email || '').toLowerCase().includes(q) ||
     (c.phone || '').toLowerCase().includes(q) ||
+    (c.interests || '').toLowerCase().includes(q) ||
     (a.company_name || '').toLowerCase().includes(q));
 
   if (state.contactCompanyFilter) rows = rows.filter(({ a }) => a.id === state.contactCompanyFilter);
@@ -4088,11 +4090,11 @@ function renderDashboardContacts() {
     const interests = interestPills(c.interests, true);
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="text-align:center;width:34px">${c.is_key_influencer ? '<span style="color:var(--vic-orange);font-size:16px" title="Key influencer">&#9733;</span>' : '<span style="color:var(--g300);font-size:16px">&#9734;</span>'}</td>
-      <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
+      <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong>${c.linkedin_connected ? `<span title="Connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:#0A66C2;color:#fff;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle">in</span>` : ''}</td>
       <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px;margin-top:6px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
-      <td style="font-size:12px;color:var(--g600)">${interests}</td>
       <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.map(b => `<div style="margin:3px 0;overflow:hidden;text-overflow:ellipsis">${b}</div>`).join('') || '—'}</td>
+      <td style="font-size:12px;color:var(--g600)">${interests}</td>
       <td style="font-size:12px;color:var(--g600);white-space:nowrap;text-align:center">${lastContacted}</td>
     </tr>`;
   }).join('');
@@ -4113,8 +4115,8 @@ function renderDashboardContacts() {
         <th style="cursor:pointer;user-select:none${sActive('name')}" onclick="contactSort('name')">Name${sIcon('name')}</th>
         <th style="cursor:pointer;user-select:none${sActive('company')}" onclick="contactSort('company')">Company${sIcon('company')}</th>
         <th style="cursor:pointer;user-select:none${sActive('role')}" onclick="contactSort('role')">Role${sIcon('role')}</th>
+        <th style="white-space:nowrap">Contact Info</th>
         <th style="cursor:pointer;user-select:none${sActive('interests')}" onclick="contactSort('interests')">Interests${sIcon('interests')}</th>
-        <th style="white-space:nowrap">Email / Phone</th>
         <th style="cursor:pointer;user-select:none;text-align:center${sActive('lastcontacted')}" onclick="contactSort('lastcontacted')">Last Contacted${sIcon('lastcontacted')}</th>
       </tr></thead>
       <tbody>${body}</tbody>
@@ -7499,6 +7501,10 @@ function showAddContactGlobal() {
         <input type="checkbox" id="gc-influencer" style="width:22px;height:22px;accent-color:var(--vic-orange)">
         <label for="gc-influencer" style="margin:0">Key buying influencer</label>
       </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="gc-linkedin" style="width:22px;height:22px;accent-color:#0A66C2">
+        <label for="gc-linkedin" style="margin:0">Connected on LinkedIn</label>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
         <button type="submit" class="btn-save">Add Contact</button>
@@ -7543,7 +7549,8 @@ async function handleAddContactGlobal(e) {
     sector: getChipValues('gc-sectors-wrap'),
     email: document.getElementById('gc-email').value.trim(),
     phone: formatPhone(document.getElementById('gc-phone').value),
-    is_key_influencer: document.getElementById('gc-influencer').checked
+    is_key_influencer: document.getElementById('gc-influencer').checked,
+    linkedin_connected: document.getElementById('gc-linkedin').checked
   });
   closeModal();
   if (state.currentView === 'detail') renderAccountDetail();
@@ -7621,6 +7628,10 @@ function showAddContact(accountId) {
         <input type="checkbox" id="ct-influencer" style="width:22px;height:22px;accent-color:var(--vic-orange)">
         <label for="ct-influencer" style="margin:0">Key buying influencer</label>
       </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="ct-linkedin" style="width:22px;height:22px;accent-color:#0A66C2">
+        <label for="ct-linkedin" style="margin:0">Connected on LinkedIn</label>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
         <button type="submit" class="btn-save">Add Contact</button>
@@ -7693,6 +7704,10 @@ function showEditContact(contactId, accountId) {
         <input type="checkbox" id="ct-influencer" ${c.is_key_influencer?'checked':''} style="width:22px;height:22px;accent-color:var(--vic-orange)">
         <label for="ct-influencer" style="margin:0">Key buying influencer</label>
       </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="ct-linkedin" ${c.linkedin_connected?'checked':''} style="width:22px;height:22px;accent-color:#0A66C2">
+        <label for="ct-linkedin" style="margin:0">Connected on LinkedIn</label>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
         <button type="submit" class="btn-save">Save</button>
@@ -7716,6 +7731,7 @@ async function handleSaveContact(e, existingId, accountId) {
   data.email = document.getElementById('ct-email').value.trim();
   data.phone = formatPhone(document.getElementById('ct-phone').value);
   data.is_key_influencer = document.getElementById('ct-influencer').checked;
+  data.linkedin_connected = document.getElementById('ct-linkedin').checked;
   data.sector = getChipValues('ct-sectors-wrap');
   data.interests = document.getElementById('ct-interests').value.trim();
   await saveContact(data);
