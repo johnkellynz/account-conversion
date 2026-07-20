@@ -3224,6 +3224,81 @@ function interestPills(str, clickable) {
     return `<span class="badge"${extra} style="${style}">${esc(it)}</span>`;
   }).join('')}</div>`;
 }
+// Org chart PDF report — every branch of the company, local trees intact,
+// cross-branch reporting lines called out per person and summarised at the end.
+function generateOrgChartPDF(accountId) {
+  const acct = state.accounts.find(a => a.id === accountId);
+  if (!acct) return;
+  const base = acct.company_name.replace(/^\[TEST\]\s*/, '');
+  const branches = state.accounts
+    .filter(a => a.company_name.replace(/^\[TEST\]\s*/, '') === base)
+    .sort((a, b) => (a.hq_city || '').localeCompare(b.hq_city || ''));
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageH = 297, margin = 14, lineW = 210 - margin * 2;
+  let y = 18;
+  const ensure = (need) => { if (y + need > pageH - 14) { doc.addPage(); y = 18; } };
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(30);
+  doc.text(`${base} — Organisation Chart`, margin, y); y += 6;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120);
+  doc.text(`${branches.length} branch${branches.length === 1 ? '' : 'es'} · Generated ${new Date().toLocaleDateString('en-NZ', { day: 'numeric', month: 'long', year: 'numeric' })}`, margin, y); y += 8;
+  const crossLinks = [];
+  branches.forEach(br => {
+    const contacts = state.contacts[br.id] || [];
+    ensure(14);
+    doc.setFillColor(245, 130, 32); doc.rect(margin, y - 4.5, lineW, 7, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(255);
+    doc.text(`${(br.hq_city || 'Branch').toUpperCase()}${br.regions ? '  ·  ' + br.regions : ''}`, margin + 2, y); y += 8;
+    if (!contacts.length) {
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(150);
+      doc.text('No contacts mapped', margin + 2, y); y += 7;
+      return;
+    }
+    const byId = {}; contacts.forEach(c => byId[c.id] = c);
+    const kids = {};
+    contacts.forEach(c => { const k = (c.reports_to && byId[c.reports_to]) ? c.reports_to : '__root__'; (kids[k] = kids[k] || []).push(c); });
+    Object.values(kids).forEach(list => list.sort((a, b) => (a.contact_name || '').localeCompare(b.contact_name || '')));
+    const walk = (key, depth, seen) => {
+      (kids[key] || []).forEach(c => {
+        if (seen.has(c.id)) return; seen.add(c.id);
+        const x = margin + 2 + depth * 7;
+        // external manager annotation for local roots
+        if (depth === 0 && c.reports_to && !byId[c.reports_to]) {
+          const ext = findContactGlobal(c.reports_to);
+          if (ext) {
+            const extBranch = ext.account ? `${ext.account.company_name.replace(/^\[TEST\]\s*/, '')}${ext.account.hq_city ? ' · ' + ext.account.hq_city : ''}` : 'other branch';
+            ensure(5);
+            doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(130);
+            doc.text(`\u2197 reports to ${ext.c.contact_name} — ${extBranch}`, x, y); y += 4;
+            crossLinks.push(`${c.contact_name} (${br.hq_city || 'branch'}) \u2192 ${ext.c.contact_name} (${extBranch})`);
+          }
+        }
+        ensure(6);
+        if (depth > 0) { doc.setDrawColor(200); doc.line(x - 3.5, y - 1.5, x - 1, y - 1.5); }
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(40);
+        const name = `${c.contact_name}${c.is_key_influencer ? ' \u2605' : ''}`;
+        doc.text(name, x, y);
+        const nameW = doc.getTextWidth(name);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110);
+        const extra = [c.role, c.division].filter(Boolean).join('  ·  ');
+        if (extra) doc.text(`  —  ${extra}`, x + nameW, y);
+        y += 5.2;
+        walk(c.id, depth + 1, seen);
+      });
+    };
+    walk('__root__', 0, new Set());
+    y += 5;
+  });
+  if (crossLinks.length) {
+    ensure(12 + crossLinks.length * 5);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(30);
+    doc.text('Cross-branch reporting lines', margin, y); y += 5.5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(90);
+    crossLinks.forEach(l => { ensure(5); doc.text(l, margin + 2, y); y += 4.6; });
+  }
+  doc.save(`KAC_OrgChart_${base.replace(/[^a-z0-9]+/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+  toast('Org chart report downloaded');
+}
 // Find a contact by id across every loaded account (for cross-branch reporting lines)
 function findContactGlobal(contactId) {
   if (!contactId) return null;
@@ -3308,7 +3383,10 @@ function orgChartSection(accountId, flush) {
     return `<ul>${kids.map(c => { seen.add(c.id); return `<li>${orgNode(c)}${buildTree(c.id, seen)}</li>`; }).join('')}</ul>`;
   };
   return `<div class="dash-section" style="${flush ? 'margin:16px 0 10px' : 'margin-top:16px'};padding:14px 16px">
-    <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Org Chart</h3>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:0 0 8px">
+      <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Org Chart</h3>
+      <button onclick="event.stopPropagation();generateOrgChartPDF('${accountId}')" title="Download org chart report — all branches of this company" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--g200);background:var(--white);color:var(--g600);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF</button>
+    </div>
     <div style="overflow-x:auto;padding:4px 0"><div class="org-tree">${buildTree('__root__')}</div></div>
   </div>`;
 }
