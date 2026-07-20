@@ -442,6 +442,12 @@ select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmln
 .sector-chip { padding: 7px 12px; border-radius: 20px; font-size: 13px; font-weight: 500; background: var(--g100); border: 1.5px solid var(--g200); color: var(--g700); cursor: pointer; transition: all .15s; user-select: none; }
 .sector-chip.selected { background: var(--vic-orange); color: var(--white); border-color: var(--vic-orange); }
 
+/* Direct reports checklist (org chart tree builder) */
+.direct-reports-list { border: 1.5px solid var(--g300); border-radius: var(--radius-sm); padding: 10px 14px; max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: var(--white); }
+.direct-reports-list label { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 400; color: var(--g900); margin: 0; cursor: pointer; }
+.direct-reports-list input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--vic-orange); }
+.direct-reports-list .dr-empty { font-size: 13px; color: var(--g400); }
+
 /* ---------- HAMBURGER MENU & NAV DRAWER ---------- */
 .hamburger-btn {
   display: block;
@@ -3286,20 +3292,35 @@ function generateOrgChartPDF(accountId) {
             const extBranch = ext.account ? `${ext.account.company_name.replace(/^\[TEST\]\s*/, '')}${ext.account.hq_city ? ' · ' + ext.account.hq_city : ''}` : 'other branch';
             ensure(5);
             doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(130);
-            doc.text(`\u2197 reports to ${ext.c.contact_name} — ${extBranch}`, x, y); y += 4;
-            crossLinks.push(`${c.contact_name} (${br.hq_city || 'branch'}) \u2192 ${ext.c.contact_name} (${extBranch})`);
+            doc.text(`reports to ${ext.c.contact_name} — ${extBranch}`, x, y); y += 4;
+            crossLinks.push(`${c.contact_name} (${br.hq_city || 'branch'}) -> ${ext.c.contact_name} (${extBranch})`);
           }
         }
-        ensure(6);
+        ensure(9);
         if (depth > 0) { doc.setDrawColor(200); doc.line(x - 3.5, y - 1.5, x - 1, y - 1.5); }
         doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(40);
-        const name = `${c.contact_name}${c.is_key_influencer ? ' \u2605' : ''}`;
-        doc.text(name, x, y);
-        const nameW = doc.getTextWidth(name);
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(110);
+        doc.text(c.contact_name, x, y);
+        if (c.is_key_influencer) {
+          // Key-influencer marker: drawn as a small filled dot rather than a Unicode star
+          // glyph. jsPDF's standard Helvetica font can't encode that star, so it was
+          // rendering as the wrong character (or nothing) in every viewer, not just Chrome.
+          const nameW = doc.getTextWidth(c.contact_name);
+          doc.setFillColor(245, 130, 32);
+          doc.circle(x + nameW + 2.2, y - 1.6, 0.9, 'F');
+        }
+        y += 4.2;
+        // Role/division goes on its own line below the name rather than being appended inline
+        // via getTextWidth(name) — jsPDF's getTextWidth uses its built-in Helvetica metrics,
+        // which don't always match the substitute bold font some PDF viewers (e.g. Chrome)
+        // render with, and that mismatch made this text overlap the name above it.
         const extra = [c.role, c.division].filter(Boolean).join('  ·  ');
-        if (extra) doc.text(`  —  ${extra}`, x + nameW, y);
-        y += 5.2;
+        if (extra) {
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120);
+          doc.text(extra, x, y);
+          y += 4.4;
+        } else {
+          y += 0.6;
+        }
         walk(c.id, depth + 1, seen);
       });
     };
@@ -3340,6 +3361,32 @@ function reportsToOptions(accountId, selectedId, excludeId) {
   });
   others.sort((x, y) => x.sort.localeCompare(y.sort));
   return `<option value="">— None (top of org) —</option>${local}${others.length ? `<optgroup label="Other branches">${others.map(o => o.html).join('')}</optgroup>` : ''}`;
+}
+// Checklist of this account's other contacts, for picking this contact's direct reports.
+// Anyone ticked gets their Reports To set to contactId on save; anyone unticked who
+// previously reported here gets cleared. contactId is null for a not-yet-created contact.
+function directReportsChecklist(accountId, contactId) {
+  const list = (state.contacts[accountId] || []).filter(ct => ct.id !== contactId);
+  if (!list.length) return `<div class="dr-empty">No other contacts at this company yet</div>`;
+  return [...list].sort((a, b) => (a.contact_name || '').localeCompare(b.contact_name || ''))
+    .map(ct => `<label><input type="checkbox" class="ct-direct-report-cb" value="${ct.id}" ${contactId && ct.reports_to === contactId ? 'checked' : ''}> ${esc(ct.contact_name)}${ct.role ? ` <span style="color:var(--g400)">— ${esc(ct.role)}</span>` : ''}</label>`)
+    .join('');
+}
+// Apply a Direct Reports checklist: sets/clears reports_to on every affected contact in the account.
+async function applyDirectReports(accountId, managerId) {
+  const wrap = document.getElementById('ct-direct-reports-wrap');
+  if (!wrap) return;
+  const selected = new Set([...wrap.querySelectorAll('.ct-direct-report-cb:checked')].map(cb => cb.value));
+  const list = (state.contacts[accountId] || []).filter(ct => ct.id !== managerId);
+  for (const ct of list) {
+    const shouldReport = selected.has(ct.id);
+    const currentlyReports = ct.reports_to === managerId;
+    if (shouldReport && !currentlyReports) {
+      await saveContact({ ...ct, reports_to: managerId });
+    } else if (!shouldReport && currentlyReports) {
+      await saveContact({ ...ct, reports_to: null });
+    }
+  }
 }
 // Click the star to flip a contact's key-influencer flag in place
 async function toggleKeyInfluencer(accountId, contactId, event) {
@@ -7919,6 +7966,11 @@ function showAddContact(accountId) {
         <select id="ct-reports-to">${reportsToOptions(accountId, null, null)}</select>
       </div>
       <div class="form-group">
+        <label>Direct Reports</label>
+        <div id="ct-direct-reports-wrap" class="direct-reports-list">${directReportsChecklist(accountId, null)}</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Tick anyone at this company who reports to this person — sets their Reports To automatically</div>
+      </div>
+      <div class="form-group">
         <label>Email</label>
         <input type="email" id="ct-email" placeholder="email@company.com">
       </div>
@@ -8004,6 +8056,11 @@ function showEditContact(contactId, accountId) {
         <select id="ct-reports-to">${reportsToOptions(accountId, c.reports_to, contactId)}</select>
       </div>
       <div class="form-group">
+        <label>Direct Reports</label>
+        <div id="ct-direct-reports-wrap" class="direct-reports-list">${directReportsChecklist(accountId, contactId)}</div>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Tick anyone at this company who reports to ${esc(_first || 'this person')} — sets their Reports To automatically</div>
+      </div>
+      <div class="form-group">
         <label>Email</label>
         <input type="email" id="ct-email" value="${esc(c.email)}">
       </div>
@@ -8061,6 +8118,9 @@ async function handleSaveContact(e, existingId, accountId) {
   data.sector = getChipValues('ct-sectors-wrap');
   data.interests = document.getElementById('ct-interests').value.trim();
   await saveContact(data);
+  // Direct Reports checklist was rendered against the original account (accountId) — apply
+  // it there so ticking/unticking people sets or clears their Reports To back to this contact.
+  await applyDirectReports(accountId, data.id);
   if (movedFrom) {
     state.contacts[movedFrom] = (state.contacts[movedFrom] || []).filter(c => c.id !== data.id);
     const bLabel = (id) => { const a = state.accounts.find(x => x.id === id); return a ? `${a.company_name.replace(/^\[TEST\]\s*/, '')}${a.hq_city ? ' (' + a.hq_city + ')' : ''}` : '—'; };
