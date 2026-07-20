@@ -3224,6 +3224,16 @@ function interestPills(str, clickable) {
     return `<span class="badge"${extra} style="${style}">${esc(it)}</span>`;
   }).join('')}</div>`;
 }
+// Click the "in" badge to flip a contact's LinkedIn-connected flag in place
+async function toggleLinkedInConnected(accountId, contactId, event) {
+  if (event) event.stopPropagation();
+  const c = (state.contacts[accountId] || []).find(x => x.id === contactId);
+  if (!c) return;
+  await saveContact({ ...c, linkedin_connected: !c.linkedin_connected });
+  if (state.currentView === 'dashboard' && state.dashMode === 'contacts') renderDashboardContacts();
+  else if (state.currentView === 'detail') renderDetailTab();
+  toast(!c.linkedin_connected ? 'Marked connected on LinkedIn' : 'Marked not connected on LinkedIn');
+}
 function filterByInterest(interest, event) {
   if (event) event.stopPropagation();
   const cur = state.contactInterestFilter;
@@ -4093,7 +4103,7 @@ function renderDashboardContacts() {
       <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px;margin-top:6px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.map(b => `<div style="margin:3px 0;overflow:hidden;text-overflow:ellipsis">${b}</div>`).join('') || '—'}</td>
-      <td style="text-align:center">${c.linkedin_connected ? `<span title="Connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#0A66C2;color:#fff;font-size:11px;font-weight:700">in</span>` : `<span title="Not connected on LinkedIn" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:var(--g200);color:var(--g400);font-size:11px;font-weight:700">in</span>`}</td>
+      <td style="text-align:center">${c.linkedin_connected ? `<span onclick="toggleLinkedInConnected('${a.id}','${c.id}',event)" title="Connected on LinkedIn — click to mark not connected" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#0A66C2;color:#fff;font-size:11px;font-weight:700;cursor:pointer">in</span>` : `<span onclick="toggleLinkedInConnected('${a.id}','${c.id}',event)" title="Not connected on LinkedIn — click to mark connected" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:var(--g200);color:var(--g400);font-size:11px;font-weight:700;cursor:pointer">in</span>`}</td>
       <td style="font-size:12px;color:var(--g600);white-space:nowrap;text-align:center">${lastContacted}</td>
     </tr>`;
   }).join('');
