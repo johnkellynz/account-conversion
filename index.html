@@ -4004,6 +4004,7 @@ function renderDashboardContacts() {
         <button onclick="state.contactKeyOnly=!state.contactKeyOnly;renderDashboardContacts()" title="Show only key influencers" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--g200)'};background:${state.contactKeyOnly ? 'var(--vic-orange)' : 'var(--white)'};color:${state.contactKeyOnly ? '#fff' : 'var(--g600)'}"><span style="font-size:14px">&#9733;</span> Key influencers only</button>
       </div>
     </div>
+    ${state.contactCompanyFilter ? `<button class="btn-add" onclick="showAddContact('${state.contactCompanyFilter}')" style="margin:4px 0 12px;width:100%;justify-content:center">+ Add Contact</button>` : ''}
     ${rows.length ? `<table class="data-table">
       <thead><tr>
         <th style="cursor:pointer;user-select:none;text-align:center;width:34px${sActive('keyinfluencer')}" onclick="contactSort('keyinfluencer')" title="Sort by key influencer">&#9733;${sIcon('keyinfluencer')}</th>
@@ -7617,7 +7618,9 @@ async function handleSaveContact(e, existingId, accountId) {
   data.interests = document.getElementById('ct-interests').value.trim();
   await saveContact(data);
   closeModal();
-  renderDetailTab();
+  // Refresh whichever view the contact was added from
+  if (state.currentView === 'dashboard' && state.dashMode === 'contacts') renderDashboardContacts();
+  else renderDetailTab();
   toast(existingId ? 'Contact updated' : 'Contact added');
 }
 
