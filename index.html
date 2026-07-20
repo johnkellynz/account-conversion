@@ -2331,7 +2331,7 @@ function showAccountDetail(id) {
   if (state.currentView) pushHistory({ type: 'view', view: state.currentView });
   state.currentAccountId = id;
   state.currentView = 'detail';
-  state.detailTab = 'contacts';
+  state.detailTab = 'acceptance';
   state._expandContactId = null;
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-detail').classList.add('active');
@@ -2654,8 +2654,8 @@ function renderAccountDetail() {
     </div>
 
     <div class="detail-tabs">
-      <button class="detail-tab ${state.detailTab==='contacts'?'active':''}" onclick="switchDetailTab('contacts')">Contacts</button>
       <button class="detail-tab ${state.detailTab==='acceptance'?'active':''}" onclick="switchDetailTab('acceptance')">Acceptance</button>
+      <button class="detail-tab ${state.detailTab==='contacts'?'active':''}" onclick="switchDetailTab('contacts')">Contacts</button>
       <button class="detail-tab ${state.detailTab==='notes'?'active':''}" onclick="switchDetailTab('notes')">Notes</button>
       <button class="detail-tab ${state.detailTab==='checklist'?'active':''}" onclick="switchDetailTab('checklist')">Checklist</button>
     </div>
@@ -7798,6 +7798,11 @@ function showEditContact(contactId, accountId) {
   modal.innerHTML = `
     <h2>Edit Contact</h2>
     <form onsubmit="handleSaveContact(event, '${contactId}', '${accountId}')">
+      <div class="form-group">
+        <label>Company</label>
+        <select id="ct-company">${[...state.accounts].sort((x, y) => (x.company_name || '').localeCompare(y.company_name || '') || (x.hq_city || '').localeCompare(y.hq_city || '')).map(a => `<option value="${a.id}" ${a.id === accountId ? 'selected' : ''}>${esc(a.company_name.replace(/^\[TEST\]\s*/, ''))}${a.hq_city ? ` — ${esc(a.hq_city)}` : ''}</option>`).join('')}</select>
+        <div style="font-size:11px;color:var(--g400);margin-top:4px">Changing this moves the contact to the new company and records it in their activity</div>
+      </div>
       <div class="form-row">
         <div class="form-group">
           <label>First Name *</label>
@@ -7862,6 +7867,13 @@ function showEditContact(contactId, accountId) {
 async function handleSaveContact(e, existingId, accountId) {
   e.preventDefault();
   const data = existingId ? { ...(state.contacts[accountId] || []).find(c => c.id === existingId) } : { account_id: accountId };
+  // Company move (edit form only): reassign the contact and record the move as activity
+  let movedFrom = null;
+  const compSel = document.getElementById('ct-company');
+  if (existingId && compSel && compSel.value && compSel.value !== accountId) {
+    movedFrom = accountId;
+    data.account_id = compSel.value;
+  }
   const _first = document.getElementById('ct-first-name').value.trim();
   const _last = document.getElementById('ct-last-name').value.trim();
   data.contact_name = (_first + ' ' + _last).trim();
@@ -7876,11 +7888,17 @@ async function handleSaveContact(e, existingId, accountId) {
   data.sector = getChipValues('ct-sectors-wrap');
   data.interests = document.getElementById('ct-interests').value.trim();
   await saveContact(data);
+  if (movedFrom) {
+    state.contacts[movedFrom] = (state.contacts[movedFrom] || []).filter(c => c.id !== data.id);
+    const bLabel = (id) => { const a = state.accounts.find(x => x.id === id); return a ? `${a.company_name.replace(/^\[TEST\]\s*/, '')}${a.hq_city ? ' (' + a.hq_city + ')' : ''}` : '—'; };
+    await logActivity(data.account_id, data.id, 'Company Change', `${data.contact_name} moved from ${bLabel(movedFrom)} to ${bLabel(data.account_id)}`);
+    await logActivity(movedFrom, null, 'Company Change', `${data.contact_name} moved to ${bLabel(data.account_id)}`);
+  }
   closeModal();
   // Refresh whichever view the contact was added from
   if (state.currentView === 'dashboard' && state.dashMode === 'contacts') renderDashboardContacts();
   else renderDetailTab();
-  toast(existingId ? 'Contact updated' : 'Contact added');
+  toast(movedFrom ? 'Contact moved — recorded in activity' : (existingId ? 'Contact updated' : 'Contact added'));
 }
 
 // ======================== ONLINE/OFFLINE ========================
