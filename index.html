@@ -3992,7 +3992,7 @@ function renderDashboardMatrix() {
   });
   const prodHtml = `<div style="display:grid;grid-template-columns:repeat(5,1fr)">` + rows.map((r, i) => {
     const pp = perProduct[r.id];
-    const pct = pp.eligible > 0 ? Math.round(pp.approved / pp.eligible * 100) : 0;
+    const pct = pp.eligible > 0 ? Math.round(pp.score / pp.eligible * 100) : 0;
     const gPts = pp.eligible > 0 ? Math.round((pp.apprGain - pp.rejGain) / pp.eligible * 1000)/10 : 0;
     const divider = (i % 5 !== 4) && (i !== rows.length - 1);
     const bottomDivider = Math.floor(i/5) < Math.floor((rows.length-1)/5);
@@ -4605,9 +4605,9 @@ function renderMatrixView(targetId, embedded) {
   const naStatus = statuses.find(s => s.label === 'N/A');
   const inProgressStatus = statuses.find(s => s.label === 'In Progress');
 
-  let totalApproved = 0, totalRejected = 0, totalInProgress = 0, totalNA = 0, totalCells = 0;
+  let totalApproved = 0, totalRejected = 0, totalInProgress = 0, totalNA = 0, totalCells = 0, totalScore = 0;
   const perProduct = {};
-  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0 });
+  rows.forEach(r => perProduct[r.id] = { approved: 0, inProgress: 0, rejected: 0, total: 0, eligible: 0, score: 0 });
 
   accts.forEach(a => {
     const data = state.matrixData[a.id] || [];
@@ -4617,6 +4617,10 @@ function renderMatrixView(targetId, embedded) {
         perProduct[row.id].total++;
         const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
         if (cell) {
+          if (!naStatus || cell.status_id !== naStatus.id) {
+            const _stW = statusWeight((statuses.find(s => s.id === cell.status_id) || {}).label);
+            totalScore += _stW; perProduct[row.id].score += _stW;
+          }
           if (approvedStatus && cell.status_id === approvedStatus.id) { totalApproved++; perProduct[row.id].approved++; }
           else if (rejectedStatus && cell.status_id === rejectedStatus.id) { totalRejected++; perProduct[row.id].rejected++; }
           else if (naStatus && cell.status_id === naStatus.id) { totalNA++; }
@@ -4644,20 +4648,21 @@ function renderMatrixView(targetId, embedded) {
   });
 
   const totalEligible = totalCells - totalNA;
-  const overallRate = totalEligible > 0 ? Math.round(totalApproved / totalEligible * 100) : 0;
+  const overallRate = totalEligible > 0 ? Math.round(totalScore / totalEligible * 100) : 0;
   const scoreColor = overallRate >= 75 ? '#34D399' : overallRate >= 40 ? '#FBBF24' : overallRate > 0 ? '#F58220' : '#94A3B8';
 
   // Per-account acceptance for scoring
   const acctScores = accts.map(a => {
     const data = state.matrixData[a.id] || [];
-    let approved = 0, eligible = 0;
+    let approved = 0, eligible = 0, score = 0;
     rows.forEach(row => cols.forEach(col => {
       const cell = data.find(d => d.row_id === row.id && d.col_id === col.id);
       if (cell && naStatus && cell.status_id === naStatus.id) return;
       eligible++;
+      if (cell) score += statusWeight((statuses.find(s => s.id === cell.status_id) || {}).label);
       if (cell && approvedStatus && cell.status_id === approvedStatus.id) approved++;
     }));
-    return { ...a, mxApproved: approved, mxEligible: eligible, mxRate: eligible > 0 ? Math.round(approved / eligible * 100) : 0 };
+    return { ...a, mxApproved: approved, mxEligible: eligible, mxRate: eligible > 0 ? Math.round(score / eligible * 100) : 0 };
   });
 
   // Movement KPIs — count accounts by acceptance tier
@@ -4696,7 +4701,7 @@ function renderMatrixView(targetId, embedded) {
     <div style="display:flex;flex-direction:column;gap:8px">`;
   rows.forEach(r => {
     const pp = perProduct[r.id];
-    const pct = pp.eligible > 0 ? Math.round(pp.approved / pp.eligible * 100) : 0;
+    const pct = pp.eligible > 0 ? Math.round(pp.score / pp.eligible * 100) : 0;
     const pColor = pct > 0 ? '#F58220' : '#94A3B8';
     kpiHtml += `<div style="display:flex;align-items:center;gap:10px">
       <span style="font-size:12px;font-weight:600;min-width:120px;color:var(--g700)">${esc(r.label)}</span>
