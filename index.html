@@ -818,6 +818,30 @@ const STAGES = {
 const SECTORS = ['Health', 'Industrial', 'Mining', 'Data Centres', 'Water'];
 // Sector/discipline a contact works in (distinct from account key sectors — includes HVAC)
 const CONTACT_SECTORS = ['HVAC', 'Water', 'Mining', 'Infrastructure', 'Data Centres'];
+// Format a phone number with spaces (country code + readable groups), e.g.
+// "+6421123456" → "+64 21 123 456", "0412345678" → "0412 345 678". Non-digit
+// input (extensions, letters) is left as typed.
+function formatPhone(raw) {
+  const t = (raw || '').trim();
+  if (!t || /[^\d+\s()\-]/.test(t)) return t;
+  const v = t.replace(/[^\d+]/g, '');
+  if (!v) return t;
+  let cc = '', rest = v;
+  if (v.startsWith('+')) {
+    const known = ['+64', '+61', '+679', '+675', '+685', '+676', '+683', '+44', '+86', '+81', '+65', '+91', '+49', '+33', '+1', '+7'];
+    cc = known.find(k => v.startsWith(k));
+    if (!cc) { const m = v.match(/^\+\d{1,2}/); if (!m) return t; cc = m[0]; }
+    rest = v.slice(cc.length);
+    if (rest.startsWith('0')) rest = rest.slice(1);
+  }
+  // Group from the right: last 4 digits, then 3s — 7 digits reads +XX XXX XXXX
+  const parts = [];
+  let r = rest;
+  if (r.length > 4) { parts.unshift(r.slice(-4)); r = r.slice(0, -4); }
+  while (r.length > 3) { parts.unshift(r.slice(-3)); r = r.slice(0, -3); }
+  if (r) parts.unshift(r);
+  return (cc ? cc + ' ' : '') + parts.join(' ');
+}
 // Shared role suggestions for contact forms — kept alphabetical
 const CONTACT_ROLES = ['BIM / Technical Lead', 'Estimating Manager', 'Facilities Manager', 'MD / Director / Owner', 'Mechanical Engineer', 'Mechanical Lead', 'Operations Manager', 'Procurement Manager', 'Project Engineer', 'Project Manager', 'Site Foreman / Supervisor'];
 // Per-user custom roles — any manually-typed role is remembered on the user's profile
@@ -7395,7 +7419,7 @@ function showAddContactGlobal() {
       </div>
       <div class="form-row">
         <div class="form-group"><label>Email</label><input type="email" id="gc-email" placeholder="email@company.com"></div>
-        <div class="form-group"><label>Phone</label><input type="tel" id="gc-phone" placeholder="+61 ..."></div>
+        <div class="form-group"><label>Phone</label><input type="tel" id="gc-phone" placeholder="+61 ..." onblur="this.value=formatPhone(this.value)"></div>
       </div>
       <div class="form-group" style="display:flex;align-items:center;gap:8px">
         <input type="checkbox" id="gc-influencer" style="width:22px;height:22px;accent-color:var(--vic-orange)">
@@ -7444,7 +7468,7 @@ async function handleAddContactGlobal(e) {
     role: document.getElementById('gc-role').value.trim(),
     sector: getChipValues('gc-sectors-wrap'),
     email: document.getElementById('gc-email').value.trim(),
-    phone: document.getElementById('gc-phone').value.trim(),
+    phone: formatPhone(document.getElementById('gc-phone').value),
     is_key_influencer: document.getElementById('gc-influencer').checked
   });
   closeModal();
@@ -7511,7 +7535,7 @@ function showAddContact(accountId) {
       </div>
       <div class="form-group">
         <label>Phone</label>
-        <input type="tel" id="ct-phone" placeholder="+61 ...">
+        <input type="tel" id="ct-phone" placeholder="+61 ..." onblur="this.value=formatPhone(this.value)">
       </div>
       <div class="form-group">
         <label>Interests</label>
@@ -7583,7 +7607,7 @@ function showEditContact(contactId, accountId) {
       </div>
       <div class="form-group">
         <label>Phone</label>
-        <input type="tel" id="ct-phone" value="${esc(c.phone)}">
+        <input type="tel" id="ct-phone" value="${esc(c.phone)}" onblur="this.value=formatPhone(this.value)">
       </div>
       <div class="form-group">
         <label>Interests</label>
@@ -7616,7 +7640,7 @@ async function handleSaveContact(e, existingId, accountId) {
   data.division = document.getElementById('ct-division').value.trim();
   data.reports_to = document.getElementById('ct-reports-to').value || null;
   data.email = document.getElementById('ct-email').value.trim();
-  data.phone = document.getElementById('ct-phone').value.trim();
+  data.phone = formatPhone(document.getElementById('ct-phone').value);
   data.is_key_influencer = document.getElementById('ct-influencer').checked;
   data.sector = getChipValues('ct-sectors-wrap');
   data.interests = document.getElementById('ct-interests').value.trim();
