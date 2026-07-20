@@ -2034,8 +2034,8 @@ async function addNote(accountId, text) {
 
 // ======================== CONTACT ACTIVITY ========================
 const ACTIVITY_TYPES = ['Call', 'Email', 'Meeting', 'Site visit', 'Presentation', 'Sample/Demo'];
-async function logActivity(accountId, contactId, type, note) {
-  const act = { id: uuid(), account_id: accountId, contact_id: contactId || null, user_id: state.user.id, activity_type: type, note: (note || '').trim() || null, created_at: new Date().toISOString() };
+async function logActivity(accountId, contactId, type, note, createdAt) {
+  const act = { id: uuid(), account_id: accountId, contact_id: contactId || null, user_id: state.user.id, activity_type: type, note: (note || '').trim() || null, created_at: createdAt || new Date().toISOString() };
   await db.activities.put(act);
   try {
     await supa.from('kac_activities').insert(act);
@@ -2047,6 +2047,9 @@ async function logActivity(accountId, contactId, type, note) {
   if (!state.activities[accountId]) state.activities[accountId] = [];
   state.activities[accountId].unshift(act);
   state.allActivities.unshift(act);
+  const desc = (a, b) => (b.created_at || '').localeCompare(a.created_at || '');
+  state.activities[accountId].sort(desc);
+  state.allActivities.sort(desc);
   return act;
 }
 async function loadAllActivities() {
@@ -2058,11 +2061,15 @@ async function loadAllActivities() {
     state.allActivities = await db.activities.orderBy('created_at').reverse().toArray();
   }
 }
-async function updateActivity(id, type, note) {
+async function updateActivity(id, type, note, createdAt) {
   const patch = { activity_type: type, note: (note || '').trim() || null };
-  const apply = (a) => { if (a && a.id === id) { a.activity_type = patch.activity_type; a.note = patch.note; } };
+  if (createdAt) patch.created_at = createdAt;
+  const apply = (a) => { if (a && a.id === id) { a.activity_type = patch.activity_type; a.note = patch.note; if (patch.created_at) a.created_at = patch.created_at; } };
   state.allActivities.forEach(apply);
   Object.values(state.activities).forEach(list => list && list.forEach(apply));
+  const desc = (a, b) => (b.created_at || '').localeCompare(a.created_at || '');
+  state.allActivities.sort(desc);
+  Object.values(state.activities).forEach(list => list && list.sort(desc));
   try { await db.activities.update(id, patch); } catch (_) {}
   try {
     await supa.from('kac_activities').update(patch).eq('id', id);
@@ -2086,58 +2093,80 @@ async function deleteActivity(id) {
 }
 function editActivity(id, event) {
   if (event) event.stopPropagation();
-  document.querySelectorAll('.confirm-pop').forEach(el => el.remove());
   let act = state.allActivities.find(a => a.id === id);
   if (!act) { for (const list of Object.values(state.activities)) { const f = list && list.find(a => a.id === id); if (f) { act = f; break; } } }
   if (!act) return;
-  let selType = act.activity_type;
-  const pop = document.createElement('div');
-  pop.className = 'confirm-pop';
-  pop.style.minWidth = '230px';
-  pop.innerHTML = `<div class="cp-msg">Edit activity</div>
-    <input id="edit-act-note" placeholder="Optional note…" autocomplete="off" style="width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid var(--g200);border-radius:6px;font-size:12px;margin-bottom:10px">
-    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
-      ${ACTIVITY_TYPES.map(t => `<button class="edit-act-type" data-type="${esc(t)}" style="text-align:left;background:${t===selType?'var(--vic-orange)':'var(--g100)'};border:1px solid ${t===selType?'var(--vic-orange)':'var(--g200)'};color:${t===selType?'#fff':'var(--g700)'};padding:7px 10px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">${esc(t)}</button>`).join('')}
+  showActivityForm(act.account_id, act.contact_id, act);
+}
+
+// Re-render whichever view is showing activity data after a log/edit/delete
+function refreshActivityViews() {
+  if (state.currentView === 'activity') renderActivityView();
+  if (state.currentView === 'detail' && document.getElementById('detail-tab-content')) renderDetailTab();
+  if (state.currentView === 'dashboard' && state.dashMode === 'contacts') renderDashboardContacts();
+}
+
+// Full-form activity modal — used for both logging (act = null) and editing
+function showActivityForm(accountId, contactId, act) {
+  const contact = contactId ? (state.contacts[accountId] || []).find(c => c.id === contactId) : null;
+  const account = state.accounts.find(a => a.id === accountId);
+  const today = new Date().toISOString().slice(0, 10);
+  let selType = act ? act.activity_type : null;
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <h2>${act ? 'Edit Activity' : 'Log Activity'}</h2>
+    <p style="color:var(--g600);font-size:13px;margin:-14px 0 18px">${esc(contact ? contact.contact_name : '')}${contact && account ? ' · ' : ''}${account ? esc(account.company_name.replace(/^\[TEST\]\s*/, '')) : ''}</p>
+    <div class="form-group">
+      <label>Activity Type *</label>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${ACTIVITY_TYPES.map(t => `<button type="button" class="af-type" data-type="${esc(t)}" style="padding:11px 4px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--g200);background:var(--g100);color:var(--g700)">${esc(t)}</button>`).join('')}
+      </div>
     </div>
-    <div style="display:flex;gap:6px">
-      <button id="edit-act-save" style="flex:1;background:var(--vic-orange);border:none;color:#fff;padding:8px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Save</button>
-      <button id="edit-act-del" title="Delete entry" style="background:var(--white);border:1px solid var(--danger);color:var(--danger);padding:8px 10px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer">Delete</button>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="af-date" value="${act && act.created_at ? act.created_at.slice(0, 10) : today}" max="${today}">
+    </div>
+    <div class="form-group">
+      <label>Note</label>
+      <textarea id="af-note" rows="3" placeholder="What was discussed, outcomes, next steps…" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--g200);border-radius:var(--radius-xs);font-size:14px;font-family:inherit;resize:vertical">${act && act.note ? esc(act.note) : ''}</textarea>
+    </div>
+    <div class="modal-actions">
+      ${act ? `<button type="button" id="af-delete" style="padding:0 16px;border:1px solid var(--danger);background:var(--white);color:var(--danger);border-radius:var(--radius-xs);font-size:14px;font-weight:600;cursor:pointer">Delete</button>` : ''}
+      <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button type="button" class="btn-save" id="af-save">${act ? 'Save' : 'Log Activity'}</button>
     </div>`;
-  document.body.appendChild(pop);
-  pop.querySelector('#edit-act-note').value = act.note || '';
-  const x = event && event.clientX || window.innerWidth / 2, y = event && event.clientY || window.innerHeight / 2;
-  const r = pop.getBoundingClientRect();
-  let left = x + 10, top = y + 10;
-  if (left + r.width > window.innerWidth - 8) left = Math.max(8, x - r.width - 10);
-  if (top + r.height > window.innerHeight - 8) top = Math.max(8, window.innerHeight - r.height - 8);
-  pop.style.left = left + 'px';
-  pop.style.top = top + 'px';
-  const close = () => { pop.remove(); document.removeEventListener('mousedown', outside, true); };
-  const outside = (e) => { if (!pop.contains(e.target)) close(); };
-  setTimeout(() => document.addEventListener('mousedown', outside, true), 0);
-  pop.querySelectorAll('.edit-act-type').forEach(btn => btn.onclick = () => {
-    selType = btn.dataset.type;
-    pop.querySelectorAll('.edit-act-type').forEach(b => {
-      const on = b.dataset.type === selType;
-      b.style.background = on ? 'var(--vic-orange)' : 'var(--g100)';
-      b.style.borderColor = on ? 'var(--vic-orange)' : 'var(--g200)';
-      b.style.color = on ? '#fff' : 'var(--g700)';
-    });
+  document.getElementById('modal-overlay').classList.add('active');
+  const paint = () => modal.querySelectorAll('.af-type').forEach(b => {
+    const on = b.dataset.type === selType;
+    b.style.background = on ? 'var(--vic-orange)' : 'var(--g100)';
+    b.style.borderColor = on ? 'var(--vic-orange)' : 'var(--g200)';
+    b.style.color = on ? '#fff' : 'var(--g700)';
   });
-  pop.querySelector('#edit-act-save').onclick = async () => {
-    const note = pop.querySelector('#edit-act-note').value;
-    close();
-    await updateActivity(id, selType, note);
-    if (state.currentView === 'activity') renderActivityView();
-    if (state.detailTab === 'contacts' && document.getElementById('detail-tab-content')) renderDetailTab();
-    toast('Activity updated');
+  modal.querySelectorAll('.af-type').forEach(b => b.onclick = () => { selType = b.dataset.type; paint(); });
+  paint();
+  modal.querySelector('#af-save').onclick = async () => {
+    if (!selType) { toast('Pick an activity type'); return; }
+    const note = modal.querySelector('#af-note').value;
+    const dateVal = modal.querySelector('#af-date').value;
+    // Keep the original timestamp when the date hasn't changed; noon otherwise so timezones don't shift the day
+    let createdAt = null;
+    if (dateVal) {
+      if (act && act.created_at && act.created_at.slice(0, 10) === dateVal) createdAt = act.created_at;
+      else if (dateVal === today && !act) createdAt = new Date().toISOString();
+      else createdAt = new Date(dateVal + 'T12:00:00').toISOString();
+    }
+    closeModal();
+    if (act) await updateActivity(act.id, selType, note, createdAt);
+    else await logActivity(accountId, contactId, selType, note, createdAt);
+    refreshActivityViews();
+    toast(act ? 'Activity updated' : 'Logged: ' + selType);
   };
-  pop.querySelector('#edit-act-del').onclick = async () => {
+  const del = modal.querySelector('#af-delete');
+  if (del) del.onclick = async () => {
     if (!confirm('Delete this activity entry?')) return;
-    close();
-    await deleteActivity(id);
-    if (state.currentView === 'activity') renderActivityView();
-    if (state.detailTab === 'contacts' && document.getElementById('detail-tab-content')) renderDetailTab();
+    closeModal();
+    await deleteActivity(act.id);
+    refreshActivityViews();
     toast('Activity deleted');
   };
 }
@@ -3298,35 +3327,8 @@ async function confirmDeleteContact(contactId, accountId, event) {
 }
 // Cursor-anchored menu to log an interaction against a contact.
 function showActivityMenu(event, accountId, contactId) {
-  event.stopPropagation();
-  document.querySelectorAll('.confirm-pop').forEach(el => el.remove());
-  const pop = document.createElement('div');
-  pop.className = 'confirm-pop';
-  pop.style.minWidth = '210px';
-  pop.innerHTML = `<div class="cp-msg">Log activity</div>
-    <input id="act-note" placeholder="Optional note…" autocomplete="off" style="width:100%;box-sizing:border-box;padding:7px 9px;border:1px solid var(--g200);border-radius:6px;font-size:12px;margin-bottom:10px">
-    <div style="display:flex;flex-direction:column;gap:5px">
-      ${ACTIVITY_TYPES.map(t => `<button class="act-type" data-type="${esc(t)}" style="text-align:left;background:var(--g100);border:1px solid var(--g200);color:var(--g700);padding:7px 10px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer">${esc(t)}</button>`).join('')}
-    </div>`;
-  document.body.appendChild(pop);
-  const x = event.clientX || window.innerWidth / 2, y = event.clientY || window.innerHeight / 2;
-  const r = pop.getBoundingClientRect();
-  let left = x + 10, top = y + 10;
-  if (left + r.width > window.innerWidth - 8) left = Math.max(8, x - r.width - 10);
-  if (top + r.height > window.innerHeight - 8) top = Math.max(8, window.innerHeight - r.height - 8);
-  pop.style.left = left + 'px';
-  pop.style.top = top + 'px';
-  const close = () => { pop.remove(); document.removeEventListener('mousedown', outside, true); };
-  const outside = (e) => { if (!pop.contains(e.target)) close(); };
-  setTimeout(() => document.addEventListener('mousedown', outside, true), 0);
-  pop.querySelectorAll('.act-type').forEach(btn => btn.onclick = async () => {
-    const note = pop.querySelector('#act-note').value;
-    const type = btn.dataset.type;
-    close();
-    await logActivity(accountId, contactId, type, note);
-    renderDetailTab();
-    toast('Logged: ' + type);
-  });
+  if (event) event.stopPropagation();
+  showActivityForm(accountId, contactId, null);
 }
 
 // ======================== RENDER: NOTES ========================
