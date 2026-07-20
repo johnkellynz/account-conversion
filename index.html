@@ -811,7 +811,7 @@ const STAGES = {
 };
 
 // ======================== SECTOR OPTIONS ========================
-const SECTORS = ['Commercial', 'Health', 'Industrial', 'Mining', 'Data Centres', 'Education', 'Government', 'Retail', 'Water'];
+const SECTORS = ['Health', 'Industrial', 'Mining', 'Data Centres', 'Water'];
 // Sector/discipline a contact works in (distinct from account key sectors — includes HVAC)
 const CONTACT_SECTORS = ['HVAC', 'Water', 'Mining', 'Infrastructure', 'Data Centres'];
 // Per-user custom contact sectors — stored on the user's profile (falls back to this device only if the column is missing)
@@ -847,6 +847,34 @@ async function addCustomContactSector(wrapId) {
 const AU_REGIONS = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 const NZ_REGIONS = ['NTL', 'AKL', 'WKO', 'BOP', 'GIS', 'HKB', 'TKI', 'MWT', 'WGN', 'TSM', 'NSN', 'MBH', 'WTC', 'CAN', 'OTA', 'STL'];
 const ALL_REGIONS = [...AU_REGIONS, ...NZ_REGIONS, 'National'];
+// City → region auto-fill for the account form (lowercase keys)
+const CITY_REGION = {
+  // NZ
+  'whangarei': 'NTL', 'auckland': 'AKL', 'hamilton': 'WKO', 'taupo': 'WKO', 'cambridge': 'WKO',
+  'tauranga': 'BOP', 'te puke': 'BOP', 'mount maunganui': 'BOP', 'rotorua': 'BOP', 'whakatane': 'BOP',
+  'gisborne': 'GIS', 'napier': 'HKB', 'hastings': 'HKB', 'new plymouth': 'TKI',
+  'palmerston north': 'MWT', 'whanganui': 'MWT', 'wellington': 'WGN', 'lower hutt': 'WGN',
+  'upper hutt': 'WGN', 'porirua': 'WGN', 'richmond': 'TSM', 'motueka': 'TSM', 'nelson': 'NSN',
+  'blenheim': 'MBH', 'greymouth': 'WTC', 'hokitika': 'WTC', 'christchurch': 'CAN', 'timaru': 'CAN',
+  'ashburton': 'CAN', 'rangiora': 'CAN', 'dunedin': 'OTA', 'queenstown': 'OTA', 'wanaka': 'OTA',
+  'oamaru': 'OTA', 'invercargill': 'STL', 'gore': 'STL',
+  // AU
+  'sydney': 'NSW', 'newcastle': 'NSW', 'wollongong': 'NSW', 'parramatta': 'NSW',
+  'melbourne': 'VIC', 'geelong': 'VIC', 'ballarat': 'VIC', 'bendigo': 'VIC',
+  'brisbane': 'QLD', 'gold coast': 'QLD', 'sunshine coast': 'QLD', 'townsville': 'QLD',
+  'cairns': 'QLD', 'toowoomba': 'QLD', 'perth': 'WA', 'fremantle': 'WA', 'adelaide': 'SA',
+  'hobart': 'TAS', 'launceston': 'TAS', 'canberra': 'ACT', 'darwin': 'NT', 'alice springs': 'NT'
+};
+// Auto-select the matching region chip when the HQ city is recognised (never deselects anything)
+function autofillRegionFromCity() {
+  const inp = document.getElementById('acc-city');
+  const wrap = document.getElementById('acc-regions-wrap');
+  if (!inp || !wrap) return;
+  const code = CITY_REGION[inp.value.trim().toLowerCase()];
+  if (!code) return;
+  const chip = [...wrap.querySelectorAll('.sector-chip')].find(el => el.textContent === code);
+  if (chip) chip.classList.add('selected');
+}
 const REGION_NAMES = {
   WA:'Western Australia',NT:'Northern Territory',SA:'South Australia',QLD:'Queensland',
   NSW:'New South Wales',VIC:'Victoria',TAS:'Tasmania',ACT:'ACT',
@@ -3843,7 +3871,7 @@ function keyAccountsTableSection() {
     }
     statusBar += '</div>';
     return `<tr onclick="dashCompanyContacts('${a.id}')" style="cursor:pointer">
-      <td style="white-space:nowrap"><strong style="color:var(--g700)">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g600);font-weight:400;font-size:12px;margin-top:1px">${esc(a.hq_city)}</div>` : ''}</td>
+      <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);cursor:pointer;text-decoration:underline;text-decoration-color:var(--g300);text-underline-offset:3px">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g600);font-weight:400;font-size:12px;margin-top:1px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600);white-space:nowrap">${opp}</td>
       <td>${statusBar}</td>
       <td style="font-size:13px;color:var(--g700);white-space:nowrap">${esc(repName(a.assigned_to))}</td>
@@ -3935,7 +3963,7 @@ function renderDashboardContacts() {
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="text-align:center;width:34px">${c.is_key_influencer ? '<span style="color:var(--vic-orange);font-size:16px" title="Key influencer">&#9733;</span>' : '<span style="color:var(--g300);font-size:16px">&#9734;</span>'}</td>
       <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
-      <td style="white-space:nowrap"><strong style="color:var(--g700);font-weight:600">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}</td>
+      <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--g300);text-underline-offset:3px">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td style="font-size:12px;color:var(--g600)">${interests}</td>
       <td style="font-size:12px;color:var(--g600)">${bits.join('<br>') || '—'}</td>
@@ -7085,7 +7113,7 @@ function showAddAccount() {
       </div>
       <div class="form-group">
         <label>HQ City</label>
-        <input type="text" id="acc-city" placeholder="e.g. Sydney">
+        <input type="text" id="acc-city" placeholder="e.g. Sydney" oninput="autofillRegionFromCity()">
       </div>
       <div class="form-group">
         <label>Regions / States (select all that apply)</label>
@@ -7143,7 +7171,7 @@ function showEditAccount(id) {
       </div>
       <div class="form-group">
         <label>HQ City</label>
-        <input type="text" id="acc-city" value="${esc(a.hq_city)}">
+        <input type="text" id="acc-city" value="${esc(a.hq_city)}" oninput="autofillRegionFromCity()">
       </div>
       <div class="form-group">
         <label>Regions / States (select all that apply)</label>
@@ -7195,6 +7223,7 @@ async function handleSaveAccount(e, existingId) {
   data.hq_city = document.getElementById('acc-city').value.trim();
   data.key_sectors = getChipValues('acc-sectors-wrap');
   data.regions = getChipValues('acc-regions-wrap');
+  if (!data.regions) { toast('Select at least one region / state'); return; }
   data.currency = document.getElementById('acc-currency').value;
   data.estimated_revenue = document.getElementById('acc-revenue').value.replace(/,/g, '').trim();
   if (existingId) data.psa_tier = document.getElementById('acc-psa')?.value || '';
