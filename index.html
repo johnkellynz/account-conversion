@@ -813,7 +813,7 @@ const STAGES = {
 // ======================== SECTOR OPTIONS ========================
 const SECTORS = ['Commercial', 'Health', 'Industrial', 'Mining', 'Data Centres', 'Education', 'Government', 'Retail', 'Water'];
 // Sector/discipline a contact works in (distinct from account key sectors — includes HVAC)
-const CONTACT_SECTORS = ['HVAC', 'Fire Protection', 'Water', 'Plumbing', 'Mechanical Services', 'Mining', 'Industrial', 'Data Centres', 'Oil & Gas', 'Power', 'Marine'];
+const CONTACT_SECTORS = ['HVAC', 'Water', 'Mining', 'Industrial', 'Data Centres', 'Oil & Gas'];
 const AU_REGIONS = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT'];
 const NZ_REGIONS = ['NTL', 'AKL', 'WKO', 'BOP', 'GIS', 'HKB', 'TKI', 'MWT', 'WGN', 'TSM', 'NSN', 'MBH', 'WTC', 'CAN', 'OTA', 'STL'];
 const ALL_REGIONS = [...AU_REGIONS, ...NZ_REGIONS, 'National'];
@@ -7006,7 +7006,8 @@ function renderChips(wrapperId, options, selectedStr) {
   const wrap = document.getElementById(wrapperId);
   if (!wrap) return;
   const selected = (selectedStr || '').split(',').map(s => s.trim()).filter(Boolean);
-  wrap.innerHTML = options.map(s =>
+  const opts = [...options, ...selected.filter(s => !options.includes(s))];
+  wrap.innerHTML = opts.map(s =>
     `<span class="sector-chip ${selected.includes(s) ? 'selected' : ''}" onclick="this.classList.toggle('selected')">${s}</span>`
   ).join('');
 }
