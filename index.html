@@ -3135,7 +3135,7 @@ function filterByInterest(interest, event) {
 }
 // Reports-to org chart for one account — used on the account Contacts tab and the
 // dashboard Contacts view when filtered to a single company
-function orgChartSection(accountId) {
+function orgChartSection(accountId, flush) {
   const contacts = state.contacts[accountId] || [];
   if (!contacts.length) return '';
   const byId = {}; contacts.forEach(c => byId[c.id] = c);
@@ -3152,7 +3152,7 @@ function orgChartSection(accountId) {
     if (!kids.length) return '';
     return `<ul>${kids.map(c => { seen.add(c.id); return `<li>${orgNode(c)}${buildTree(c.id, seen)}</li>`; }).join('')}</ul>`;
   };
-  return `<div class="dash-section" style="margin-top:16px;padding:14px 16px">
+  return `<div class="dash-section" style="${flush ? 'margin:16px 0 10px' : 'margin-top:16px'};padding:14px 16px">
     <h3 style="margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500)">Org Chart</h3>
     <div style="overflow-x:auto;padding:4px 0"><div class="org-tree">${buildTree('__root__')}</div></div>
   </div>`;
@@ -3196,8 +3196,8 @@ function renderContacts(container) {
     });
   }
 
-  // Org chart (reports-to tree) under the contacts list
-  html += orgChartSection(accountId);
+  // Org chart (reports-to tree) under the contacts list — flush so it matches the card width
+  html += orgChartSection(accountId, true);
 
   container.innerHTML = html;
   // If we arrived here by jumping to a specific person, scroll their (already-expanded) card into view
@@ -4019,7 +4019,7 @@ function renderDashboardContacts() {
     return `<tr onclick="openContactFromDirectory('${a.id}','${c.id}')" style="cursor:pointer">
       <td style="text-align:center;width:34px">${c.is_key_influencer ? '<span style="color:var(--vic-orange);font-size:16px" title="Key influencer">&#9733;</span>' : '<span style="color:var(--g300);font-size:16px">&#9734;</span>'}</td>
       <td style="white-space:nowrap"><strong style="color:var(--g800)">${esc(c.contact_name)}</strong></td>
-      <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--g300);text-underline-offset:3px">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}</td>
+      <td style="white-space:nowrap"><strong onclick="event.stopPropagation();showAccountDetail('${a.id}')" title="Open company page" style="color:var(--g700);font-weight:600;cursor:pointer;text-decoration:underline;text-decoration-color:var(--g300);text-underline-offset:3px">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px;margin-top:6px">${esc(a.hq_city)}</div>` : ''}</td>
       <td style="font-size:13px;color:var(--g600)">${esc(c.role || '—')}</td>
       <td style="font-size:12px;color:var(--g600)">${interests}</td>
       <td class="cell-clip" style="font-size:12px;color:var(--g600)" title="${esc([c.email, c.phone].filter(Boolean).join(' · '))}">${bits.map(b => `<div style="margin:3px 0;overflow:hidden;text-overflow:ellipsis">${b}</div>`).join('') || '—'}</td>
