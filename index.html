@@ -4517,21 +4517,38 @@ function renderDashboardActions() {
       <td style="white-space:nowrap;vertical-align:top"><span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:${stageColors[stage]};padding:2px 8px;border-radius:10px">${esc(STAGES[stage].name)}</span><div style="font-size:11px;color:var(--g400);margin-top:3px">${comp.done}/${comp.total} steps</div></td>
       <td style="vertical-align:top;font-size:13px;max-width:440px"><span style="color:var(--g700);border-bottom:1px dashed var(--g300)">${esc(nextItem.label)}</span></td>
       <td style="white-space:nowrap;vertical-align:top;text-align:center;font-size:12px">${lastTxt}</td>
+      <td style="vertical-align:top;text-align:center" onclick="event.stopPropagation()">
+        <input type="checkbox" title="Confirm this step is done — shows the next task from the playbook" style="width:20px;height:20px;accent-color:var(--vic-orange);cursor:pointer" onchange="confirmNextStep(event,'${a.id}',${stage},'${nextItem.key}')">
+      </td>
     </tr>`;
   }).join('');
 
   el.innerHTML = `<div class="dash-section"><div class="table-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
       <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);white-space:nowrap">Next Steps <span style="color:var(--g400);font-weight:400">· ${rows.length} open</span></h3>
-      <span style="font-size:11px;color:var(--g400);white-space:nowrap">Most stalled first — click a row to open its checklist</span>
+      <span style="font-size:11px;color:var(--g400);white-space:nowrap">Most stalled first — click a row to open its checklist, or tick to confirm</span>
     </div>
     ${rows.length ? `<table class="data-table">
       <thead><tr>
-        <th>Account</th><th>Stage</th><th>Next Step</th><th style="text-align:center;white-space:nowrap">Last Touched</th>
+        <th>Account</th><th>Stage</th><th>Next Step</th><th style="text-align:center;white-space:nowrap">Last Touched</th><th style="text-align:center;white-space:nowrap">Confirm</th>
       </tr></thead>
       <tbody>${body}</tbody>
     </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">Nothing outstanding — every account has completed its current playbook step. &#127881;</div>`}
   </div></div>`;
+}
+
+// Ticking the checkbox in the Next Steps list marks the current step done, then re-renders —
+// which recomputes each account's outstanding item fresh, so this same row immediately shows
+// whatever the NEW next task from the playbook is (or the row drops out if nothing's left).
+async function confirmNextStep(event, accountId, stage, itemKey) {
+  if (event) event.stopPropagation();
+  await toggleChecklistItem(accountId, stage, itemKey, true);
+  const newStage = recalcCurrentStage(accountId);
+  const items = (STAGES[newStage] && STAGES[newStage].items) || [];
+  const cl = (state.checklist[accountId] || []).filter(c => c.stage === newStage);
+  const nextItem = items.find(it => !cl.find(c => c.item_key === it.key && (c.completed || c.na)));
+  toast(nextItem ? `Confirmed — next: ${nextItem.label}` : 'Confirmed — nothing else outstanding for this account \u{1F389}');
+  renderDashboardActions();
 }
 
 function openAccountChecklist(accountId) {
