@@ -4515,31 +4515,23 @@ function renderDashboardActions() {
     return `<tr onclick="openAccountChecklist('${a.id}')" style="cursor:pointer">
       <td style="white-space:nowrap;vertical-align:top"><strong style="color:var(--g800)">${acctLabel(a.company_name)}</strong>${a.hq_city ? `<div style="color:var(--g500);font-weight:400;font-size:12px">${esc(a.hq_city)}</div>` : ''}<div style="font-size:11px;color:var(--g400);margin-top:2px">${esc(repName(a.assigned_to))}</div></td>
       <td style="white-space:nowrap;vertical-align:top"><span style="display:inline-block;font-size:11px;font-weight:700;color:#fff;background:${stageColors[stage]};padding:2px 8px;border-radius:10px">${esc(STAGES[stage].name)}</span><div style="font-size:11px;color:var(--g400);margin-top:3px">${comp.done}/${comp.total} steps</div></td>
-      <td style="vertical-align:top;font-size:13px;max-width:440px"><span onclick="event.stopPropagation();openAccountChecklist('${a.id}')" title="Open this account's checklist" style="color:var(--g700);cursor:pointer;border-bottom:1px dashed var(--g300)" onmouseover="this.style.color='var(--vic-orange)'" onmouseout="this.style.color='var(--g700)'">${esc(nextItem.label)}</span></td>
+      <td style="vertical-align:top;font-size:13px;max-width:440px"><span style="color:var(--g700);border-bottom:1px dashed var(--g300)">${esc(nextItem.label)}</span></td>
       <td style="white-space:nowrap;vertical-align:top;text-align:center;font-size:12px">${lastTxt}</td>
-      <td style="vertical-align:top;text-align:center"><button onclick="completeNextStep(event,'${a.id}',${stage},'${nextItem.key}')" title="Mark this step done" style="padding:6px 10px;border:1px solid var(--success);background:var(--success-bg);color:var(--success);border-radius:var(--radius-xs);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">&#10003; Done</button></td>
     </tr>`;
   }).join('');
 
   el.innerHTML = `<div class="dash-section"><div class="table-wrap">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 0 8px">
       <h3 style="margin:0;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--g500);white-space:nowrap">Next Steps <span style="color:var(--g400);font-weight:400">· ${rows.length} open</span></h3>
-      <span style="font-size:11px;color:var(--g400);white-space:nowrap">Most stalled first</span>
+      <span style="font-size:11px;color:var(--g400);white-space:nowrap">Most stalled first — click a row to open its checklist</span>
     </div>
     ${rows.length ? `<table class="data-table">
       <thead><tr>
-        <th>Account</th><th>Stage</th><th>Next Step</th><th style="text-align:center;white-space:nowrap">Last Touched</th><th></th>
+        <th>Account</th><th>Stage</th><th>Next Step</th><th style="text-align:center;white-space:nowrap">Last Touched</th>
       </tr></thead>
       <tbody>${body}</tbody>
     </table>` : `<div style="color:var(--g400);font-size:13px;padding:12px 0">Nothing outstanding — every account has completed its current playbook step. &#127881;</div>`}
   </div></div>`;
-}
-
-async function completeNextStep(event, accountId, stage, itemKey) {
-  if (event) event.stopPropagation();
-  await toggleChecklistItem(accountId, stage, itemKey, true);
-  toast('Step marked done');
-  renderDashboardActions();
 }
 
 function openAccountChecklist(accountId) {
